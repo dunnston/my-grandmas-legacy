@@ -1,0 +1,78 @@
+# Godot 4.5 .gitignore
+
+# Godot-specific ignores
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+/android/
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+# Mono-specific ignores (if using C#, not applicable for GDScript-only project)
+.mono/
+data_*/
+mono_crash.*.json
+
+# Build results
+build/
+builds/
+exports/
+
+# OS-specific files
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# IDE-specific files
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs (Rider, etc.)
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Editor backups
+*.autosave
+*.orig
+
+# Save files and user data (optional - include if you don't want to track saves)
+# user://
+# *.save
+
+# Addons (only if you want to exclude certain addons)
+# addons/
+
+# Custom ignores for this project
+# Add any project-specific files to ignore here

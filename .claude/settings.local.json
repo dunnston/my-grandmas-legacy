@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat \"c:\\Users\\ryans\\OneDrive\\Documents\\my-grandmas-legacy\\GDD.md\")",
+      "Read(//c/Users/ryans/.claude/**)",
+      "Bash(git init)",
+      "Bash(git add .)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Project setup\n\n- Initialize Godot 4.5 project\n- Add comprehensive Game Design Document (GDD.md)\n- Add phase-based development plan (PLAN.md)\n- Add project-specific Claude context (CLAUDE.md)\n- Configure .gitignore for Godot 4.5\n- Set up project with icon and basic configuration\n\nReady to begin Phase 1: Core Prototype\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
