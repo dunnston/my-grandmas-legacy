@@ -207,7 +207,20 @@ This is a living document that tracks the development progress of "My Grandma's 
 **Branch:** `phase-3-progression-systems`
 **Goal:** Add depth and long-term goals
 **Time Estimate:** 4-5 weeks
-**Status:** 🔄 IN PROGRESS
+**Status:** 🔄 CORE SYSTEMS COMPLETE - Additional features pending
+
+**Core systems implemented:**
+- ✅ ProgressionManager with milestone tracking
+- ✅ Reputation system (0-100, affects traffic)
+- ✅ Lifetime revenue tracking
+- ✅ Recipe unlock system
+- ✅ Traffic calculation based on reputation + day of week
+
+**Remaining work:**
+- Equipment upgrade system
+- Staff hiring and management
+- Ingredient expiration
+- UI integration for progression features
 
 ### Success Criteria
 - [ ] 2-week playthrough feels rewarding
@@ -218,11 +231,11 @@ This is a living document that tracks the development progress of "My Grandma's 
 ### Tasks
 
 #### Progression Manager
-- [ ] Create ProgressionManager singleton
-- [ ] Track total revenue across all days
-- [ ] Implement milestone checking ($500, $2000, $5000, etc.)
-- [ ] Create unlock system for recipes
-- [ ] Add unlock notifications/popups
+- [x] Create ProgressionManager singleton
+- [x] Track total revenue across all days
+- [x] Implement milestone checking ($500, $2000, $5000, etc.)
+- [x] Create unlock system for recipes
+- [ ] Add unlock notifications/popups (signals ready, UI pending)
 
 #### Recipe Unlocks
 - [ ] Create all recipes from GDD (27 total)
@@ -243,18 +256,18 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Visual changes when equipment upgraded (placeholder)
 
 #### Reputation System
-- [ ] Add reputation score (0-100, starts at 50)
-- [ ] Track customer satisfaction per day
-- [ ] Update reputation based on happy/unhappy customers
-- [ ] Show reputation in Planning phase report
-- [ ] Implement reputation decay (slow return to 50)
+- [x] Add reputation score (0-100, starts at 50)
+- [x] Track customer satisfaction per day
+- [x] Update reputation based on happy/unhappy customers
+- [x] Show reputation in Planning phase report (data available)
+- [x] Implement reputation decay (slow return to 50)
 
 #### Traffic System
-- [ ] Create CustomerManager for spawning logic
-- [ ] Base traffic on reputation score
-- [ ] Add day-of-week modifiers
-- [ ] Implement traffic projection in Planning phase
-- [ ] Scale customer spawns based on traffic calculation
+- [x] Create CustomerManager for spawning logic (enhanced existing)
+- [x] Base traffic on reputation score
+- [x] Add day-of-week modifiers (Mon-Thu 1.0x, Fri 1.3x, Sat 1.5x, Sun 1.2x)
+- [x] Implement traffic projection in Planning phase
+- [x] Scale customer spawns based on traffic calculation
 
 #### Staff Hiring System
 - [ ] Create Staff resource class (name, role, skill, wage)
