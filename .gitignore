@@ -1,5 +1,8 @@
 # Godot 4.5 .gitignore
 
+# Claude Code settings (local only)
+.claude/
+
 # Godot-specific ignores
 .godot/
 .import/
