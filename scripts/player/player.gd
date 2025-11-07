@@ -88,10 +88,19 @@ func check_for_interactable() -> void:
 
 	if interaction_ray.is_colliding():
 		var collider = interaction_ray.get_collider()
+		var interactable = null
+
+		# Check if collider has the method
 		if collider and collider.has_method("get_interaction_prompt"):
-			if current_interactable != collider:
-				current_interactable = collider
-				print("Can interact with: ", collider.name)
+			interactable = collider
+		# If not, check parent (for Area3D children of equipment)
+		elif collider and collider.get_parent() and collider.get_parent().has_method("get_interaction_prompt"):
+			interactable = collider.get_parent()
+
+		if interactable:
+			if current_interactable != interactable:
+				current_interactable = interactable
+				print("Can interact with: ", interactable.name)
 		else:
 			current_interactable = null
 	else:

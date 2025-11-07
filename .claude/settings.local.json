@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m \"Enable collision on floor and walls\n\n- Add use_collision = true to all CSG shapes (floor, walls, ceiling)\n- Fixes player falling through the floor\n- Player can now walk on the floor and collide with walls\")"
+      "Bash(git commit -m \"Enable collision on floor and walls\n\n- Add use_collision = true to all CSG shapes (floor, walls, ceiling)\n- Fixes player falling through the floor\n- Player can now walk on the floor and collide with walls\")",
+      "Bash(git commit -m \"Fix interaction detection for equipment\n\n- Check parent node when raycast hits Area3D children\n- Equipment has Area3D children but interaction methods on parent\n- Player can now interact with all equipment using E key\n- Console output will show interaction results\")"
     ],
     "deny": [],
     "ask": []
