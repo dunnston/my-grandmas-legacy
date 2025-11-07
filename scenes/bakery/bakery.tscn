@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://register001" path="res://scenes/bakery/equipment/register.tscn" id="7_register"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" uid="uid://planning_menu001" path="res://scenes/ui/planning_menu.tscn" id="9_planning"]
+[ext_resource type="PackedScene" uid="uid://cf3c4wqwx6lhm" path="res://scenes/ui/dev_menu.tscn" id="10_devmenu"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -130,3 +131,5 @@ gizmo_extents = 0.5
 [node name="HUD" parent="." instance=ExtResource("8_hud")]
 
 [node name="PlanningMenu" parent="." instance=ExtResource("9_planning")]
+
+[node name="DevMenu" parent="." instance=ExtResource("10_devmenu")]
