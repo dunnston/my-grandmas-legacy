@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://c2h8tpnwm1r7e"]
+[gd_scene load_steps=6 format=3 uid="uid://c2h8tpnwm1r7e"]
 
 [ext_resource type="Script" path="res://scripts/equipment/oven.gd" id="1_oven"]
 
@@ -6,6 +6,14 @@
 albedo_color = Color(0.3, 0.3, 0.35, 1)
 metallic = 0.8
 roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
+albedo_color = Color(0.2, 0.2, 0.25, 1)
+metallic = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_window"]
+albedo_color = Color(0.1, 0.1, 0.1, 0.5)
+transparency = 1
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
 size = Vector3(2, 2, 2)
@@ -42,11 +50,3 @@ collision_mask = 1
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 shape = SubResource("BoxShape3D_interaction")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
-albedo_color = Color(0.2, 0.2, 0.25, 1)
-metallic = 0.7
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_window"]
-albedo_color = Color(0.1, 0.1, 0.1, 0.5)
-transparency = 1
