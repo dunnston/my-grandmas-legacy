@@ -17,16 +17,43 @@ var crafting_timer: float = 0.0
 var current_recipe: Dictionary = {}
 var player_nearby: Node3D = null
 
-# Simple bread recipe (for Phase 1)
-const BREAD_RECIPE = {
-	"name": "bread_dough",
-	"ingredients": {
-		"flour": 2,
-		"water": 1,
-		"yeast": 1
+# Crafting recipes (Phase 2: 3 starter recipes)
+const RECIPES = {
+	"white_bread": {
+		"name": "White Bread Dough",
+		"ingredients": {
+			"flour": 2,
+			"yeast": 1,
+			"salt": 1
+		},
+		"result": "white_bread_dough",
+		"time": 60.0
 	},
-	"result": "bread_dough",
-	"time": 60.0
+	"chocolate_chip_cookies": {
+		"name": "Cookie Dough",
+		"ingredients": {
+			"flour": 1,
+			"sugar": 1,
+			"butter": 1,
+			"eggs": 1,
+			"chocolate_chips": 2
+		},
+		"result": "cookie_dough",
+		"time": 45.0
+	},
+	"blueberry_muffins": {
+		"name": "Muffin Batter",
+		"ingredients": {
+			"flour": 2,
+			"sugar": 1,
+			"eggs": 1,
+			"milk": 1,
+			"blueberries": 2,
+			"butter": 1
+		},
+		"result": "muffin_batter",
+		"time": 50.0
+	}
 }
 
 func _ready() -> void:
@@ -69,19 +96,29 @@ func interact(player: Node3D) -> void:
 
 func open_crafting_ui(player: Node3D) -> void:
 	print("\n=== MIXING BOWL ===")
-	print("Recipe: Bread Dough")
-	print("Required: 2x flour, 1x water, 1x yeast")
+	print("Available recipes:")
+	for recipe_id in RECIPES:
+		print("  - ", RECIPES[recipe_id]["name"])
 	print("\nYour inventory:")
 	InventoryManager.print_inventory("player")
-	print("\nTransfer ingredients? (This is placeholder - UI will be added)")
-	print("For now, let's check if you have the ingredients...")
+	print("\nChecking which recipes you can make...")
 
-	# Check if player has ingredients
-	if check_recipe_ingredients("player", BREAD_RECIPE):
-		print("You have all ingredients! Starting to mix...")
-		transfer_ingredients_and_start("player", BREAD_RECIPE)
+	# Check each recipe to see if player has ingredients
+	var craftable_recipe: Dictionary = {}
+	for recipe_id in RECIPES:
+		var recipe: Dictionary = RECIPES[recipe_id]
+		if check_recipe_ingredients("player", recipe):
+			print("✓ Can make: ", recipe["name"])
+			craftable_recipe = recipe
+			break  # Use first craftable recipe found
+		else:
+			print("✗ Missing ingredients for: ", recipe["name"])
+
+	if not craftable_recipe.is_empty():
+		print("\nStarting to mix ", craftable_recipe["name"], "...")
+		transfer_ingredients_and_start("player", craftable_recipe)
 	else:
-		print("You don't have all the required ingredients.")
+		print("\nYou don't have ingredients for any recipe.")
 		print("Go to the ingredient storage first!")
 
 func check_recipe_ingredients(inventory_id: String, recipe: Dictionary) -> bool:

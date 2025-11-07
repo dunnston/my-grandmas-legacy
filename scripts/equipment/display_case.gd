@@ -50,8 +50,8 @@ func open_display_ui(player: Node3D) -> void:
 	var player_inventory = InventoryManager.get_inventory("player")
 	var has_goods: bool = false
 
-	# Look for finished products (anything that's not raw ingredients)
-	var finished_goods = ["bread", "cookies", "muffins"]  # Expandable
+	# Look for finished products (must match oven output and recipe IDs)
+	var finished_goods = ["white_bread", "chocolate_chip_cookies", "blueberry_muffins"]
 
 	for item_id in player_inventory.keys():
 		if item_id in finished_goods:
@@ -72,7 +72,7 @@ func stock_item(player: Node3D, item_id: String, quantity: int) -> void:
 		print("Error: Could not stock ", item_id)
 
 func get_inventory_id() -> String:
-	return "display_case_" + name
+	return "display_case"  # Fixed ID for customer access
 
 func get_display_contents() -> Dictionary:
 	return InventoryManager.get_inventory(get_inventory_id())
