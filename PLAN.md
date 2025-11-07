@@ -1,8 +1,10 @@
 # My Grandma's Legacy - Development Plan
 
 **Last Updated:** 2025-11-07
-**Current Phase:** Phase 1 - Core Prototype
-**Project Status:** Setup & Planning
+**Current Phase:** Phase 2 - Business & Economy
+**Project Status:** Active Development
+
+**Phase 1 Status:** ✅ COMPLETE (Merged to main)
 
 ---
 
@@ -25,17 +27,17 @@ This is a living document that tracks the development progress of "My Grandma's 
 
 ---
 
-## Phase 1: Core Prototype
-**Branch:** `phase-1-core-prototype`
+## Phase 1: Core Prototype ✅ COMPLETE
+**Branch:** `phase-1-core-prototype` (merged to main)
 **Goal:** Prove core loop is fun
 **Time Estimate:** 2-3 weeks
-**Status:** Not Started
+**Status:** ✅ COMPLETE
 
 ### Success Criteria
-- [ ] Can complete one full day loop
-- [ ] Baking feels engaging and satisfying
-- [ ] Controls feel responsive
-- [ ] Time system works correctly
+- [x] Can complete one full day loop
+- [x] Baking feels engaging and satisfying
+- [x] Controls feel responsive
+- [x] Time system works correctly
 
 ### Tasks
 
@@ -117,11 +119,11 @@ This is a living document that tracks the development progress of "My Grandma's 
 
 ---
 
-## Phase 2: Business & Economy
+## Phase 2: Business & Economy 🚧 IN PROGRESS
 **Branch:** `phase-2-business-economy`
 **Goal:** Complete gameplay loop with economy
 **Time Estimate:** 3-4 weeks
-**Status:** Not Started
+**Status:** 🚧 IN PROGRESS
 
 ### Success Criteria
 - [ ] Can play multiple days in sequence
