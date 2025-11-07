@@ -23,6 +23,7 @@ EconomyManager="*res://scripts/autoload/economy_manager.gd"
 RecipeManager="*res://scripts/autoload/recipe_manager.gd"
 CustomerManager="*res://scripts/autoload/customer_manager.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
+ProgressionManager="*res://scripts/autoload/progression_manager.gd"
 
 [input]
 

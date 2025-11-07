@@ -41,9 +41,11 @@ func save_game(slot: String = DEFAULT_SAVE_SLOT) -> bool:
 	save_data["metadata"] = {
 		"save_slot": slot,
 		"save_time": Time.get_datetime_string_from_system(),
-		"game_version": "0.2.0",  # Phase 2
+		"game_version": "0.3.0",  # Phase 3
 		"day": GameManager.get_current_day(),
-		"cash": EconomyManager.get_current_cash()
+		"cash": EconomyManager.get_current_cash(),
+		"reputation": ProgressionManager.get_reputation() if ProgressionManager else 50,
+		"total_revenue": ProgressionManager.get_total_revenue() if ProgressionManager else 0.0
 	}
 
 	# Convert to JSON
@@ -137,6 +139,10 @@ func _collect_save_data() -> Dictionary:
 	# Inventory (save all inventories)
 	data["inventory_manager"] = InventoryManager.get_save_data()
 
+	# Progression (milestones, reputation, unlocks)
+	if ProgressionManager:
+		data["progression_manager"] = ProgressionManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -168,6 +174,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Inventory
 	if data.has("inventory_manager"):
 		InventoryManager.load_save_data(data["inventory_manager"])
+
+	# Progression
+	if data.has("progression_manager") and ProgressionManager:
+		ProgressionManager.load_save_data(data["progression_manager"])
 
 	print("Applied save data to all managers")
 
