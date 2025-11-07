@@ -19,11 +19,19 @@ var baking_timer: float = 0.0
 var current_item: String = ""
 var player_nearby: Node3D = null
 
-# Baking recipes
+# Baking recipes (dough/batter -> finished product)
 const BAKING_RECIPES = {
-	"bread_dough": {
-		"result": "bread",
+	"white_bread_dough": {
+		"result": "white_bread",
 		"time": 300.0  # 5 minutes
+	},
+	"cookie_dough": {
+		"result": "chocolate_chip_cookies",
+		"time": 180.0  # 3 minutes
+	},
+	"muffin_batter": {
+		"result": "blueberry_muffins",
+		"time": 240.0  # 4 minutes
 	}
 }
 

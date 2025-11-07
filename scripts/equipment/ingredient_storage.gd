@@ -10,13 +10,17 @@ signal ingredients_taken(player_id: String)
 # State
 var player_nearby: Node3D = null
 
-# Starter ingredients (unlimited for Phase 1 testing)
+# Starter ingredients (Phase 2: includes all ingredients for 3 starter recipes)
 const STARTER_INGREDIENTS = {
 	"flour": 10,
-	"water": 10,
-	"yeast": 10,
 	"sugar": 10,
-	"eggs": 10
+	"eggs": 10,
+	"butter": 10,
+	"milk": 10,
+	"yeast": 10,
+	"salt": 10,
+	"chocolate_chips": 10,
+	"blueberries": 10
 }
 
 func _ready() -> void:
@@ -58,20 +62,26 @@ func open_storage_ui(player: Node3D) -> void:
 	print("\nYour inventory:")
 	InventoryManager.print_inventory("player")
 
-	print("\nTaking ingredients for bread recipe...")
-	take_ingredients_for_bread(player)
+	print("\nTaking a batch of ingredients...")
+	take_ingredient_batch(player)
 
-func take_ingredients_for_bread(player: Node3D) -> void:
-	# Take ingredients needed for bread
-	var needed = {
-		"flour": 2,
-		"water": 1,
-		"yeast": 1
+func take_ingredient_batch(player: Node3D) -> void:
+	# Take a batch of ingredients (enough for multiple recipes)
+	var batch = {
+		"flour": 5,
+		"sugar": 3,
+		"eggs": 3,
+		"butter": 3,
+		"milk": 2,
+		"yeast": 2,
+		"salt": 2,
+		"chocolate_chips": 4,
+		"blueberries": 4
 	}
 
-	print("\nTaking bread ingredients:")
-	for ingredient in needed:
-		var quantity = needed[ingredient]
+	print("\nTaking ingredients:")
+	for ingredient in batch:
+		var quantity = batch[ingredient]
 		if InventoryManager.transfer_item(get_inventory_id(), "player", ingredient, quantity):
 			print("  Took ", quantity, "x ", ingredient)
 		else:
@@ -79,11 +89,11 @@ func take_ingredients_for_bread(player: Node3D) -> void:
 
 	print("\nDone! Check your inventory:")
 	InventoryManager.print_inventory("player")
-	print("\nNow go to the Mixing Bowl!")
+	print("\nNow go to the Mixing Bowl to craft!")
 
 	ingredients_taken.emit("player")
 
-	# Restock for testing (unlimited ingredients in Phase 1)
+	# Restock for testing (unlimited ingredients in Phase 2 baking phase)
 	restock()
 
 func restock() -> void:

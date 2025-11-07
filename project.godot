@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 GameManager="*res://scripts/autoload/game_manager.gd"
 InventoryManager="*res://scripts/autoload/inventory_manager.gd"
+EconomyManager="*res://scripts/autoload/economy_manager.gd"
+RecipeManager="*res://scripts/autoload/recipe_manager.gd"
+CustomerManager="*res://scripts/autoload/customer_manager.gd"
+SaveManager="*res://scripts/autoload/save_manager.gd"
 
 [input]
 
