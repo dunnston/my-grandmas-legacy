@@ -9,7 +9,8 @@
       "Bash(git branch -m master main)",
       "Bash(git checkout -b phase-1-core-prototype)",
       "Bash(git add -A)",
-      "Bash(git commit -m \"Add core game systems and player controller\n\n- Create GameManager singleton for phase/time management\n- Create InventoryManager singleton for item handling\n- Implement player character with WASD movement and mouse look\n- Create basic bakery scene with CSG shapes\n- Add input mappings (WASD, E interact, Shift sprint)\n- Set up project directory structure\n- Configure autoload singletons\n\nPlayer can now move around the bakery scene.\")"
+      "Bash(git commit -m \"Add core game systems and player controller\n\n- Create GameManager singleton for phase/time management\n- Create InventoryManager singleton for item handling\n- Implement player character with WASD movement and mouse look\n- Create basic bakery scene with CSG shapes\n- Add input mappings (WASD, E interact, Shift sprint)\n- Set up project directory structure\n- Configure autoload singletons\n\nPlayer can now move around the bakery scene.\")",
+      "Bash(git commit -m \"Implement all Phase 1 crafting stations\n\n- Create MixingBowl station with recipe checking and crafting timer\n- Create Oven station with baking system and visual feedback\n- Create DisplayCase for stocking finished goods\n- Create IngredientStorage with starter ingredients (unlimited for testing)\n- Add all equipment to Bakery scene in logical workflow order\n- Implement complete bread crafting loop: storage → mixing → baking → display\n\nWorkflow: Player gets ingredients from storage → mixes at bowl → bakes in oven → stocks in display case\")"
     ],
     "deny": [],
     "ask": []
