@@ -10,7 +10,7 @@ signal item_burned
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
-@onready var mesh: MeshInstance3D = $OvenMesh
+@onready var mesh: CSGBox3D = $OvenMesh
 @onready var light: OmniLight3D = $OvenLight
 
 # State
@@ -132,7 +132,7 @@ func start_baking(item_id: String) -> void:
 		light.light_color = Color(1.0, 0.6, 0.2)  # Orange glow
 
 	if mesh:
-		var mat = mesh.get_surface_override_material(0)
+		var mat = mesh.material
 		if mat:
 			mat.emission_enabled = true
 			mat.emission = Color(1.0, 0.4, 0.1)
@@ -161,7 +161,7 @@ func complete_baking() -> void:
 		light.visible = false
 
 	if mesh:
-		var mat = mesh.get_surface_override_material(0)
+		var mat = mesh.material
 		if mat:
 			mat.emission_enabled = false
 
