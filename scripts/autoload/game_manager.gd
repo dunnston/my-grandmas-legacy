@@ -95,6 +95,11 @@ func start_planning_phase() -> void:
 func end_day() -> void:
 	current_day += 1
 	game_time = 0.0
+
+	# Update progression manager day tracking and reputation
+	if ProgressionManager:
+		ProgressionManager.increment_day()
+
 	print("=== DAY ", current_day, " ===")
 	day_changed.emit(current_day)
 	start_baking_phase()
