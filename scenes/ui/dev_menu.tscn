@@ -1,0 +1,470 @@
+[gd_scene load_steps=2 format=3 uid="uid://cf3c4wqwx6lhm"]
+
+[ext_resource type="Script" path="res://scripts/ui/dev_menu.gd" id="1_dev_menu"]
+
+[node name="DevMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_dev_menu")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="TitleBar" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "DEVELOPER MENU (Press ` to toggle)"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TitleBar"]
+layout_mode = 2
+text = "Close"
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TabContainer" type="TabContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Economy" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CashLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+text = "Current Cash: $0.00"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+
+[node name="AddMoneyLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+text = "Add Money:"
+
+[node name="AddMoneyButtons" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+
+[node name="Add100" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/AddMoneyButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+ $100"
+
+[node name="Add500" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/AddMoneyButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+ $500"
+
+[node name="Add1000" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/AddMoneyButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+ $1000"
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+
+[node name="SetCashLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+text = "Set Exact Cash:"
+
+[node name="SetCash" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpinBox" type="SpinBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/SetCash"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -999999.0
+max_value = 999999.0
+step = 100.0
+value = 1000.0
+
+[node name="SetButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/SetCash"]
+layout_mode = 2
+text = "Set Cash"
+
+[node name="Spacer" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Inventory" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="Ingredients" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Ingredients"]
+layout_mode = 2
+text = "Add Ingredients:"
+
+[node name="GridContainer" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Ingredients"]
+layout_mode = 2
+columns = 3
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Products" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Products"]
+layout_mode = 2
+text = "Add Finished Products:"
+
+[node name="GridContainer" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Products"]
+layout_mode = 2
+columns = 2
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Utilities" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Utilities"]
+layout_mode = 2
+text = "Utilities:"
+
+[node name="FillIngredientsButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Utilities"]
+layout_mode = 2
+text = "Fill All Ingredients (50 each)"
+
+[node name="ClearInventoryButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Utilities"]
+layout_mode = 2
+text = "Clear Player Inventory"
+
+[node name="Customers" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ActiveCustomersLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+text = "Active Customers: 0"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpawnLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+text = "Spawn Customers:"
+
+[node name="SpawnSingleButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+text = "Spawn 1 Customer"
+
+[node name="SpawnMultiple" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpinBox" type="SpinBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawnMultiple"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 50.0
+value = 5.0
+
+[node name="SpawnButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawnMultiple"]
+layout_mode = 2
+text = "Spawn Multiple"
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+
+[node name="ControlLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+text = "Spawning Control:"
+
+[node name="SpawningButtons" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+
+[node name="StartSpawningButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawningButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start Auto-Spawn"
+
+[node name="StopSpawningButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawningButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Stop Auto-Spawn"
+
+[node name="HSeparator3" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+
+[node name="ClearCustomersButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+text = "Clear All Customers"
+
+[node name="Spacer" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Time" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CurrentDayLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Current Day: 1"
+horizontal_alignment = 1
+
+[node name="CurrentPhaseLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Current Phase: BAKING"
+horizontal_alignment = 1
+
+[node name="TimeScaleLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Time Scale: 1.0x"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+
+[node name="TimeScaleLabel2" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Time Scale:"
+
+[node name="TimeScaleButtons" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+
+[node name="PauseButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pause"
+
+[node name="Speed1xButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "1x"
+
+[node name="Speed2xButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "2x"
+
+[node name="Speed3xButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "3x"
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+
+[node name="PhaseLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Phase Control:"
+
+[node name="NextPhaseButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Skip to Next Phase"
+
+[node name="PhaseButtons" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="SetBakingButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set: BAKING"
+
+[node name="SetBusinessButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set: BUSINESS"
+
+[node name="SetCleanupButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set: CLEANUP"
+
+[node name="SetPlanningButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set: PLANNING"
+
+[node name="HSeparator3" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+
+[node name="DayLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Day Control:"
+
+[node name="AdvanceDayButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+text = "Advance to Next Day"
+
+[node name="SetDay" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+
+[node name="SpinBox" type="SpinBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/SetDay"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 999.0
+value = 1.0
+
+[node name="SetButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/SetDay"]
+layout_mode = 2
+text = "Set Day"
+
+[node name="Spacer" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Utilities" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+text = "Save/Load:"
+
+[node name="SaveButtons" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+
+[node name="QuickSaveButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer/SaveButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Quick Save"
+
+[node name="QuickLoadButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer/SaveButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Quick Load"
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+text = "Debug:"
+
+[node name="PrintDebugButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+text = "Print Debug Info to Console"
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+text = "Info:"
+
+[node name="InfoLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+text = "This developer menu allows you to test all game systems without playing through the full game loop.
+
+Use the tabs above to access different systems:
+- Economy: Add money, set cash values
+- Inventory: Spawn items directly into your inventory
+- Customers: Spawn/clear customers, control spawning
+- Time: Control time scale, skip phases, advance days
+- Utilities: Save/load, debug info
+
+Press ` (backtick) anytime to toggle this menu."
+autowrap_mode = 3
+
+[node name="Spacer" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TitleBar/CloseButton" to="." method="_on_close_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/AddMoneyButtons/Add100" to="." method="_on_add_100_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/AddMoneyButtons/Add500" to="." method="_on_add_500_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/AddMoneyButtons/Add1000" to="." method="_on_add_1000_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Economy/VBoxContainer/SetCash/SetButton" to="." method="_on_set_cash_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Utilities/FillIngredientsButton" to="." method="_on_fill_ingredients_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Inventory/ScrollContainer/VBoxContainer/Utilities/ClearInventoryButton" to="." method="_on_clear_inventory_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawnSingleButton" to="." method="_on_spawn_customer_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawnMultiple/SpawnButton" to="." method="_on_spawn_multiple_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawningButtons/StartSpawningButton" to="." method="_on_start_spawning_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/SpawningButtons/StopSpawningButton" to="." method="_on_stop_spawning_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Customers/VBoxContainer/ClearCustomersButton" to="." method="_on_clear_customers_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons/PauseButton" to="." method="_on_pause_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons/Speed1xButton" to="." method="_on_speed_1x_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons/Speed2xButton" to="." method="_on_speed_2x_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/TimeScaleButtons/Speed3xButton" to="." method="_on_speed_3x_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/NextPhaseButton" to="." method="_on_next_phase_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons/SetBakingButton" to="." method="_on_set_baking_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons/SetBusinessButton" to="." method="_on_set_business_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons/SetCleanupButton" to="." method="_on_set_cleanup_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/PhaseButtons/SetPlanningButton" to="." method="_on_set_planning_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/AdvanceDayButton" to="." method="_on_advance_day_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Time/VBoxContainer/SetDay/SetButton" to="." method="_on_set_day_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer/SaveButtons/QuickSaveButton" to="." method="_on_quick_save_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer/SaveButtons/QuickLoadButton" to="." method="_on_quick_load_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Utilities/VBoxContainer/PrintDebugButton" to="." method="_on_print_debug_pressed"]
