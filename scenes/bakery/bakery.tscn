@@ -41,31 +41,37 @@ shadow_enabled = true
 
 [node name="Floor" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+use_collision = true
 size = Vector3(20, 0.2, 20)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="BackWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -10)
+use_collision = true
 size = Vector3(20, 4, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="LeftWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, 0)
+use_collision = true
 size = Vector3(0.2, 4, 20)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="RightWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 0)
+use_collision = true
 size = Vector3(0.2, 4, 20)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="FrontWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 10)
+use_collision = true
 size = Vector3(20, 4, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="Ceiling" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.1, 0)
+use_collision = true
 size = Vector3(20, 0.2, 20)
 material = SubResource("StandardMaterial3D_ceiling")
 

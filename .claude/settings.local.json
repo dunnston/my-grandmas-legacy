@@ -1,20 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat \"c:\\Users\\ryans\\OneDrive\\Documents\\my-grandmas-legacy\\GDD.md\")",
-      "Read(//c/Users/ryans/.claude/**)",
-      "Bash(git init)",
-      "Bash(git add .)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Project setup\n\n- Initialize Godot 4.5 project\n- Add comprehensive Game Design Document (GDD.md)\n- Add phase-based development plan (PLAN.md)\n- Add project-specific Claude context (CLAUDE.md)\n- Configure .gitignore for Godot 4.5\n- Set up project with icon and basic configuration\n\nReady to begin Phase 1: Core Prototype\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git branch -m master main)",
-      "Bash(git checkout -b phase-1-core-prototype)",
-      "Bash(git add -A)",
-      "Bash(git commit -m \"Add core game systems and player controller\n\n- Create GameManager singleton for phase/time management\n- Create InventoryManager singleton for item handling\n- Implement player character with WASD movement and mouse look\n- Create basic bakery scene with CSG shapes\n- Add input mappings (WASD, E interact, Shift sprint)\n- Set up project directory structure\n- Configure autoload singletons\n\nPlayer can now move around the bakery scene.\")",
-      "Bash(git commit -m \"Implement all Phase 1 crafting stations\n\n- Create MixingBowl station with recipe checking and crafting timer\n- Create Oven station with baking system and visual feedback\n- Create DisplayCase for stocking finished goods\n- Create IngredientStorage with starter ingredients (unlimited for testing)\n- Add all equipment to Bakery scene in logical workflow order\n- Implement complete bread crafting loop: storage → mixing → baking → display\n\nWorkflow: Player gets ingredients from storage → mixes at bowl → bakes in oven → stocks in display case\")",
-      "Bash(git add TESTING.md)",
-      "Bash(git commit -m \"Add Phase 1 testing guide\n\n- Document how to test complete baking workflow\n- List all controls and expected console output\n- Include success criteria for Phase 1\n- Note known limitations (intentional for this phase)\")",
-      "Bash(git commit -m \"Fix scene file formatting errors\n\n- Move SubResource definitions before they''re used (Godot requirement)\n- Update load_steps counts to match resource counts\n- Fix player.tscn, bakery.tscn, and all equipment scenes\n- Resolves ''Parse Error: Invalid parameter'' errors\")",
-      "Bash(git commit -m \"Fix oven.gd type mismatch\n\n- Change mesh type from MeshInstance3D to CSGBox3D\n- Update material access from get_surface_override_material() to .material\n- Fixes runtime error when starting the game\")"
+      "Bash(git commit -m \"Enable collision on floor and walls\n\n- Add use_collision = true to all CSG shapes (floor, walls, ceiling)\n- Fixes player falling through the floor\n- Player can now walk on the floor and collide with walls\")"
     ],
     "deny": [],
     "ask": []
