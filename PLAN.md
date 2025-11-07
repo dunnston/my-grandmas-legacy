@@ -1,11 +1,12 @@
 # My Grandma's Legacy - Development Plan
 
 **Last Updated:** 2025-11-07
-**Current Phase:** Phase 2 - Business & Economy
+**Current Phase:** Phase 3 - Progression Systems
 **Project Status:** Active Development
 
 **Phase 1 Status:** ✅ COMPLETE (Merged to main)
-**Phase 2 Status:** ⚠️ READY FOR TESTING (All systems implemented, needs playtesting)
+**Phase 2 Status:** ✅ COMPLETE (Merged to main)
+**Phase 3 Status:** 🔄 IN PROGRESS
 
 ---
 
@@ -120,11 +121,11 @@ This is a living document that tracks the development progress of "My Grandma's 
 
 ---
 
-## Phase 2: Business & Economy ⚠️ READY FOR TESTING
-**Branch:** `phase-2-business-economy`
+## Phase 2: Business & Economy ✅ COMPLETE
+**Branch:** `phase-2-business-economy` (merged to main)
 **Goal:** Complete gameplay loop with economy
 **Time Estimate:** 3-4 weeks
-**Status:** ⚠️ READY FOR TESTING
+**Status:** ✅ COMPLETE
 
 ### Success Criteria
 - [ ] Can play multiple days in sequence (READY TO TEST)
@@ -202,11 +203,11 @@ This is a living document that tracks the development progress of "My Grandma's 
 
 ---
 
-## Phase 3: Progression Systems
+## Phase 3: Progression Systems 🔄 IN PROGRESS
 **Branch:** `phase-3-progression-systems`
 **Goal:** Add depth and long-term goals
 **Time Estimate:** 4-5 weeks
-**Status:** Not Started
+**Status:** 🔄 IN PROGRESS
 
 ### Success Criteria
 - [ ] 2-week playthrough feels rewarding
