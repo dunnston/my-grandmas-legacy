@@ -126,3 +126,16 @@ func print_inventory(inventory_id: String) -> void:
 	else:
 		for item_id in inventories[inventory_id]:
 			print("  ", item_id, ": ", inventories[inventory_id][item_id])
+
+# Save/Load support
+func get_save_data() -> Dictionary:
+	"""Get all inventory data for saving"""
+	return {
+		"inventories": inventories.duplicate(true)
+	}
+
+func load_save_data(data: Dictionary) -> void:
+	"""Load inventory data from save"""
+	if data.has("inventories"):
+		inventories = data["inventories"].duplicate(true)
+		print("Inventory data loaded: %d inventories" % inventories.size())

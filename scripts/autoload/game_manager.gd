@@ -53,21 +53,44 @@ func start_baking_phase() -> void:
 	print("=== BAKING PHASE STARTED ===")
 	print("Prepare goods for the day!")
 
+	# Stop customer spawning if it was active
+	CustomerManager.stop_spawning()
+	resume_game()
+
 func start_business_phase() -> void:
 	set_phase(Phase.BUSINESS)
 	game_time = BUSINESS_START_HOUR * 3600  # Set to 9 AM
 	print("=== BUSINESS PHASE STARTED ===")
 	print("Shop opens at 9 AM")
 
+	# Start spawning customers
+	CustomerManager.start_spawning()
+	resume_game()
+
 func start_cleanup_phase() -> void:
 	set_phase(Phase.CLEANUP)
 	print("=== CLEANUP PHASE STARTED ===")
 	print("Time to clean up!")
 
+	# Stop customer spawning
+	CustomerManager.stop_spawning()
+
+	# Clear any remaining customers
+	CustomerManager.clear_all_customers()
+
+	# Auto-complete cleanup phase after brief delay
+	await get_tree().create_timer(2.0).timeout
+	start_planning_phase()
+
 func start_planning_phase() -> void:
 	set_phase(Phase.PLANNING)
 	print("=== PLANNING PHASE STARTED ===")
 	print("Review the day and plan for tomorrow")
+
+	# Auto-save before planning
+	SaveManager.auto_save()
+
+	# Note: Planning menu will be opened by the bakery scene
 
 func end_day() -> void:
 	current_day += 1
