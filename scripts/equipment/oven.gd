@@ -81,8 +81,9 @@ func _ready() -> void:
 	print("Oven ready: ", name)
 
 func _process(delta: float) -> void:
-	if is_baking and not GameManager.is_game_paused():
-		baking_timer += delta * GameManager.get_time_scale()
+	if is_baking and GameManager and not GameManager.is_game_paused():
+		var time_scale = GameManager.get_time_scale() if GameManager else 1.0
+		baking_timer += delta * time_scale
 
 		# Update light intensity based on baking progress
 		if light:
@@ -166,6 +167,9 @@ func start_baking(item_id: String) -> void:
 		return
 
 	# Get baking time from RecipeManager
+	if not RecipeManager:
+		print("Error: RecipeManager not available")
+		return
 	var recipe: Dictionary = RecipeManager.get_recipe(recipe_id)
 	if recipe.is_empty():
 		print("Error: Recipe not found in RecipeManager: ", recipe_id)
@@ -208,25 +212,36 @@ func complete_baking() -> void:
 
 	# Try to find the mixing bowl to add its tier bonus
 	var mixing_bowl = get_node_or_null("../MixingBowl")
-	if mixing_bowl and mixing_bowl.has_method("get"):
-		var mixer_tier: int = mixing_bowl.get("equipment_tier") if "equipment_tier" in mixing_bowl else 0
+	if mixing_bowl and "equipment_tier" in mixing_bowl:
+		var mixer_tier: int = mixing_bowl.equipment_tier
 		combined_tier += mixer_tier
 		if mixer_tier > 0:
 			print("Equipment bonuses: Mixer (Tier %d) + Oven (Tier %d) = Total Tier %d" % [mixer_tier, equipment_tier, combined_tier])
 
 	# Calculate quality based on timing and equipment
-	var quality_data: Dictionary = QualityManager.calculate_quality(
-		current_recipe_id,
-		baking_timer,        # actual time
-		target_bake_time,    # target time
-		combined_tier        # combined equipment quality bonus
-	)
+	var quality_data: Dictionary = {}
+	if QualityManager:
+		quality_data = QualityManager.calculate_quality(
+			current_recipe_id,
+			baking_timer,        # actual time
+			target_bake_time,    # target time
+			combined_tier        # combined equipment quality bonus
+		)
+	else:
+		# Fallback quality data if QualityManager not available
+		quality_data = {
+			"quality": 70.0,
+			"tier": 1,
+			"tier_name": "NORMAL",
+			"is_legendary": false,
+			"price_multiplier": 1.0
+		}
 
 	print("Baking complete! ", result, " is ready!")
 	print("Quality: %.1f%% (%s)%s" % [
-		quality_data.quality,
-		quality_data.tier_name,
-		" ✨ LEGENDARY!" if quality_data.is_legendary else ""
+		quality_data.get("quality", 70.0),
+		quality_data.get("tier_name", "NORMAL"),
+		" ✨ LEGENDARY!" if quality_data.get("is_legendary", false) else ""
 	])
 
 	# Clear oven inventory (dough was consumed)
@@ -244,7 +259,8 @@ func complete_baking() -> void:
 	print("✓ Quality data saved with item!")
 
 	# Track recipe mastery for achievements
-	AchievementManager.track_recipe_mastery(current_recipe_id, quality_data.get("tier_name", ""))
+	if AchievementManager:
+		AchievementManager.track_recipe_mastery(current_recipe_id, quality_data.get("tier_name", ""))
 
 	baking_complete.emit(result, quality_data)
 

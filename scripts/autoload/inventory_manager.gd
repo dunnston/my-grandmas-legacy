@@ -180,13 +180,16 @@ func _remove_item_with_metadata(inventory_id: String, item_id: String, quantity:
 
 # Transfer item between inventories
 func transfer_item(from_inventory: String, to_inventory: String, item_id: String, quantity: int = 1) -> bool:
+	# Get metadata before removal to preserve it during transfer
+	var metadata: Dictionary = get_item_metadata(from_inventory, item_id)
+
 	if remove_item(from_inventory, item_id, quantity):
-		if add_item(to_inventory, item_id, quantity):
+		if add_item(to_inventory, item_id, quantity, metadata):
 			print("Transferred ", quantity, "x ", item_id, " from ", from_inventory, " to ", to_inventory)
 			return true
 		else:
-			# Rollback if add failed
-			add_item(from_inventory, item_id, quantity)
+			# Rollback if add failed - restore with metadata
+			add_item(from_inventory, item_id, quantity, metadata)
 			return false
 	return false
 
@@ -216,6 +219,9 @@ func get_inventory(inventory_id: String) -> Dictionary:
 func clear_inventory(inventory_id: String) -> void:
 	if inventories.has(inventory_id):
 		inventories[inventory_id].clear()
+		# Also clear metadata to prevent memory leak
+		if item_metadata.has(inventory_id):
+			item_metadata[inventory_id].clear()
 		inventory_changed.emit(inventory_id)
 		print("Cleared inventory: ", inventory_id)
 
