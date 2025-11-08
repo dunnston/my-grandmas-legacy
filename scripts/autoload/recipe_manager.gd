@@ -24,6 +24,10 @@ signal recipe_unlocked(recipe_id: String)
 var recipes: Dictionary = {}
 var unlocked_recipes: Array[String] = []
 
+# Player-set prices (GDD Section 4.2.4) - maps recipe_id -> custom price
+# If not set, uses base_price from recipe
+var player_prices: Dictionary = {}
+
 func _ready() -> void:
 	print("RecipeManager initialized")
 	_initialize_all_recipes()
@@ -799,7 +803,8 @@ func can_craft_recipe(recipe_id: String, available_ingredients: Dictionary) -> b
 # Save/Load support
 func get_save_data() -> Dictionary:
 	return {
-		"unlocked_recipes": unlocked_recipes
+		"unlocked_recipes": unlocked_recipes,
+		"player_prices": player_prices
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -810,10 +815,42 @@ func load_save_data(data: Dictionary) -> void:
 			recipes[recipe_id]["unlocked"] = recipe_id in unlocked_recipes
 		print("Recipes loaded: %d unlocked" % unlocked_recipes.size())
 
+	if data.has("player_prices"):
+		player_prices = data["player_prices"]
+		print("Player prices loaded: %d custom prices" % player_prices.size())
+
 # Helper functions for UI
 func get_all_recipes() -> Dictionary:
 	"""Get all recipes (both locked and unlocked)"""
 	return recipes
+
+# Player Pricing System (GDD Section 4.2.4, Lines 278-286)
+func set_player_price(recipe_id: String, price: float) -> void:
+	"""Set a custom price for a recipe"""
+	if not recipes.has(recipe_id):
+		push_warning("Cannot set price for unknown recipe: ", recipe_id)
+		return
+
+	player_prices[recipe_id] = price
+	print("Set price for %s: $%.2f" % [recipes[recipe_id].name, price])
+
+func get_player_price(recipe_id: String) -> float:
+	"""Get player-set price, or 0 if not set (uses base_price instead)"""
+	return player_prices.get(recipe_id, 0.0)
+
+func clear_player_price(recipe_id: String) -> void:
+	"""Remove custom price, reverting to base_price"""
+	player_prices.erase(recipe_id)
+	print("Cleared custom price for %s, using base price" % recipe_id)
+
+func get_effective_price(recipe_id: String) -> float:
+	"""Get the effective price (player price if set, otherwise base price)"""
+	var player_price = get_player_price(recipe_id)
+	if player_price > 0:
+		return player_price
+
+	var recipe = get_recipe(recipe_id)
+	return recipe.get("base_price", 0.0)
 
 func get_all_ingredients() -> Dictionary:
 	"""Get all unique ingredients from all recipes"""
