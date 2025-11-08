@@ -4,6 +4,7 @@ extends Node3D
 # Player interacts to process customer transactions
 
 signal transaction_completed(customer: Node3D, total: float)
+signal sale_completed(items: Array, total: float)  # For AI automation
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
