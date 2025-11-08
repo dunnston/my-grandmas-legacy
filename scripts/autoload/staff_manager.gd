@@ -23,6 +23,9 @@ var applicant_pool: Array = []    # Available applicants (refreshes weekly)
 var max_staff_slots: int = 3      # Upgradeable
 var next_staff_id: int = 1
 
+# AI instances (created when staff activated)
+var active_ai_workers: Dictionary = {}  # staff_id -> AI instance
+
 # Staff generation settings
 var staff_names: Array = [
 	"Alice", "Bob", "Carlos", "Diana", "Emma", "Frank", "Grace", "Henry",
@@ -61,9 +64,17 @@ func _ready() -> void:
 	# Connect to day change signal
 	if GameManager:
 		GameManager.day_ended.connect(_on_day_ended)
+		GameManager.phase_changed.connect(_on_phase_changed)
 
 	# Generate initial applicant pool
 	refresh_applicants()
+
+func _process(delta: float) -> void:
+	"""Process all active AI workers"""
+	for staff_id in active_ai_workers.keys():
+		var ai_worker = active_ai_workers[staff_id]
+		if ai_worker and ai_worker.has_method("process"):
+			ai_worker.process(delta)
 
 # ============================================================================
 # HIRING & FIRING
@@ -269,6 +280,74 @@ func increase_staff_capacity(additional_slots: int) -> void:
 	"""Increase maximum staff slots (from upgrades)"""
 	max_staff_slots += additional_slots
 	print("Staff capacity increased to ", max_staff_slots)
+
+# ============================================================================
+# AI AUTOMATION
+# ============================================================================
+
+func _on_phase_changed(new_phase: int) -> void:
+	"""Handle phase changes to activate/deactivate staff AI"""
+	# Deactivate all current AI
+	_deactivate_all_ai()
+
+	# Activate AI for the appropriate phase
+	match new_phase:
+		0:  # BAKING phase
+			_activate_bakers()
+		1:  # BUSINESS phase
+			_activate_cashiers()
+		2:  # CLEANUP phase
+			_activate_cleaners()
+		3:  # PLANNING phase
+			pass  # No automation during planning
+
+func _activate_bakers() -> void:
+	"""Activate all hired bakers"""
+	var bakers: Array = get_staff_by_role(StaffRole.BAKER)
+	for baker_data in bakers:
+		_create_and_activate_ai(baker_data, "baker")
+
+func _activate_cashiers() -> void:
+	"""Activate all hired cashiers"""
+	var cashiers: Array = get_staff_by_role(StaffRole.CASHIER)
+	for cashier_data in cashiers:
+		_create_and_activate_ai(cashier_data, "cashier")
+
+func _activate_cleaners() -> void:
+	"""Activate all hired cleaners"""
+	var cleaners: Array = get_staff_by_role(StaffRole.CLEANER)
+	for cleaner_data in cleaners:
+		_create_and_activate_ai(cleaner_data, "cleaner")
+
+func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
+	"""Create and activate an AI worker instance"""
+	var staff_id: String = staff_data.id
+
+	# Load the appropriate AI class
+	var ai_instance = null
+	match ai_type:
+		"baker":
+			var BakerAI = load("res://scripts/staff/baker_ai.gd")
+			ai_instance = BakerAI.new(staff_id, staff_data)
+		"cashier":
+			var CashierAI = load("res://scripts/staff/cashier_ai.gd")
+			ai_instance = CashierAI.new(staff_id, staff_data)
+		"cleaner":
+			var CleanerAI = load("res://scripts/staff/cleaner_ai.gd")
+			ai_instance = CleanerAI.new(staff_id, staff_data)
+
+	if ai_instance:
+		active_ai_workers[staff_id] = ai_instance
+		ai_instance.activate()
+
+func _deactivate_all_ai() -> void:
+	"""Deactivate and cleanup all AI workers"""
+	for staff_id in active_ai_workers.keys():
+		var ai_worker = active_ai_workers[staff_id]
+		if ai_worker and ai_worker.has_method("deactivate"):
+			ai_worker.deactivate()
+
+	active_ai_workers.clear()
 
 # ============================================================================
 # SAVE/LOAD
