@@ -51,6 +51,7 @@ func toggle_inventory() -> void:
 func show_inventory() -> void:
 	"""Show inventory panel and refresh contents"""
 	print("QuickInventory: Showing")
+	z_index = 100  # Ensure it appears on top
 	show()
 	refresh_inventory()
 

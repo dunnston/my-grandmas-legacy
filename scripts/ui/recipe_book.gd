@@ -61,6 +61,7 @@ func toggle_recipe_book() -> void:
 func show_recipe_book() -> void:
 	"""Show recipe book panel and refresh contents"""
 	print("RecipeBook: Showing")
+	z_index = 100  # Ensure it appears on top
 	show()
 	refresh_recipe_list()
 

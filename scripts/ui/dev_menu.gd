@@ -31,6 +31,7 @@ var all_products: Array[String] = ["white_bread", "chocolate_chip_cookies", "blu
 
 func _ready() -> void:
 	# Start hidden
+	z_index = 50  # Lower than quick inventory/recipe book
 	hide()
 
 	# Populate inventory buttons
