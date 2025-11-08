@@ -27,6 +27,9 @@ var daily_report: Dictionary = {}
 var ingredient_order: Dictionary = {}
 var active_campaigns: Array = []
 
+# Constants
+const INGREDIENT_STORAGE_ID: String = "ingredient_storage_IngredientStorage"  # Matches InventoryManager convention
+
 func _ready() -> void:
 	hide()  # Hidden by default
 
@@ -221,7 +224,7 @@ func _on_next_day_pressed() -> void:
 	# Add ingredients to storage
 	for ingredient_id in ingredient_order:
 		var quantity: int = ingredient_order[ingredient_id]
-		InventoryManager.add_item("ingredient_storage_IngredientStorage", ingredient_id, quantity)
+		InventoryManager.add_item(INGREDIENT_STORAGE_ID, ingredient_id, quantity)
 		print("Ordered: %dx %s" % [quantity, ingredient_id])
 
 	print("Order complete!")

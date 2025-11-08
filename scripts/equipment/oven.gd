@@ -148,8 +148,13 @@ func start_baking(item_id: String) -> void:
 		light.light_color = Color(1.0, 0.6, 0.2)  # Orange glow
 
 	if mesh:
-		var mat = mesh.material
-		if mat:
+		# Safely set material emission
+		var mat = mesh.get_surface_override_material(0)
+		if not mat:
+			# Create material if it doesn't exist
+			mat = StandardMaterial3D.new()
+			mesh.set_surface_override_material(0, mat)
+		if mat and mat is StandardMaterial3D:
 			mat.emission_enabled = true
 			mat.emission = Color(1.0, 0.4, 0.1)
 			mat.emission_energy = 0.3
@@ -208,8 +213,9 @@ func complete_baking() -> void:
 		light.visible = false
 
 	if mesh:
-		var mat = mesh.material
-		if mat:
+		# Safely disable material emission
+		var mat = mesh.get_surface_override_material(0)
+		if mat and mat is StandardMaterial3D:
 			mat.emission_enabled = false
 
 func get_inventory_id() -> String:
