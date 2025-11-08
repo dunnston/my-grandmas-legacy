@@ -288,3 +288,60 @@ func get_baking_progress() -> float:
 	if not is_baking:
 		return 0.0
 	return baking_timer / baking_time
+
+# ============================================================================
+# AUTOMATION METHODS (for staff AI)
+# ============================================================================
+
+func auto_load_item(item_id: String) -> bool:
+	"""Load dough/batter into oven automatically (called by Baker AI)"""
+	if is_baking or has_finished_item:
+		return false
+
+	# Add item to oven inventory
+	InventoryManager.add_item(get_inventory_id(), item_id, 1)
+
+	# Determine recipe and result
+	current_item = item_id
+	current_recipe_id = _get_recipe_from_dough(item_id)
+
+	# Start baking
+	is_baking = true
+	baking_timer = 0.0
+
+	# Get recipe data for bake time
+	var recipe: Dictionary = RecipeManager.get_recipe(current_recipe_id)
+	if recipe:
+		target_bake_time = recipe.get("bake_time_seconds", baking_time)
+	else:
+		target_bake_time = baking_time
+
+	# Visual feedback
+	if light:
+		light.visible = true
+	if mesh:
+		var mat = mesh.get_surface_override_material(0)
+		if mat and mat is StandardMaterial3D:
+			mat.emission_enabled = true
+			mat.emission = Color(1.0, 0.5, 0.0)
+			mat.emission_energy_multiplier = 0.5
+
+	print("[Oven] Auto-loaded ", item_id, " - baking for ", target_bake_time, "s")
+	return true
+
+func auto_collect_baked_goods() -> bool:
+	"""Collect finished baked goods automatically (called by Baker AI)"""
+	if not has_finished_item:
+		return false
+
+	# The result is already in player inventory from complete_baking()
+	# Just clear the finished state
+	has_finished_item = false
+	print("[Oven] Auto-collected baked goods")
+	return true
+
+func _get_recipe_from_dough(dough_id: String) -> String:
+	"""Map dough/batter back to recipe ID"""
+	# Remove "_dough" or "_batter" suffix
+	var recipe_id: String = dough_id.replace("_dough", "").replace("_batter", "")
+	return recipe_id
