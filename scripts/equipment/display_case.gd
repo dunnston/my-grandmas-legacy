@@ -67,11 +67,27 @@ func open_display_ui(player: Node3D) -> void:
 		print("Bake something first!")
 
 func stock_item(player: Node3D, item_id: String, quantity: int) -> void:
-	if InventoryManager.transfer_item("player", get_inventory_id(), item_id, quantity):
-		print("Successfully stocked ", quantity, "x ", item_id)
-		item_stocked.emit(item_id, quantity)
-	else:
-		print("Error: Could not stock ", item_id)
+	# Check if there's an active bulk order for this item
+	var bulk_order_quantity: int = 0
+	if EventManager.has_active_bulk_order(item_id):
+		# Try to deliver to bulk order first
+		var delivered: bool = EventManager.deliver_to_bulk_order(item_id, quantity)
+		if delivered:
+			bulk_order_quantity = quantity
+			print("Delivered %d x %s to bulk order!" % [quantity, item_id])
+
+	# Stock remaining items in display case for regular customers
+	var remaining: int = quantity - bulk_order_quantity
+	if remaining > 0:
+		if InventoryManager.transfer_item("player", get_inventory_id(), item_id, remaining):
+			print("Successfully stocked ", remaining, "x ", item_id)
+			item_stocked.emit(item_id, remaining)
+		else:
+			print("Error: Could not stock ", item_id)
+	elif bulk_order_quantity > 0:
+		# All items went to bulk order, still need to remove from player
+		InventoryManager.remove_item("player", item_id, bulk_order_quantity)
+		item_stocked.emit(item_id, 0)  # None stocked in display, all to bulk order
 
 func get_inventory_id() -> String:
 	return "display_case"  # Fixed ID for customer access
