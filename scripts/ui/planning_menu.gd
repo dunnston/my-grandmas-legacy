@@ -324,7 +324,7 @@ func _add_campaign_card(campaign_id: String, campaign: Dictionary) -> void:
 
 	# Launch button
 	var launch_button: Button = Button.new()
-	var is_unlocked: bool = ProgressionManager.get_current_total_revenue() >= campaign.get("unlock_revenue", 0)
+	var is_unlocked: bool = ProgressionManager.get_total_revenue() >= campaign.get("unlock_revenue", 0)
 	var is_active: bool = _is_campaign_active(campaign_id)
 	var can_afford: bool = EconomyManager.can_afford(cost)
 
