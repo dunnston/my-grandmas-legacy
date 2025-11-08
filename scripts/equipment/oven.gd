@@ -339,9 +339,3 @@ func auto_collect_baked_goods() -> bool:
 	has_finished_item = false
 	print("[Oven] Auto-collected baked goods")
 	return true
-
-func _get_recipe_from_dough(dough_id: String) -> String:
-	"""Map dough/batter back to recipe ID"""
-	# Remove "_dough" or "_batter" suffix
-	var recipe_id: String = dough_id.replace("_dough", "").replace("_batter", "")
-	return recipe_id
