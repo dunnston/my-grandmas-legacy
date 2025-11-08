@@ -50,7 +50,7 @@ func _ready() -> void:
 
 	print("DevMenu initialized - Press ` to toggle")
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	# Toggle with backtick key
 	if event is InputEventKey and event.pressed and event.keycode == KEY_QUOTELEFT:
 		toggle_menu()
