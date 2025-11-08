@@ -247,10 +247,10 @@ func _ready() -> void:
 
 	# Connect to GameManager for day progression
 	if GameManager:
-		GameManager.connect("day_started", _on_day_started)
+		GameManager.connect("day_changed", _on_day_changed)
 		GameManager.connect("phase_changed", _on_phase_changed)
 
-func _on_day_started(day: int) -> void:
+func _on_day_changed(day: int) -> void:
 	"""Called when a new day starts - check for events"""
 	current_day = day
 	print("\n=== Day %d: Checking for Events ===" % day)

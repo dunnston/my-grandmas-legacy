@@ -162,13 +162,13 @@ func _ready() -> void:
 
 	# Connect to GameManager for day progression
 	if GameManager:
-		GameManager.connect("day_started", _on_day_started)
+		GameManager.connect("day_changed", _on_day_changed)
 
 func _on_milestone_reached(milestone_id: String, revenue_threshold: float) -> void:
 	"""Check for marketing campaign unlocks when milestones are reached"""
 	check_campaign_unlocks()
 
-func _on_day_started(day: int) -> void:
+func _on_day_changed(day: int) -> void:
 	"""Update active campaigns when a new day starts"""
 	update_campaigns(day)
 

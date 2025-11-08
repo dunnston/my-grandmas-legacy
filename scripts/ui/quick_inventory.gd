@@ -18,6 +18,10 @@ func _ready() -> void:
 	# Start hidden
 	hide()
 
+	# Connect to UIManager signals
+	if UIManager:
+		UIManager.quick_inventory_toggled.connect(_on_ui_manager_toggle)
+
 	# Connect close button
 	if close_button:
 		close_button.pressed.connect(_on_close_pressed)
@@ -26,15 +30,20 @@ func _ready() -> void:
 	if InventoryManager:
 		InventoryManager.inventory_changed.connect(_on_inventory_changed)
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Toggle on Tab key
-	if event.is_action_pressed("quick_inventory"):
-		toggle_inventory()
-		get_viewport().set_input_as_handled()
-		return
+func _on_ui_manager_toggle(is_open: bool) -> void:
+	"""Called when UIManager toggles quick inventory"""
+	is_visible = is_open
+	if is_open:
+		show_inventory()
+	else:
+		hide_inventory()
 
+func _unhandled_input(event: InputEvent) -> void:
 	# Allow ESC to close if visible
 	if visible and event.is_action_pressed("ui_cancel"):
+		# Update UIManager state when closing via ESC
+		if UIManager:
+			UIManager.quick_inventory_open = false
 		hide_inventory()
 		get_viewport().set_input_as_handled()
 		return
@@ -51,6 +60,7 @@ func toggle_inventory() -> void:
 func show_inventory() -> void:
 	"""Show inventory panel and refresh contents"""
 	print("QuickInventory: Showing")
+	z_index = 100  # Ensure it appears on top
 	show()
 	refresh_inventory()
 

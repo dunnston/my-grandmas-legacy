@@ -6,8 +6,8 @@ extends Node3D
 # Node references
 @onready var equipment: Node3D = $Equipment
 @onready var customers_container: Node3D = $Customers
-@onready var planning_menu: CanvasLayer = $PlanningMenu
-@onready var hud: CanvasLayer = $HUD
+@onready var planning_menu: CanvasLayer = $UILayer/PlanningMenu
+@onready var hud: CanvasLayer = $UILayer/HUD
 
 # Navigation markers
 @onready var entrance_marker: Marker3D = $NavigationMarkers/Entrance

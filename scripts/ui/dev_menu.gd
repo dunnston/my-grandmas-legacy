@@ -31,6 +31,7 @@ var all_products: Array[String] = ["white_bread", "chocolate_chip_cookies", "blu
 
 func _ready() -> void:
 	# Start hidden
+	z_index = 50  # Lower than quick inventory/recipe book
 	hide()
 
 	# Populate inventory buttons
@@ -50,7 +51,7 @@ func _ready() -> void:
 
 	print("DevMenu initialized - Press ` to toggle")
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	# Toggle with backtick key
 	if event is InputEventKey and event.pressed and event.keycode == KEY_QUOTELEFT:
 		toggle_menu()
