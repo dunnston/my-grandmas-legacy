@@ -2,6 +2,10 @@ extends Node
 
 # EconomyManager - Singleton for managing money, transactions, and economy
 # Tracks cash, daily revenue/expenses, and provides transaction methods
+#
+# BALANCE CONFIG INTEGRATION:
+# This manager now loads starting cash and ingredient prices from BalanceConfig.
+# To adjust economy balance, modify scripts/autoload/balance_config.gd instead of this file.
 
 # Signals
 signal money_changed(new_amount: float)
@@ -9,28 +13,22 @@ signal transaction_completed(amount: float, description: String, is_income: bool
 signal daily_report_ready(revenue: float, expenses: float, profit: float)
 
 # Economy state
-var current_cash: float = 200.0  # Starting cash from GDD
+var current_cash: float = 0.0  # Set in _ready() from BalanceConfig
 var daily_revenue: float = 0.0
 var daily_expenses: float = 0.0
 
 # Transaction history (for current day)
 var transaction_history: Array[Dictionary] = []
 
-# Pricing data (can be expanded with recipe-specific pricing later)
-var ingredient_prices: Dictionary = {
-	"flour": 2.0,
-	"sugar": 3.0,
-	"eggs": 4.0,
-	"butter": 5.0,
-	"milk": 3.0,
-	"yeast": 2.5,
-	"chocolate_chips": 6.0,
-	"blueberries": 7.0,
-	"vanilla": 4.0,
-	"salt": 1.0
-}
+# Pricing data - NOW LOADED FROM BalanceConfig!
+# Use get_ingredient_price() instead of accessing this directly
+var ingredient_prices: Dictionary = {}
 
 func _ready() -> void:
+	# Load balance config values
+	current_cash = BalanceConfig.ECONOMY.starting_cash
+	ingredient_prices = BalanceConfig.ECONOMY.ingredient_prices.duplicate()
+
 	print("EconomyManager initialized")
 	print("Starting cash: $", current_cash)
 
