@@ -32,6 +32,7 @@ enum Mood {
 var customer_id: String = ""
 var current_state: State = State.ENTERING
 var current_mood: Mood = Mood.NEUTRAL
+var _last_logged_mood: Mood = Mood.NEUTRAL  # Track mood changes for logging
 
 # Movement
 var move_speed: float = 3.0
@@ -53,8 +54,12 @@ var exit_position: Vector3 = Vector3.ZERO
 # Satisfaction factors
 var satisfaction_score: float = 50.0  # 0-100
 
+# Static counter for unique IDs
+static var _customer_counter: int = 0
+
 func _ready() -> void:
-	customer_id = "customer_" + str(Time.get_ticks_msec())
+	_customer_counter += 1
+	customer_id = "customer_%d_%d" % [Time.get_ticks_msec(), _customer_counter]
 
 	# Configure navigation agent
 	if navigation_agent:
@@ -66,24 +71,32 @@ func _ready() -> void:
 
 	print("Customer spawned: ", customer_id)
 
-func _physics_process(delta: float) -> void:
-	# Update state machine
+func _process(delta: float) -> void:
+	# Update state machine (AI logic in _process, not _physics_process)
 	match current_state:
-		State.ENTERING:
-			_state_entering(delta)
 		State.BROWSING:
 			_state_browsing(delta)
-		State.WAITING_CHECKOUT:
-			_state_waiting_checkout(delta)
 		State.CHECKING_OUT:
 			_state_checking_out(delta)
-		State.LEAVING:
-			_state_leaving(delta)
 		State.EXITED:
 			pass  # Do nothing, waiting for cleanup
+		_:
+			pass  # Movement states handled in _physics_process
 
 	# Update mood based on patience
 	_update_mood()
+
+func _physics_process(delta: float) -> void:
+	# Only handle movement and navigation in physics process
+	match current_state:
+		State.ENTERING:
+			_state_entering(delta)
+		State.WAITING_CHECKOUT:
+			_state_waiting_checkout(delta)
+		State.LEAVING:
+			_state_leaving(delta)
+		_:
+			pass  # Non-movement states handled in _process
 
 func initialize(entrance: Vector3, display: Vector3, register: Vector3, exit: Vector3) -> void:
 	"""Initialize customer with target positions"""
@@ -209,14 +222,15 @@ func _select_items_to_purchase() -> void:
 		print(customer_id, ": No items in display case")
 		return
 
-	# Pick random items
+	# Pick random items (no duplicates)
 	var num_items: int = randi_range(1, min(3, available_items.size()))
+	available_items.shuffle()  # Randomize order
 	for i in range(num_items):
-		var random_item: String = available_items.pick_random()
-		selected_items.append({
-			"item_id": random_item,
-			"quantity": 1
-		})
+		if i < available_items.size():
+			selected_items.append({
+				"item_id": available_items[i],
+				"quantity": randi_range(1, 2)  # Customer may want 1-2 of each item
+			})
 
 	print(customer_id, ": Selected ", selected_items.size(), " items to purchase")
 
@@ -225,16 +239,23 @@ func get_selected_items() -> Array[Dictionary]:
 	return selected_items
 
 func get_total_cost() -> float:
-	"""Calculate total cost of selected items"""
+	"""Calculate total cost of selected items (with quality-adjusted pricing)"""
 	var total: float = 0.0
 
 	for item_data in selected_items:
 		var item_id: String = item_data["item_id"]
 
 		# Look up price from RecipeManager
-		var recipe: Dictionary = RecipeManager.get_recipe(item_id)
+		var recipe: Dictionary = RecipeManager.get_recipe(item_id) if RecipeManager else {}
 		if not recipe.is_empty():
-			var price: float = recipe.get("base_price", 0.0)
+			var base_price: float = recipe.get("base_price", 0.0)
+			var price: float = base_price
+
+			# Check for quality metadata to get actual price
+			var metadata: Dictionary = InventoryManager.get_item_metadata("display_case", item_id)
+			if metadata.has("quality_data") and QualityManager:
+				price = QualityManager.get_price_for_quality(base_price, metadata.quality_data)
+
 			total += price * item_data["quantity"]
 
 	return total
@@ -283,12 +304,19 @@ func _calculate_final_satisfaction() -> void:
 
 func _update_mood() -> void:
 	"""Update mood based on patience"""
+	var old_mood = current_mood
+
 	if patience > 60:
 		current_mood = Mood.HAPPY
 	elif patience > 30:
 		current_mood = Mood.NEUTRAL
 	else:
 		current_mood = Mood.UNHAPPY
+
+	# Only log when mood changes (performance optimization)
+	if old_mood != current_mood and _last_logged_mood != current_mood:
+		print(customer_id, ": Mood changed to ", Mood.keys()[current_mood], " (patience: %.0f%%)" % patience)
+		_last_logged_mood = current_mood
 
 # Getters
 func get_mood() -> Mood:

@@ -52,15 +52,16 @@ func open_display_ui(player: Node3D) -> void:
 	var player_inventory = InventoryManager.get_inventory("player")
 	var has_goods: bool = false
 
-	# Look for finished products (must match oven output and recipe IDs)
-	var finished_goods = ["white_bread", "chocolate_chip_cookies", "blueberry_muffins"]
-
+	# Look for finished products (any valid recipe that's not dough/batter)
 	for item_id in player_inventory.keys():
-		if item_id in finished_goods:
-			var quantity = player_inventory[item_id]
-			print("\nStocking ", quantity, "x ", item_id, " in display case...")
-			stock_item(player, item_id, quantity)
-			has_goods = true
+		# Check if this is a finished product (not dough/batter intermediate)
+		if not item_id.ends_with("_dough") and not item_id.ends_with("_batter"):
+			# Verify it's a valid recipe
+			if RecipeManager and RecipeManager.get_recipe(item_id) != {}:
+				var quantity = player_inventory[item_id]
+				print("\nStocking ", quantity, "x ", item_id, " in display case...")
+				stock_item(player, item_id, quantity)
+				has_goods = true
 
 	if not has_goods:
 		print("You don't have any finished goods to stock!")
@@ -69,7 +70,7 @@ func open_display_ui(player: Node3D) -> void:
 func stock_item(player: Node3D, item_id: String, quantity: int) -> void:
 	# Check if there's an active bulk order for this item
 	var bulk_order_quantity: int = 0
-	if EventManager.has_active_bulk_order(item_id):
+	if EventManager and EventManager.has_active_bulk_order(item_id):
 		# Try to deliver to bulk order first
 		var delivered: bool = EventManager.deliver_to_bulk_order(item_id, quantity)
 		if delivered:

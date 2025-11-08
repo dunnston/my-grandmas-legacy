@@ -54,7 +54,8 @@ func start_baking_phase() -> void:
 	print("Prepare goods for the day!")
 
 	# Stop customer spawning if it was active
-	CustomerManager.stop_spawning()
+	if CustomerManager:
+		CustomerManager.stop_spawning()
 	resume_game()
 
 func start_business_phase() -> void:
@@ -64,7 +65,8 @@ func start_business_phase() -> void:
 	print("Shop opens at 9 AM")
 
 	# Start spawning customers
-	CustomerManager.start_spawning()
+	if CustomerManager:
+		CustomerManager.start_spawning()
 	resume_game()
 
 func start_cleanup_phase() -> void:
@@ -73,13 +75,13 @@ func start_cleanup_phase() -> void:
 	print("Time to clean up!")
 
 	# Stop customer spawning
-	CustomerManager.stop_spawning()
+	if CustomerManager:
+		CustomerManager.stop_spawning()
+		# Clear any remaining customers
+		CustomerManager.clear_all_customers()
 
-	# Clear any remaining customers
-	CustomerManager.clear_all_customers()
-
-	# Auto-complete cleanup phase after brief delay
-	await get_tree().create_timer(2.0).timeout
+	# Auto-complete cleanup phase after brief delay (respects pause state)
+	await get_tree().create_timer(2.0, false).timeout
 	start_planning_phase()
 
 func start_planning_phase() -> void:
@@ -88,7 +90,8 @@ func start_planning_phase() -> void:
 	print("Review the day and plan for tomorrow")
 
 	# Auto-save before planning
-	SaveManager.auto_save()
+	if SaveManager:
+		SaveManager.auto_save()
 
 	# Note: Planning menu will be opened by the bakery scene
 

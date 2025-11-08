@@ -121,6 +121,10 @@ func _on_customer_purchase_complete(items: Array, total: float, customer: Node3D
 
 func _on_customer_left(customer: Node3D) -> void:
 	"""Called when a customer leaves the bakery"""
+	# Check if customer is still valid before accessing
+	if not is_instance_valid(customer):
+		return
+
 	var satisfaction: float = customer.get_satisfaction() if customer.has_method("get_satisfaction") else 50.0
 
 	print("CustomerManager: Customer left (Satisfaction: %.0f%%)" % satisfaction)
@@ -230,7 +234,8 @@ func calculate_spawn_interval() -> void:
 	var customers_per_hour: float = base_customers_per_hour * reputation_modifier * day_of_week_modifier * current_traffic_modifier
 
 	# Convert to spawn interval (seconds between spawns)
-	spawn_interval = 60.0 / customers_per_hour
+	# Ensure minimum customers_per_hour to prevent division by zero
+	spawn_interval = 60.0 / max(customers_per_hour, 0.1)
 	spawn_interval = clamp(spawn_interval, 3.0, 120.0)  # Min 3s, max 120s between customers
 
 	print("Traffic calculation: %.1f customers/hour (interval: %.1fs)" % [customers_per_hour, spawn_interval])
@@ -302,10 +307,8 @@ func get_projected_daily_customers() -> int:
 
 # Save/Load support
 func get_save_data() -> Dictionary:
-	# Clear active customers before saving to prevent stale customer state
-	# Customers will naturally respawn when business phase starts
-	clear_all_customers()
-
+	# Note: We don't save active customers - they'll respawn naturally
+	# when business phase starts based on traffic calculations
 	return {
 		"customers_served_today": customers_served_today,
 		"total_satisfaction_today": total_satisfaction_today
