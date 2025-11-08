@@ -329,6 +329,33 @@ const CUSTOMERS = {
 	# Movement
 	"customer_move_speed": 3.0,
 	"customer_rotation_speed": 10.0,
+
+	# Customer Types (GDD Section 4.2.1)
+	"customer_type_regular_weight": 0.3,     # 30% after unlocked
+	"customer_type_tourist_weight": 0.25,    # 25%
+	"customer_type_local_weight": 0.45,      # 45% (default type)
+	"customer_type_regular_unlock": 5,       # Unlock after 5 happy visits from same customer
+
+	# Price Tolerance (GDD Section 4.2.4, Lines 278-286)
+	"price_tolerance_base_min": 0.8,         # Customers accept 80% to 150% of base price
+	"price_tolerance_base_max": 1.5,
+
+	# Customer Type Price Tolerance Modifiers
+	"regular_price_min": 0.7,                # Regulars: More forgiving (70%-160%)
+	"regular_price_max": 1.6,
+	"tourist_price_min": 0.9,                # Tourists: Less price-sensitive (90%-180%)
+	"tourist_price_max": 1.8,
+	"local_price_min": 0.75,                 # Locals: Price-conscious (75%-130%)
+	"local_price_max": 1.3,
+
+	# Quality affects price tolerance
+	"quality_excellent_price_bonus": 0.2,    # +20% tolerance for excellent quality
+	"quality_perfect_price_bonus": 0.3,      # +30% tolerance for perfect quality
+	"quality_poor_price_penalty": 0.15,      # -15% tolerance for poor quality
+
+	# Reputation affects price tolerance
+	"reputation_high_price_bonus": 0.1,      # +10% tolerance at 75+ reputation
+	"reputation_low_price_penalty": 0.1,     # -10% tolerance at <30 reputation
 }
 
 ## =============================================================================
@@ -380,6 +407,11 @@ const EQUIPMENT = {
 	# Base Equipment Times
 	"mixing_bowl_base_time": 60.0,
 	"oven_base_time": 300.0,
+	"cooling_rack_base_time": 45.0,
+	"cooling_rack_max_slots": 6,
+	"cooling_rack_rush_penalty": 30.0,  # Quality penalty (%) if removed too early
+	"decorating_station_base_time": 90.0,
+	"decorating_station_value_multiplier": 1.3,  # 30% price increase
 
 	# Equipment Upgrade Costs
 	"oven_tier_1_cost": 2000.0,
@@ -433,6 +465,18 @@ const EQUIPMENT = {
 	"kitchen_expansion_cost": 10000.0,
 	"kitchen_expansion_unlock": 25000.0,
 	"kitchen_expansion_slots": 2,
+
+	# Cooling Rack
+	"cooling_rack_tier_1_cost": 500.0,
+	"cooling_rack_tier_1_unlock": 500.0,
+	"cooling_rack_tier_2_cost": 1200.0,
+	"cooling_rack_tier_2_unlock": 5000.0,
+	"cooling_rack_tier_2_slots": 10,  # Upgraded capacity
+
+	# Decorating Station (unlocks at $10,000)
+	"decorating_station_cost": 1500.0,
+	"decorating_station_unlock": 10000.0,
+	"decorating_station_quality_bonus": 5,  # +5% quality
 }
 
 ## =============================================================================
