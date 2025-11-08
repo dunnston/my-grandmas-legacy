@@ -2,6 +2,10 @@ extends Node
 
 # RecipeManager - Singleton for managing recipes and crafting data
 # Stores all recipe information, ingredients, times, and prices
+#
+# BALANCE CONFIG INTEGRATION:
+# Recipe times and prices can be adjusted via BalanceConfig.
+# Individual recipe values are multiplied by global multipliers from balance_config.gd
 
 # Signals
 signal recipe_unlocked(recipe_id: String)
@@ -687,6 +691,19 @@ func register_recipe(recipe_data: Dictionary) -> void:
 
 	var recipe_id: String = recipe_data["id"]
 	recipe_data["unlocked"] = false  # Default to locked
+
+	# Apply BalanceConfig multipliers if available
+	if BalanceConfig:
+		# Apply time multipliers
+		if recipe_data.has("mixing_time"):
+			recipe_data["mixing_time"] *= BalanceConfig.RECIPES.mixing_time_multiplier
+		if recipe_data.has("baking_time"):
+			recipe_data["baking_time"] *= BalanceConfig.RECIPES.baking_time_multiplier
+
+		# Apply price multiplier from BalanceConfig helper function
+		if recipe_data.has("base_price"):
+			recipe_data["base_price"] = BalanceConfig.get_recipe_price(recipe_id)
+
 	recipes[recipe_id] = recipe_data
 	print("Recipe registered: ", recipe_data.get("name", recipe_id))
 
