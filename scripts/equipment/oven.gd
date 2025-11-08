@@ -21,6 +21,7 @@ var target_bake_time: float = 0.0
 var current_item: String = ""
 var current_recipe_id: String = ""
 var player_nearby: Node3D = null
+var has_finished_item: bool = false  # For AI automation - tracks if baked goods ready to collect
 
 # Note: Baking recipes are now loaded dynamically from RecipeManager
 # This supports all 27 recipes instead of just 3!
@@ -270,6 +271,7 @@ func complete_baking() -> void:
 	target_bake_time = 0.0
 	current_item = ""
 	current_recipe_id = ""
+	has_finished_item = true  # Flag for AI that goods are ready to collect
 
 	# Turn off visual feedback
 	if light:
