@@ -25,6 +25,13 @@ enum Mood {
 	UNHAPPY
 }
 
+# GDD Section 4.2.1: Customer Types
+enum CustomerType {
+	LOCAL,      # Price-conscious, want staples
+	TOURIST,    # Less price-sensitive, want variety
+	REGULAR     # Forgiving on price/wait, consistent orders
+}
+
 # Node references
 @onready var navigation_agent: NavigationAgent3D = $NavigationAgent3D
 
@@ -33,6 +40,7 @@ var customer_id: String = ""
 var current_state: State = State.ENTERING
 var current_mood: Mood = Mood.NEUTRAL
 var _last_logged_mood: Mood = Mood.NEUTRAL  # Track mood changes for logging
+var customer_type: CustomerType = CustomerType.LOCAL  # Default type
 
 # Movement
 var move_speed: float = 3.0
@@ -203,7 +211,7 @@ func _is_at_target() -> bool:
 
 # Shopping logic
 func _select_items_to_purchase() -> void:
-	"""Select items from display case based on what's available"""
+	"""Select items from display case based on what's available and price tolerance"""
 	# Get available items from display case
 	var display_inventory: Dictionary = InventoryManager.get_inventory("display_case")
 
@@ -211,16 +219,28 @@ func _select_items_to_purchase() -> void:
 		print(customer_id, ": Display case is empty!")
 		return
 
-	# For now, randomly select 1-3 items from what's available
+	# Filter items by availability AND price tolerance (GDD Section 4.2.4)
 	var available_items: Array = []
+	var rejected_count: int = 0
+
 	for item_id in display_inventory:
 		var quantity: int = display_inventory[item_id]
 		if quantity > 0:
-			available_items.append(item_id)
+			# Check if customer accepts the price
+			if _check_price_acceptable(item_id):
+				available_items.append(item_id)
+			else:
+				rejected_count += 1
 
 	if available_items.is_empty():
-		print(customer_id, ": No items in display case")
+		if rejected_count > 0:
+			print(customer_id, ": All items too expensive! (rejected ", rejected_count, " items)")
+		else:
+			print(customer_id, ": No items in display case")
 		return
+
+	if rejected_count > 0:
+		print(customer_id, ": Rejected ", rejected_count, " items due to high prices")
 
 	# Pick random items (no duplicates)
 	var num_items: int = randi_range(1, min(3, available_items.size()))
@@ -330,3 +350,92 @@ func get_state() -> State:
 
 func is_waiting_at_register() -> bool:
 	return current_state == State.CHECKING_OUT
+
+func get_customer_type() -> CustomerType:
+	return customer_type
+
+func set_customer_type(type: CustomerType) -> void:
+	customer_type = type
+	print(customer_id, ": Customer type set to ", CustomerType.keys()[type])
+
+# Price Tolerance System (GDD Section 4.2.4, Lines 278-286)
+func _check_price_acceptable(item_id: String) -> bool:
+	"""Check if customer accepts the current price for an item"""
+	if not RecipeManager:
+		return true  # Default accept if no price system
+
+	# Get recipe and current price
+	var recipe: Dictionary = RecipeManager.get_recipe(item_id)
+	if recipe.is_empty():
+		return true
+
+	var base_price: float = recipe.get("base_price", 0.0)
+	var current_price: float = base_price
+
+	# Check for quality-adjusted price
+	var metadata: Dictionary = InventoryManager.get_item_metadata("display_case", item_id)
+	if metadata.has("quality_data") and QualityManager:
+		current_price = QualityManager.get_price_for_quality(base_price, metadata.quality_data)
+
+	# Check for player-set price (will be implemented next)
+	if RecipeManager.has_method("get_player_price"):
+		var player_price = RecipeManager.get_player_price(item_id)
+		if player_price > 0:
+			current_price = player_price
+
+	# Calculate price tolerance based on customer type
+	var tolerance_range = _get_price_tolerance_range(item_id, metadata)
+	var min_acceptable = base_price * tolerance_range.min
+	var max_acceptable = base_price * tolerance_range.max
+
+	var acceptable = current_price >= min_acceptable and current_price <= max_acceptable
+
+	if not acceptable:
+		print(customer_id, " (%s): Rejected %s - $%.2f not in range $%.2f-$%.2f" % [
+			CustomerType.keys()[customer_type],
+			item_id,
+			current_price,
+			min_acceptable,
+			max_acceptable
+		])
+
+	return acceptable
+
+func _get_price_tolerance_range(item_id: String, metadata: Dictionary) -> Dictionary:
+	"""Calculate min/max price tolerance for this customer"""
+	# Base tolerance from customer type
+	var min_tolerance: float = BalanceConfig.CUSTOMERS.price_tolerance_base_min
+	var max_tolerance: float = BalanceConfig.CUSTOMERS.price_tolerance_base_max
+
+	# Apply customer type modifiers
+	match customer_type:
+		CustomerType.REGULAR:
+			min_tolerance = BalanceConfig.CUSTOMERS.regular_price_min
+			max_tolerance = BalanceConfig.CUSTOMERS.regular_price_max
+		CustomerType.TOURIST:
+			min_tolerance = BalanceConfig.CUSTOMERS.tourist_price_min
+			max_tolerance = BalanceConfig.CUSTOMERS.tourist_price_max
+		CustomerType.LOCAL:
+			min_tolerance = BalanceConfig.CUSTOMERS.local_price_min
+			max_tolerance = BalanceConfig.CUSTOMERS.local_price_max
+
+	# Quality affects tolerance (GDD: quality and reputation affect acceptance)
+	if metadata.has("quality_data") and metadata.quality_data.has("quality"):
+		var quality: float = metadata.quality_data.quality
+		if quality >= 95:  # Excellent/Perfect
+			if quality >= 100:
+				max_tolerance += BalanceConfig.CUSTOMERS.quality_perfect_price_bonus
+			else:
+				max_tolerance += BalanceConfig.CUSTOMERS.quality_excellent_price_bonus
+		elif quality < 70:  # Poor quality
+			max_tolerance -= BalanceConfig.CUSTOMERS.quality_poor_price_penalty
+
+	# Reputation affects tolerance
+	if ReputationManager:
+		var reputation = ReputationManager.get_reputation()
+		if reputation >= 75:
+			max_tolerance += BalanceConfig.CUSTOMERS.reputation_high_price_bonus
+		elif reputation < 30:
+			max_tolerance -= BalanceConfig.CUSTOMERS.reputation_low_price_penalty
+
+	return {"min": min_tolerance, "max": max_tolerance}

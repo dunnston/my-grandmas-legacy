@@ -97,6 +97,11 @@ func spawn_customer() -> Node3D:
 	# Initialize with navigation targets
 	customer.initialize(entrance_position, display_case_position, register_position, exit_position)
 
+	# Set customer type (GDD Section 4.2.1)
+	if customer.has_method("set_customer_type"):
+		var customer_type = _select_customer_type()
+		customer.set_customer_type(customer_type)
+
 	# Connect signals
 	customer.purchase_complete.connect(_on_customer_purchase_complete.bind(customer))
 	customer.left_bakery.connect(_on_customer_left.bind(customer))
@@ -320,3 +325,28 @@ func load_save_data(data: Dictionary) -> void:
 	if data.has("total_satisfaction_today"):
 		total_satisfaction_today = data["total_satisfaction_today"]
 	print("CustomerManager data loaded")
+
+# Customer Type Selection (GDD Section 4.2.1, Lines 252-259)
+func _select_customer_type() -> int:
+	"""Select customer type based on weighted random distribution"""
+	# Customer types:
+	# - LOCAL (45%): Price-conscious, want staples
+	# - TOURIST (25%): Less price-sensitive, want variety
+	# - REGULAR (30%): Forgiving on price/wait (requires unlock)
+
+	var local_weight = BalanceConfig.CUSTOMERS.customer_type_local_weight
+	var tourist_weight = BalanceConfig.CUSTOMERS.customer_type_tourist_weight
+	var regular_weight = BalanceConfig.CUSTOMERS.customer_type_regular_weight
+
+	# For now, don't track "regular unlock" - just use weights
+	# TODO: Track happy customer visits and unlock regulars after 5 happy visits
+
+	var total_weight = local_weight + tourist_weight + regular_weight
+	var random_value = randf() * total_weight
+
+	if random_value < local_weight:
+		return 0  # CustomerType.LOCAL
+	elif random_value < (local_weight + tourist_weight):
+		return 1  # CustomerType.TOURIST
+	else:
+		return 2  # CustomerType.REGULAR
