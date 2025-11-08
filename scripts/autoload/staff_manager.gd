@@ -88,7 +88,7 @@ func hire_staff(applicant_data: Dictionary) -> bool:
 
 	# Check if can afford first day's wage
 	var daily_wage: float = wage_rates[applicant_data.skill]
-	if EconomyManager.get_cash() < daily_wage:
+	if EconomyManager.get_current_cash() < daily_wage:
 		print("Cannot hire - insufficient funds for wage")
 		return false
 
@@ -270,7 +270,7 @@ func get_applicant_pool() -> Array:
 func can_afford_staff(applicant_data: Dictionary) -> bool:
 	"""Check if player can afford to hire this applicant"""
 	var daily_wage: float = wage_rates[applicant_data.skill]
-	return EconomyManager.get_cash() >= daily_wage
+	return EconomyManager.get_current_cash() >= daily_wage
 
 # ============================================================================
 # UPGRADES
