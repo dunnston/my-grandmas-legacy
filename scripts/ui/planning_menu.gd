@@ -22,6 +22,10 @@ signal next_day_started()
 
 @onready var next_day_button: Button = $Panel/VBoxContainer/NextDayButton
 
+# Staff hiring panel (created dynamically)
+var staff_hiring_panel: VBoxContainer
+var staff_tab_index: int = -1
+
 # State
 var daily_report: Dictionary = {}
 var ingredient_order: Dictionary = {}
@@ -36,6 +40,9 @@ func _ready() -> void:
 	if next_day_button:
 		next_day_button.pressed.connect(_on_next_day_pressed)
 
+	# Create staff hiring tab
+	_create_staff_tab()
+
 	print("PlanningMenu initialized")
 
 func open_menu() -> void:
@@ -47,6 +54,7 @@ func open_menu() -> void:
 	_display_daily_report()
 	_setup_ingredient_ordering()
 	_setup_marketing_campaigns()
+	_setup_staff_hiring()
 
 	print("\n=== PLANNING PHASE ===")
 	print("Review your day and prepare for tomorrow!")
@@ -346,3 +354,32 @@ func _on_launch_campaign(campaign_id: String, cost: float) -> void:
 		_setup_marketing_campaigns()
 	else:
 		print("Failed to launch campaign: ", campaign_id)
+
+# ============================================================================
+# STAFF HIRING TAB
+# ============================================================================
+
+func _create_staff_tab() -> void:
+	"""Create the Staff tab in the TabContainer"""
+	if not tab_container:
+		print("ERROR: TabContainer not found!")
+		return
+
+	# Create a new tab for Staff
+	var staff_scroll: ScrollContainer = ScrollContainer.new()
+	staff_scroll.name = "Staff"
+	tab_container.add_child(staff_scroll)
+
+	# Load the staff hiring panel script
+	var StaffHiringPanel = load("res://scripts/ui/staff_hiring_panel.gd")
+	staff_hiring_panel = StaffHiringPanel.new()
+	staff_hiring_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	staff_scroll.add_child(staff_hiring_panel)
+
+	staff_tab_index = tab_container.get_child_count() - 1
+	print("Staff tab created at index: ", staff_tab_index)
+
+func _setup_staff_hiring() -> void:
+	"""Refresh the staff hiring panel"""
+	if staff_hiring_panel and staff_hiring_panel.has_method("refresh_display"):
+		staff_hiring_panel.refresh_display()
