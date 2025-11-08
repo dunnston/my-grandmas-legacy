@@ -100,10 +100,25 @@ func _refresh_equipment_inventory() -> void:
 		for item_id in inventory:
 			var quantity = inventory[item_id]
 			if quantity > 0:
+				# Skip the finished product (it's shown separately)
+				if mixing_bowl_script and mixing_bowl_script.has_finished_item and item_id == mixing_bowl_script.current_item:
+					continue
+
 				var button = _create_item_button(item_id, quantity)
 				button.disabled = mixing_bowl_script.is_mixing  # Can't remove while mixing
+				button.pressed.connect(_on_equipment_item_clicked.bind(item_id))
 				equipment_container.add_child(button)
 				equipment_buttons.append(button)
+
+	# Add "Start Mixing" button if we have ingredients and not currently mixing
+	if not inventory.is_empty() and mixing_bowl_script and not mixing_bowl_script.is_mixing and not mixing_bowl_script.has_finished_item:
+		var start_button = Button.new()
+		start_button.text = "▶ Start Mixing"
+		start_button.custom_minimum_size = Vector2(200, 50)
+		start_button.modulate = Color(0.2, 0.8, 0.2)
+		start_button.pressed.connect(_on_start_mixing_pressed)
+		equipment_container.add_child(start_button)
+		equipment_buttons.append(start_button)
 
 	# Show finished product if available
 	if mixing_bowl_script and mixing_bowl_script.has_finished_item:
@@ -188,3 +203,24 @@ func _on_collect_finished_product() -> void:
 
 	# Refresh display
 	_refresh_inventories()
+
+func _on_start_mixing_pressed() -> void:
+	"""Check for valid recipe and start mixing"""
+	if not mixing_bowl_script:
+		return
+
+	# Get current ingredients in the bowl
+	var bowl_inventory = InventoryManager.get_inventory(equipment_inventory_id)
+
+	# Check each unlocked recipe to see if we can make it
+	var unlocked_recipes = RecipeManager.get_all_unlocked_recipes()
+	for recipe in unlocked_recipes:
+		if RecipeManager.can_craft_recipe(recipe["id"], bowl_inventory):
+			print("Starting to mix: %s" % recipe["name"])
+			mixing_bowl_script.start_crafting(recipe, recipe["id"])
+			_refresh_inventories()
+			return
+
+	# No valid recipe found
+	print("These ingredients don't match any known recipe!")
+	# TODO: Show error message in UI

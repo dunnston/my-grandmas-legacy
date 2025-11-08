@@ -19,6 +19,21 @@ var current_recipe: Dictionary = {}
 var current_recipe_id: String = ""
 var player_nearby: Node3D = null
 
+# UI compatibility aliases
+var is_mixing: bool:
+	get: return is_crafting
+	set(value): is_crafting = value
+
+var mixing_timer: float:
+	get: return crafting_timer
+	set(value): crafting_timer = value
+
+var target_mix_time: float:
+	get: return mixing_time
+
+var has_finished_item: bool = false
+var current_item: String = ""
+
 # Note: Recipes are now loaded dynamically from RecipeManager
 # This allows access to all 27 recipes instead of just 3!
 
@@ -87,11 +102,8 @@ func get_interaction_prompt() -> String:
 	return "[E] Use Mixing Bowl"
 
 func interact(player: Node3D) -> void:
-	if is_crafting:
-		print("Already mixing! Time remaining: ", mixing_time - crafting_timer, "s")
-		return
-
-	open_crafting_ui(player)
+	# Always open the visual UI
+	open_mixing_bowl_ui(player)
 
 func open_mixing_bowl_ui(player: Node3D) -> void:
 	"""Open the visual UI for the mixing bowl"""
@@ -187,16 +199,19 @@ func complete_crafting() -> void:
 	# Clear station ingredients (they were used)
 	InventoryManager.clear_inventory(get_inventory_id())
 
-	# Add result to player inventory
-	InventoryManager.add_item("player", result, 1)
+	# Set finished item state (for UI)
+	has_finished_item = true
+	current_item = result
+
+	# Add result to equipment inventory (not player - they need to collect it)
+	InventoryManager.add_item(get_inventory_id(), result, 1)
 
 	crafting_complete.emit(result)
 
-	# Reset state
+	# Reset crafting state but keep finished item flag
 	is_crafting = false
 	crafting_timer = 0.0
-	current_recipe = {}
-	current_recipe_id = ""
+	# Keep current_recipe and current_recipe_id for reference
 
 	# Visual feedback (reset color)
 	if mesh and mesh.get_surface_override_material_count() > 0:
