@@ -3,10 +3,11 @@ extends Node3D
 # Oven - Bakes dough into finished products
 
 signal baking_started(item_name: String)
-signal baking_complete(result_item: String)
+signal baking_complete(result_item: String, quality_data: Dictionary)
 signal item_burned
 
 @export var baking_time: float = 300.0  # 5 minutes game time
+@export var equipment_tier: int = 0  # 0 = basic, upgradeable later
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
@@ -16,21 +17,26 @@ signal item_burned
 # State
 var is_baking: bool = false
 var baking_timer: float = 0.0
+var target_bake_time: float = 0.0
 var current_item: String = ""
+var current_recipe_id: String = ""
 var player_nearby: Node3D = null
 
 # Baking recipes (dough/batter -> finished product)
 const BAKING_RECIPES = {
 	"white_bread_dough": {
 		"result": "white_bread",
+		"recipe_id": "white_bread",
 		"time": 300.0  # 5 minutes
 	},
 	"cookie_dough": {
 		"result": "chocolate_chip_cookies",
+		"recipe_id": "chocolate_chip_cookies",
 		"time": 180.0  # 3 minutes
 	},
 	"muffin_batter": {
 		"result": "blueberry_muffins",
+		"recipe_id": "blueberry_muffins",
 		"time": 240.0  # 4 minutes
 	}
 }
@@ -126,12 +132,14 @@ func start_baking(item_id: String) -> void:
 		return
 
 	current_item = item_id
+	current_recipe_id = BAKING_RECIPES[item_id].recipe_id
 	is_baking = true
 	baking_timer = 0.0
-	baking_time = BAKING_RECIPES[item_id].time
+	target_bake_time = BAKING_RECIPES[item_id].time
+	baking_time = target_bake_time
 
 	print("Started baking ", current_item, "!")
-	print("Baking time: ", baking_time, " seconds")
+	print("Target baking time: ", target_bake_time, " seconds")
 	baking_started.emit(item_id)
 
 	# Visual feedback
@@ -149,20 +157,51 @@ func start_baking(item_id: String) -> void:
 func complete_baking() -> void:
 	var result = BAKING_RECIPES[current_item].result
 	print("\n=== DING! ===")
+
+	# Get combined equipment tier (mixer + oven)
+	var combined_tier: int = equipment_tier  # Start with oven tier
+
+	# Try to find the mixing bowl to add its tier bonus
+	var mixing_bowl = get_node_or_null("../MixingBowl")
+	if mixing_bowl and mixing_bowl.has_method("get"):
+		var mixer_tier: int = mixing_bowl.get("equipment_tier") if "equipment_tier" in mixing_bowl else 0
+		combined_tier += mixer_tier
+		if mixer_tier > 0:
+			print("Equipment bonuses: Mixer (Tier %d) + Oven (Tier %d) = Total Tier %d" % [mixer_tier, equipment_tier, combined_tier])
+
+	# Calculate quality based on timing and equipment
+	var quality_data: Dictionary = QualityManager.calculate_quality(
+		current_recipe_id,
+		baking_timer,        # actual time
+		target_bake_time,    # target time
+		combined_tier        # combined equipment quality bonus
+	)
+
 	print("Baking complete! ", result, " is ready!")
+	print("Quality: %.1f%% (%s)%s" % [
+		quality_data.quality,
+		quality_data.tier_name,
+		" ✨ LEGENDARY!" if quality_data.is_legendary else ""
+	])
 
 	# Clear oven inventory (dough was consumed)
 	InventoryManager.clear_inventory(get_inventory_id())
 
-	# Add result to player inventory
+	# Add result to player inventory with quality data
+	# Note: For now, we'll add as base item. Later we can create quality-specific items
 	InventoryManager.add_item("player", result, 1)
 
-	baking_complete.emit(result)
+	# TODO: Store quality data with the inventory item
+	# This will require extending InventoryManager to support item metadata
+
+	baking_complete.emit(result, quality_data)
 
 	# Reset state
 	is_baking = false
 	baking_timer = 0.0
+	target_bake_time = 0.0
 	current_item = ""
+	current_recipe_id = ""
 
 	# Turn off visual feedback
 	if light:

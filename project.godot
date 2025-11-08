@@ -27,6 +27,11 @@ ProgressionManager="*res://scripts/autoload/progression_manager.gd"
 StoryManager="*res://scripts/autoload/story_manager.gd"
 UIManager="*res://scripts/autoload/ui_manager.gd"
 EventManager="*res://scripts/autoload/event_manager.gd"
+MarketingManager="*res://scripts/autoload/marketing_manager.gd"
+QualityManager="*res://scripts/autoload/quality_manager.gd"
+UpgradeManager="*res://scripts/autoload/upgrade_manager.gd"
+CleanlinessManager="*res://scripts/autoload/cleanliness_manager.gd"
+SceneManager="*res://scripts/autoload/scene_manager.gd"
 
 [input]
 
@@ -57,7 +62,7 @@ interact={
 }
 sprint={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name","","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194325,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194325,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
 quick_inventory={

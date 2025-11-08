@@ -151,6 +151,18 @@ func _collect_save_data() -> Dictionary:
 	if EventManager:
 		data["event_manager"] = EventManager.get_save_data()
 
+	# Marketing (campaigns, spending)
+	if MarketingManager:
+		data["marketing_manager"] = MarketingManager.get_save_data()
+
+	# Upgrades (purchased upgrades)
+	if UpgradeManager:
+		data["upgrade_manager"] = UpgradeManager.get_save_data()
+
+	# Cleanliness (chores, cleanliness level, staff)
+	if CleanlinessManager:
+		data["cleanliness_manager"] = CleanlinessManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -194,6 +206,18 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Events
 	if data.has("event_manager") and EventManager:
 		EventManager.load_save_data(data["event_manager"])
+
+	# Marketing
+	if data.has("marketing_manager") and MarketingManager:
+		MarketingManager.load_save_data(data["marketing_manager"])
+
+	# Upgrades
+	if data.has("upgrade_manager") and UpgradeManager:
+		UpgradeManager.load_save_data(data["upgrade_manager"])
+
+	# Cleanliness
+	if data.has("cleanliness_manager") and CleanlinessManager:
+		CleanlinessManager.load_save_data(data["cleanliness_manager"])
 
 	print("Applied save data to all managers")
 

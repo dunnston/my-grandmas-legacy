@@ -1,0 +1,118 @@
+[gd_scene load_steps=2 format=3 uid="uid://apartment_scene"]
+
+[ext_resource type="Script" path="res://scripts/apartment/apartment.gd" id="1"]
+
+[node name="Apartment" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+size = Vector3(10, 0.2, 8)
+material_override = null
+
+[node name="Walls" type="Node3D" parent="."]
+
+[node name="BackWall" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
+size = Vector3(10, 3, 0.2)
+
+[node name="LeftWall" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.5, 0)
+size = Vector3(0.2, 3, 8)
+
+[node name="RightWall" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.5, 0)
+size = Vector3(0.2, 3, 8)
+
+[node name="FrontWall" type="CSGBox3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 4)
+size = Vector3(10, 3, 0.2)
+
+[node name="Ceiling" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+size = Vector3(10, 0.2, 8)
+
+[node name="Furniture" type="Node3D" parent="."]
+
+[node name="Bed" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0.3, -2.5)
+size = Vector3(2, 0.6, 2.5)
+
+[node name="BedPillow" type="CSGBox3D" parent="Furniture/Bed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.8)
+size = Vector3(1.8, 0.2, 0.6)
+
+[node name="BedInteraction" type="Area3D" parent="Furniture/Bed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Furniture/Bed/BedInteraction"]
+
+[node name="Couch" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.4, 2)
+size = Vector3(3, 0.8, 1.2)
+
+[node name="CouchBack" type="CSGBox3D" parent="Furniture/Couch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -0.5)
+size = Vector3(3, 1, 0.2)
+
+[node name="TV" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.2, 3.8)
+size = Vector3(2, 1.2, 0.1)
+
+[node name="TVInteraction" type="Area3D" parent="Furniture/TV"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Furniture/TV/TVInteraction"]
+
+[node name="Bookshelf" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.7, 1, 2)
+size = Vector3(0.4, 2, 2)
+
+[node name="BookshelfInteraction" type="Area3D" parent="Furniture/Bookshelf"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Furniture/Bookshelf/BookshelfInteraction"]
+
+[node name="Table" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+size = Vector3(1.5, 0.8, 1)
+
+[node name="Chair" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.25, -1.2)
+size = Vector3(0.6, 0.5, 0.6)
+
+[node name="ChairBack" type="CSGBox3D" parent="Furniture/Chair"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -0.25)
+size = Vector3(0.6, 1, 0.1)
+
+[node name="GrandmaPhoto" type="CSGBox3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -3.9)
+size = Vector3(0.8, 1, 0.05)
+
+[node name="PhotoInteraction" type="Area3D" parent="Furniture/GrandmaPhoto"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Furniture/GrandmaPhoto/PhotoInteraction"]
+
+[node name="Lighting" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Lighting"]
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 5, 0)
+light_energy = 0.6
+shadow_enabled = true
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 0.8
+omni_range = 8.0
+
+[node name="StairsExit" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.5, 3.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StairsExit"]
+
+[node name="StairsMarker" type="CSGBox3D" parent="StairsExit"]
+size = Vector3(1, 1, 1)
+material_override = null
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 3, 6)

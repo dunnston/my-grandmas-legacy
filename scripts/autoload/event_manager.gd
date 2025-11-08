@@ -8,11 +8,17 @@ signal event_triggered(event_id: String, event_data: Dictionary)
 signal event_completed(event_id: String, success: bool)
 signal random_event_occurred(event_type: String)
 signal scheduled_event_started(event_name: String)
+signal bulk_order_created(order_data: Dictionary)
+signal bulk_order_progress(order_id: String, delivered: int, total: int)
+signal bulk_order_completed(order_id: String, success: bool, reward: Dictionary)
 
 # Event state
 var active_events: Array[Dictionary] = []
 var completed_events: Array[String] = []
 var current_day: int = 1
+
+# Bulk order tracking
+var active_bulk_orders: Array[Dictionary] = []  # [{order_id, item_id, quantity, delivered, deadline}]
 
 # Event definitions
 var random_events: Dictionary = {
@@ -451,12 +457,127 @@ func get_price_modifier() -> float:
 			modifier *= event["data"]["effects"]["price_boost"]
 	return modifier
 
+# Bulk Order System
+func create_bulk_order(item_id: String = "", quantity: int = 20) -> Dictionary:
+	"""Create a new bulk order request"""
+	var order_id: String = "bulk_order_" + str(Time.get_ticks_msec())
+
+	# If no item specified, choose a random unlocked recipe
+	if item_id == "":
+		var unlocked_recipes: Array = ProgressionManager.get_unlocked_recipes()
+		if unlocked_recipes.size() > 0:
+			item_id = unlocked_recipes[randi() % unlocked_recipes.size()]
+		else:
+			item_id = "white_bread"  # Fallback
+
+	var order: Dictionary = {
+		"order_id": order_id,
+		"item_id": item_id,
+		"quantity_requested": quantity,
+		"quantity_delivered": 0,
+		"deadline": "end_of_day",  # Must complete by end of business phase
+		"reward_multiplier": 1.5,
+		"created_day": current_day
+	}
+
+	active_bulk_orders.append(order)
+	bulk_order_created.emit(order)
+
+	print("📦 Bulk order created: %d x %s" % [quantity, item_id])
+	return order
+
+func deliver_to_bulk_order(item_id: String, quantity: int = 1) -> bool:
+	"""Deliver items to an active bulk order. Returns true if delivered."""
+	for order in active_bulk_orders:
+		if order["item_id"] == item_id and order["quantity_delivered"] < order["quantity_requested"]:
+			var delivered: int = min(quantity, order["quantity_requested"] - order["quantity_delivered"])
+			order["quantity_delivered"] += delivered
+
+			bulk_order_progress.emit(order["order_id"], order["quantity_delivered"], order["quantity_requested"])
+
+			print("Delivered %d x %s to bulk order (%d/%d)" % [
+				delivered,
+				item_id,
+				order["quantity_delivered"],
+				order["quantity_requested"]
+			])
+
+			# Check if order is complete
+			if order["quantity_delivered"] >= order["quantity_requested"]:
+				_complete_bulk_order(order, true)
+
+			return true
+
+	return false
+
+func _complete_bulk_order(order: Dictionary, success: bool) -> void:
+	"""Complete a bulk order (success or failure)"""
+	var reward: Dictionary = {}
+
+	if success:
+		# Calculate rewards
+		var base_recipe: Dictionary = RecipeManager.get_recipe(order["item_id"])
+		var base_price: float = base_recipe.get("sell_price", 5.0)
+		var cash_reward: float = base_price * order["quantity_requested"] * order["reward_multiplier"]
+		var reputation_reward: int = 5
+
+		reward = {
+			"cash": cash_reward,
+			"reputation": reputation_reward
+		}
+
+		EconomyManager.add_money(cash_reward, "Bulk order bonus")
+		ProgressionManager.modify_reputation(reputation_reward)
+
+		print("✅ Bulk order completed! Earned $%.2f and +%d reputation" % [cash_reward, reputation_reward])
+	else:
+		# Failure penalties
+		var reputation_penalty: int = -3
+		reward = {
+			"reputation": reputation_penalty
+		}
+
+		ProgressionManager.modify_reputation(reputation_penalty)
+		print("❌ Bulk order failed! %d reputation lost" % reputation_penalty)
+
+	bulk_order_completed.emit(order["order_id"], success, reward)
+
+	# Remove from active orders
+	active_bulk_orders.erase(order)
+
+func check_bulk_order_deadlines() -> void:
+	"""Check if any bulk orders have expired (call at end of business phase)"""
+	var expired_orders: Array[Dictionary] = []
+
+	for order in active_bulk_orders:
+		if order["quantity_delivered"] < order["quantity_requested"]:
+			expired_orders.append(order)
+
+	# Complete all expired orders as failures
+	for order in expired_orders:
+		_complete_bulk_order(order, false)
+
+func get_active_bulk_orders() -> Array[Dictionary]:
+	"""Get all active bulk orders"""
+	return active_bulk_orders.duplicate()
+
+func has_active_bulk_order(item_id: String = "") -> bool:
+	"""Check if there's an active bulk order (optionally for a specific item)"""
+	if item_id == "":
+		return active_bulk_orders.size() > 0
+
+	for order in active_bulk_orders:
+		if order["item_id"] == item_id:
+			return true
+	return false
+
 # Save/Load support
 func get_save_data() -> Dictionary:
 	return {
 		"active_events": active_events.duplicate(true),
 		"completed_events": completed_events.duplicate(),
-		"current_day": current_day
+		"current_day": current_day,
+		"active_bulk_orders": active_bulk_orders.duplicate(true)
 	}
 
 func load_save_data(data: Dictionary) -> void:
@@ -466,5 +587,7 @@ func load_save_data(data: Dictionary) -> void:
 		completed_events = data["completed_events"]
 	if data.has("current_day"):
 		current_day = data["current_day"]
+	if data.has("active_bulk_orders"):
+		active_bulk_orders = data["active_bulk_orders"]
 
 	print("Event data loaded: %d active, %d completed" % [active_events.size(), completed_events.size()])

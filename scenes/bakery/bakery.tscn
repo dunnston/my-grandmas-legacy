@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=18 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
 [ext_resource type="PackedScene" uid="uid://cqp6vn8wrgx1f" path="res://scenes/player/player.tscn" id="2_player"]
@@ -10,6 +10,10 @@
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" uid="uid://planning_menu001" path="res://scenes/ui/planning_menu.tscn" id="9_planning"]
 [ext_resource type="PackedScene" uid="uid://cf3c4wqwx6lhm" path="res://scenes/ui/dev_menu.tscn" id="10_devmenu"]
+[ext_resource type="PackedScene" uid="uid://c3v8r1p2mxn4s" path="res://scenes/ui/quick_inventory.tscn" id="11_quickinv"]
+[ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
+[ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
+[ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -128,8 +132,18 @@ gizmo_extents = 0.5
 
 [node name="Customers" type="Node3D" parent="."]
 
-[node name="HUD" parent="." instance=ExtResource("8_hud")]
+[node name="UILayer" type="CanvasLayer" parent="."]
 
-[node name="PlanningMenu" parent="." instance=ExtResource("9_planning")]
+[node name="HUD" parent="UILayer" instance=ExtResource("8_hud")]
 
-[node name="DevMenu" parent="." instance=ExtResource("10_devmenu")]
+[node name="PlanningMenu" parent="UILayer" instance=ExtResource("9_planning")]
+
+[node name="DevMenu" parent="UILayer" instance=ExtResource("10_devmenu")]
+
+[node name="QuickInventory" parent="UILayer" instance=ExtResource("11_quickinv")]
+
+[node name="RecipeBook" parent="UILayer" instance=ExtResource("12_recipebook")]
+
+[node name="StoryLetter" parent="UILayer" instance=ExtResource("13_storyletter")]
+
+[node name="EventNotification" parent="UILayer" instance=ExtResource("14_eventnotif")]

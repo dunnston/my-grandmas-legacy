@@ -6,6 +6,7 @@ signal crafting_started(recipe_name: String)
 signal crafting_complete(result_item: String)
 
 @export var mixing_time: float = 60.0  # 60 seconds to mix
+@export var equipment_tier: int = 0  # 0 = basic, upgradeable later
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
@@ -15,6 +16,7 @@ signal crafting_complete(result_item: String)
 var is_crafting: bool = false
 var crafting_timer: float = 0.0
 var current_recipe: Dictionary = {}
+var current_recipe_id: String = ""
 var player_nearby: Node3D = null
 
 # Crafting recipes (Phase 2: 3 starter recipes)
@@ -105,18 +107,20 @@ func open_crafting_ui(player: Node3D) -> void:
 
 	# Check each recipe to see if player has ingredients
 	var craftable_recipe: Dictionary = {}
+	var craftable_recipe_id: String = ""
 	for recipe_id in RECIPES:
 		var recipe: Dictionary = RECIPES[recipe_id]
 		if check_recipe_ingredients("player", recipe):
 			print("✓ Can make: ", recipe["name"])
 			craftable_recipe = recipe
+			craftable_recipe_id = recipe_id
 			break  # Use first craftable recipe found
 		else:
 			print("✗ Missing ingredients for: ", recipe["name"])
 
 	if not craftable_recipe.is_empty():
 		print("\nStarting to mix ", craftable_recipe["name"], "...")
-		transfer_ingredients_and_start("player", craftable_recipe)
+		transfer_ingredients_and_start("player", craftable_recipe, craftable_recipe_id)
 	else:
 		print("\nYou don't have ingredients for any recipe.")
 		print("Go to the ingredient storage first!")
@@ -128,7 +132,7 @@ func check_recipe_ingredients(inventory_id: String, recipe: Dictionary) -> bool:
 			return false
 	return true
 
-func transfer_ingredients_and_start(from_inventory: String, recipe: Dictionary) -> void:
+func transfer_ingredients_and_start(from_inventory: String, recipe: Dictionary, recipe_id: String = "") -> void:
 	# Transfer ingredients from player to mixing bowl
 	var station_inventory = get_inventory_id()
 
@@ -138,10 +142,11 @@ func transfer_ingredients_and_start(from_inventory: String, recipe: Dictionary) 
 			print("Error transferring ", ingredient)
 			return
 
-	start_crafting(recipe)
+	start_crafting(recipe, recipe_id)
 
-func start_crafting(recipe: Dictionary) -> void:
+func start_crafting(recipe: Dictionary, recipe_id: String = "") -> void:
 	current_recipe = recipe
+	current_recipe_id = recipe_id
 	is_crafting = true
 	crafting_timer = 0.0
 	mixing_time = recipe.time
@@ -157,6 +162,7 @@ func start_crafting(recipe: Dictionary) -> void:
 
 func complete_crafting() -> void:
 	print("Mixing complete! ", current_recipe.result, " is ready!")
+	print("(Quality will be determined when baked in the oven)")
 
 	# Clear station ingredients (they were used)
 	InventoryManager.clear_inventory(get_inventory_id())
@@ -170,6 +176,7 @@ func complete_crafting() -> void:
 	is_crafting = false
 	crafting_timer = 0.0
 	current_recipe = {}
+	current_recipe_id = ""
 
 	# Visual feedback (reset color)
 	if mesh and mesh.get_surface_override_material_count() > 0:

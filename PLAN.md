@@ -321,26 +321,34 @@ This is a living document that tracks the development progress of "My Grandma's 
 #### Complete Recipe Catalog
 - [x] Implement all 27 recipes with proper data
 - [x] Connect recipes to milestone unlock system
+- [x] Add quality variations for each recipe (QualityManager created!)
+- [x] Implement legendary item chance (5% on perfect)
+- [x] Create QualityManager singleton with quality tiers
+- [x] Implement timing-based quality calculation
+- [x] Add equipment tier bonus system
+- [x] Integrate quality system with equipment (oven/mixer) ✅ COMPLETE!
 - [ ] Test each recipe's crafting workflow in-game
 - [ ] Balance costs and sell prices for each
-- [ ] Add quality variations for each recipe
-- [ ] Implement legendary item chance (5% on perfect)
 
 #### Upgrade Catalog Expansion
-- [ ] Add all furniture options (tables, chairs, shelving)
-- [ ] Add decoration options (paint, wallpaper, flooring, lighting)
-- [ ] Add structural upgrades (wall repairs, expansion)
-- [ ] Implement visual changes for aesthetic upgrades
-- [ ] Create upgrade preview system
+- [x] Add all furniture options (tables, chairs, shelving, counters) ✅ 10 upgrades
+- [x] Add decoration options (paint, wallpaper, flooring, lighting, art, plants) ✅ 14 upgrades
+- [x] Add structural upgrades (wall repairs, windows, expansion) ✅ 6 upgrades
+- [x] Add equipment upgrades (ovens, mixers, displays, registers) ✅ 10 upgrades
+- [x] Create UpgradeManager singleton with 40+ total upgrades
+- [x] Integrate with save/load system
+- [ ] Implement visual changes for aesthetic upgrades (future - needs 3D models)
+- [ ] Create upgrade preview system (future enhancement)
 
 #### Marketing System
-- [ ] Add Marketing tab in Planning phase
-- [ ] Implement Newspaper ad (cost, boost, duration)
-- [ ] Implement Social Media campaign
-- [ ] Implement Radio/TV advertising
-- [ ] Implement Billboard (permanent boost)
-- [ ] Show active campaigns in Planning phase
-- [ ] Apply traffic bonuses during active campaigns
+- [x] Implement MarketingManager singleton with 8 campaign types
+- [x] Implement Newspaper ad (cost, boost, duration)
+- [x] Implement Social Media campaign
+- [x] Implement Radio/TV advertising
+- [x] Implement Billboard (permanent boost)
+- [x] Apply traffic bonuses during active campaigns
+- [x] Integrate with save/load system
+- [x] Add Marketing tab UI in Planning phase ✅ COMPLETE!
 
 #### Special Events System
 - [x] Create EventManager singleton
@@ -349,8 +357,9 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [x] Integrate with save/load system
 - [x] Event effects system (traffic, prices, reputation)
 - [x] Event rewards and consequences
-- [ ] Create event notification UI - needs UI work
-- [ ] Implement bulk order mechanics (tracking/completion)
+- [x] Create event notification UI
+- [x] Implement bulk order mechanics (tracking/completion) ✅ COMPLETE!
+- [x] Create BulkOrderTracker UI widget
 - [ ] Add competition mechanics for festivals
 - [ ] Balance event frequency through playtesting
 
@@ -359,28 +368,27 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [x] Create StoryManager singleton for narrative
 - [x] Trigger story beats at milestones (auto-connected)
 - [x] Integrate with save/load system
-- [ ] Create story beat UI (letter reading popup) - needs UI work
+- [x] Create story beat UI (letter reading popup)
 - [ ] Add grandmother's photo to bakery (visual asset)
 - [ ] Add newspaper article props (visual asset)
-- [ ] Add recipe book with notes (UI work)
 - [ ] Polish final ending sequence ($50k milestone)
 
 #### Apartment Scene
-- [ ] Create Apartment.tscn (upstairs)
-- [ ] Add basic furniture and decorations (CSG)
-- [ ] Add transition between bakery and apartment
-- [ ] Add sleep interaction (optional time skip)
-- [ ] Add decorative interactions (TV, bookshelf)
+- [x] Create Apartment.tscn (upstairs) ✅ COMPLETE!
+- [x] Add basic furniture and decorations (CSG)
+- [x] Add transition between bakery and apartment (SceneManager)
+- [x] Add sleep interaction placeholder (optional time skip)
+- [x] Add decorative interactions (TV, bookshelf, photo)
 
 #### Quality of Life Features
 - [x] Add hotkeys for common actions (Tab, R, Space, +/-, ESC)
-- [x] Add quick inventory access (Tab key) - system ready
+- [x] Add quick inventory access (Tab key)
 - [x] Add batch ingredient purchasing (with bulk discounts!)
 - [x] Add confirmation dialogs for expensive purchases ($100+ threshold)
 - [x] Create UI helper functions (currency, time, color formatting)
-- [ ] Add recipe favorites/pinning - UI implementation needed
+- [x] Implement actual UI panels for inventory/recipe book
+- [ ] Add recipe favorites/pinning - future enhancement
 - [ ] Add undo/redo for planning purchases - future enhancement
-- [ ] Implement actual UI panels for inventory/recipe book
 
 #### Begin Asset Replacement
 - [ ] Identify critical models for replacement
