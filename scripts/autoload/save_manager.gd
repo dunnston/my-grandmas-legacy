@@ -147,6 +147,10 @@ func _collect_save_data() -> Dictionary:
 	if StoryManager:
 		data["story_manager"] = StoryManager.get_save_data()
 
+	# Events (active events, completed events)
+	if EventManager:
+		data["event_manager"] = EventManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -186,6 +190,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Story
 	if data.has("story_manager") and StoryManager:
 		StoryManager.load_save_data(data["story_manager"])
+
+	# Events
+	if data.has("event_manager") and EventManager:
+		EventManager.load_save_data(data["event_manager"])
 
 	print("Applied save data to all managers")
 

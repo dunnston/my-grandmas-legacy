@@ -343,12 +343,16 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Apply traffic bonuses during active campaigns
 
 #### Special Events System
-- [ ] Create EventManager singleton
-- [ ] Implement random events (critic, weather, festival, etc.)
-- [ ] Add scheduled events (holidays, market, inspection)
-- [ ] Create event notification UI
-- [ ] Implement event-specific mechanics (bulk orders, critic scoring)
-- [ ] Balance event frequency and impact
+- [x] Create EventManager singleton
+- [x] Implement 10 random events (critic, weather, celebrity, etc.)
+- [x] Add 6 scheduled events (holidays, festivals, inspections)
+- [x] Integrate with save/load system
+- [x] Event effects system (traffic, prices, reputation)
+- [x] Event rewards and consequences
+- [ ] Create event notification UI - needs UI work
+- [ ] Implement bulk order mechanics (tracking/completion)
+- [ ] Add competition mechanics for festivals
+- [ ] Balance event frequency through playtesting
 
 #### Story Implementation
 - [x] Write grandmother's letters for each milestone (7 letters complete)

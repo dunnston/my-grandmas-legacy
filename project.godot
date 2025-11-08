@@ -26,6 +26,7 @@ SaveManager="*res://scripts/autoload/save_manager.gd"
 ProgressionManager="*res://scripts/autoload/progression_manager.gd"
 StoryManager="*res://scripts/autoload/story_manager.gd"
 UIManager="*res://scripts/autoload/ui_manager.gd"
+EventManager="*res://scripts/autoload/event_manager.gd"
 
 [input]
 
