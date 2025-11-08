@@ -159,6 +159,10 @@ func _collect_save_data() -> Dictionary:
 	if UpgradeManager:
 		data["upgrade_manager"] = UpgradeManager.get_save_data()
 
+	# Cleanliness (chores, cleanliness level, staff)
+	if CleanlinessManager:
+		data["cleanliness_manager"] = CleanlinessManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -210,6 +214,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Upgrades
 	if data.has("upgrade_manager") and UpgradeManager:
 		UpgradeManager.load_save_data(data["upgrade_manager"])
+
+	# Cleanliness
+	if data.has("cleanliness_manager") and CleanlinessManager:
+		CleanlinessManager.load_save_data(data["cleanliness_manager"])
 
 	print("Applied save data to all managers")
 
