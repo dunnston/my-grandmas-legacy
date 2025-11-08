@@ -65,6 +65,25 @@ func _on_body_exited(body: Node3D) -> void:
 		player_nearby = null
 		print("Player left cooling rack")
 
+func get_interaction_prompt() -> String:
+	return "[E] Use Cooling Rack"
+
+func interact(player: Node3D) -> void:
+	"""Open cooling rack UI"""
+	open_cooling_rack_ui(player)
+
+func open_cooling_rack_ui(player: Node3D) -> void:
+	"""Open the visual UI for the cooling rack"""
+	var hud = get_tree().get_first_node_in_group("hud")
+	if not hud:
+		print("ERROR: Could not find HUD!")
+		return
+	var ui_manager = hud.get_equipment_ui_manager()
+	if not ui_manager:
+		print("ERROR: Could not find Equipment UI Manager!")
+		return
+	ui_manager.show_cooling_rack_ui(get_inventory_id(), player.get_inventory_id(), self)
+
 # Core cooling methods
 func can_add_item() -> bool:
 	"""Check if there's an empty slot"""

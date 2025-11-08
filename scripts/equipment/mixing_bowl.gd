@@ -93,6 +93,18 @@ func interact(player: Node3D) -> void:
 
 	open_crafting_ui(player)
 
+func open_mixing_bowl_ui(player: Node3D) -> void:
+	"""Open the visual UI for the mixing bowl"""
+	var hud = get_tree().get_first_node_in_group("hud")
+	if not hud:
+		print("ERROR: Could not find HUD!")
+		return
+	var ui_manager = hud.get_equipment_ui_manager()
+	if not ui_manager:
+		print("ERROR: Could not find Equipment UI Manager!")
+		return
+	ui_manager.show_mixing_bowl_ui(get_inventory_id(), player.get_inventory_id(), self)
+
 func open_crafting_ui(player: Node3D) -> void:
 	print("\n=== MIXING BOWL ===")
 

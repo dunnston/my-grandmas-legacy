@@ -112,13 +112,20 @@ func get_interaction_prompt() -> String:
 	return "[E] Use Oven"
 
 func interact(player: Node3D) -> void:
-	if is_baking:
-		var time_remaining = baking_time - baking_timer
-		print("Oven is baking! Time remaining: ", int(time_remaining), " seconds")
-		print("Progress: ", int(get_baking_progress() * 100), "%")
-		return
+	# Always open the visual UI (it shows baking progress or allows loading new items)
+	open_visual_oven_ui(player)
 
-	open_oven_ui(player)
+func open_visual_oven_ui(player: Node3D) -> void:
+	"""Open the visual UI for the oven"""
+	var hud = get_tree().get_first_node_in_group("hud")
+	if not hud:
+		print("ERROR: Could not find HUD!")
+		return
+	var ui_manager = hud.get_equipment_ui_manager()
+	if not ui_manager:
+		print("ERROR: Could not find Equipment UI Manager!")
+		return
+	ui_manager.show_oven_ui(get_inventory_id(), player.get_inventory_id(), self)
 
 func open_oven_ui(player: Node3D) -> void:
 	print("\n=== OVEN ===")
