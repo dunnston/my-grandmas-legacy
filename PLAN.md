@@ -369,12 +369,14 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Add decorative interactions (TV, bookshelf)
 
 #### Quality of Life Features
-- [ ] Add hotkeys for common actions
-- [ ] Add quick inventory access (Tab key)
-- [ ] Add batch ingredient purchasing
-- [ ] Add recipe favorites/pinning
-- [ ] Add undo/redo for planning purchases
-- [ ] Add confirmation dialogs for expensive purchases
+- [x] Add hotkeys for common actions (Tab, R, Space, +/-, ESC)
+- [x] Add quick inventory access (Tab key) - system ready
+- [x] Add batch ingredient purchasing (with bulk discounts!)
+- [x] Add confirmation dialogs for expensive purchases ($100+ threshold)
+- [x] Create UI helper functions (currency, time, color formatting)
+- [ ] Add recipe favorites/pinning - UI implementation needed
+- [ ] Add undo/redo for planning purchases - future enhancement
+- [ ] Implement actual UI panels for inventory/recipe book
 
 #### Begin Asset Replacement
 - [ ] Identify critical models for replacement
