@@ -6,6 +6,7 @@ signal crafting_started(recipe_name: String)
 signal crafting_complete(result_item: String)
 
 @export var mixing_time: float = 60.0  # 60 seconds to mix
+@export var equipment_tier: int = 0  # 0 = basic, upgradeable later
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea

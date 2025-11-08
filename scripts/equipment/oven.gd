@@ -158,12 +158,23 @@ func complete_baking() -> void:
 	var result = BAKING_RECIPES[current_item].result
 	print("\n=== DING! ===")
 
+	# Get combined equipment tier (mixer + oven)
+	var combined_tier: int = equipment_tier  # Start with oven tier
+
+	# Try to find the mixing bowl to add its tier bonus
+	var mixing_bowl = get_node_or_null("../MixingBowl")
+	if mixing_bowl and mixing_bowl.has_method("get"):
+		var mixer_tier: int = mixing_bowl.get("equipment_tier") if "equipment_tier" in mixing_bowl else 0
+		combined_tier += mixer_tier
+		if mixer_tier > 0:
+			print("Equipment bonuses: Mixer (Tier %d) + Oven (Tier %d) = Total Tier %d" % [mixer_tier, equipment_tier, combined_tier])
+
 	# Calculate quality based on timing and equipment
 	var quality_data: Dictionary = QualityManager.calculate_quality(
 		current_recipe_id,
 		baking_timer,        # actual time
 		target_bake_time,    # target time
-		equipment_tier       # equipment quality bonus
+		combined_tier        # combined equipment quality bonus
 	)
 
 	print("Baking complete! ", result, " is ready!")
