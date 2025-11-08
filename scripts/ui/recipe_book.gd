@@ -28,6 +28,10 @@ func _ready() -> void:
 	# Start hidden
 	hide()
 
+	# Connect to UIManager signals
+	if UIManager:
+		UIManager.recipe_book_toggled.connect(_on_ui_manager_toggle)
+
 	# Connect close button
 	if close_button:
 		close_button.pressed.connect(_on_close_pressed)
@@ -36,15 +40,20 @@ func _ready() -> void:
 	if ProgressionManager:
 		ProgressionManager.milestone_reached.connect(_on_milestone_reached)
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Toggle on R key
-	if event.is_action_pressed("recipe_book"):
-		toggle_recipe_book()
-		get_viewport().set_input_as_handled()
-		return
+func _on_ui_manager_toggle(is_open: bool) -> void:
+	"""Called when UIManager toggles recipe book"""
+	is_visible = is_open
+	if is_open:
+		show_recipe_book()
+	else:
+		hide_recipe_book()
 
+func _unhandled_input(event: InputEvent) -> void:
 	# Allow ESC to close if visible
 	if visible and event.is_action_pressed("ui_cancel"):
+		# Update UIManager state when closing via ESC
+		if UIManager:
+			UIManager.recipe_book_open = false
 		hide_recipe_book()
 		get_viewport().set_input_as_handled()
 		return
