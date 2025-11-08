@@ -479,7 +479,7 @@ func is_upgrade_unlocked(upgrade_id: String) -> bool:
 		return false
 
 	var required_revenue: float = upgrade.get("unlock_revenue", 0)
-	var current_revenue: float = ProgressionManager.get_current_total_revenue()
+	var current_revenue: float = ProgressionManager.get_total_revenue()
 	return current_revenue >= required_revenue
 
 # Check if upgrade is purchased
