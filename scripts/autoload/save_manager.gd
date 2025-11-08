@@ -163,6 +163,10 @@ func _collect_save_data() -> Dictionary:
 	if CleanlinessManager:
 		data["cleanliness_manager"] = CleanlinessManager.get_save_data()
 
+	# Building (placed objects)
+	if BuildingManager:
+		data["building_manager"] = BuildingManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -218,6 +222,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Cleanliness
 	if data.has("cleanliness_manager") and CleanlinessManager:
 		CleanlinessManager.load_save_data(data["cleanliness_manager"])
+
+	# Building
+	if data.has("building_manager") and BuildingManager:
+		BuildingManager.load_save_data(data["building_manager"])
 
 	print("Applied save data to all managers")
 

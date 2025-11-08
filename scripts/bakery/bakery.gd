@@ -18,6 +18,9 @@ extends Node3D
 func _ready() -> void:
 	print("Bakery scene ready")
 
+	# Add to bakery group for easy access
+	add_to_group("bakery")
+
 	# Set up CustomerManager with navigation targets
 	if customers_container and entrance_marker and display_marker and register_marker and exit_marker:
 		CustomerManager.set_spawn_parent(customers_container)
