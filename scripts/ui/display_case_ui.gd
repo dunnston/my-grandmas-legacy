@@ -10,10 +10,17 @@ func _ready() -> void:
 
 func _on_player_item_clicked(item_id: String) -> void:
 	"""Add item from player inventory to display case"""
-	# Check if item is a finished baked good
+	# Check if item is a finished baked good (not dough/batter)
 	if item_id.ends_with("_dough") or item_id.ends_with("_batter"):
 		print("%s needs to be baked and cooled first!" % item_id)
 		return
+
+	# Check if item is a valid recipe (finished product)
+	if RecipeManager:
+		var recipe = RecipeManager.get_recipe(item_id)
+		if recipe.is_empty():
+			print("%s is not a baked good! Display case only accepts finished products." % item_id)
+			return
 
 	# Get metadata (quality data)
 	var metadata = InventoryManager.get_item_metadata(player_inventory_id, item_id)
@@ -30,20 +37,10 @@ func _on_player_item_clicked(item_id: String) -> void:
 		_refresh_inventories()
 
 func _on_equipment_item_clicked(item_id: String) -> void:
-	"""Remove item from display case (return to player inventory)"""
-	# Get metadata
-	var metadata = InventoryManager.get_item_metadata(equipment_inventory_id, item_id)
-
-	# Remove from display case
-	if InventoryManager.remove_item(equipment_inventory_id, item_id, 1):
-		# Add back to player
-		InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
-
-		print("Removed %s from display case" % item_id)
-		item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
-
-		# Refresh display
-		_refresh_inventories()
+	"""Items in display case cannot be removed - customers buy them!"""
+	print("Items in the display case are for sale. Customers will buy them during business hours.")
+	# Note: Customers will remove items via the customer.gd purchase system
+	# Players cannot manually remove items from display case
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show display case with quality indicators"""
