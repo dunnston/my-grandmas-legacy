@@ -16,14 +16,16 @@ signal next_day_started()
 @onready var cash_label: Label = $Panel/VBoxContainer/ReportSection/CashLabel
 @onready var satisfaction_label: Label = $Panel/VBoxContainer/ReportSection/SatisfactionLabel
 
-@onready var ingredient_section: VBoxContainer = $Panel/VBoxContainer/IngredientSection
-@onready var ingredient_container: VBoxContainer = $Panel/VBoxContainer/IngredientSection/IngredientContainer
+@onready var tab_container: TabContainer = $Panel/VBoxContainer/TabContainer
+@onready var ingredient_container: VBoxContainer = $Panel/VBoxContainer/TabContainer/Ingredients/ScrollContainer/IngredientContainer
+@onready var campaign_container: VBoxContainer = $Panel/VBoxContainer/TabContainer/Marketing/ScrollContainer/CampaignContainer
 
 @onready var next_day_button: Button = $Panel/VBoxContainer/NextDayButton
 
 # State
 var daily_report: Dictionary = {}
 var ingredient_order: Dictionary = {}
+var active_campaigns: Array = []
 
 func _ready() -> void:
 	hide()  # Hidden by default
@@ -41,6 +43,7 @@ func open_menu() -> void:
 	# Generate and display reports
 	_display_daily_report()
 	_setup_ingredient_ordering()
+	_setup_marketing_campaigns()
 
 	print("\n=== PLANNING PHASE ===")
 	print("Review your day and prepare for tomorrow!")
@@ -236,3 +239,107 @@ func _on_next_day_pressed() -> void:
 	GameManager.end_day()
 
 	next_day_started.emit()
+
+func _setup_marketing_campaigns() -> void:
+	"""Set up marketing campaign UI"""
+	if not campaign_container:
+		return
+
+	# Clear existing children
+	for child in campaign_container.get_children():
+		child.queue_free()
+
+	# Get all campaigns from MarketingManager
+	var all_campaigns: Dictionary = MarketingManager.get_all_campaigns()
+	active_campaigns = MarketingManager.get_active_campaigns()
+
+	for campaign_id in all_campaigns.keys():
+		var campaign: Dictionary = all_campaigns[campaign_id]
+		_add_campaign_card(campaign_id, campaign)
+
+func _add_campaign_card(campaign_id: String, campaign: Dictionary) -> void:
+	"""Add a marketing campaign card to the UI"""
+	var panel: PanelContainer = PanelContainer.new()
+	campaign_container.add_child(panel)
+
+	var vbox: VBoxContainer = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 5)
+	panel.add_child(vbox)
+
+	# Campaign name
+	var name_label: Label = Label.new()
+	name_label.text = campaign.get("name", campaign_id.capitalize())
+	name_label.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(name_label)
+
+	# Description
+	var desc_label: Label = Label.new()
+	desc_label.text = campaign.get("description", "")
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_label.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(desc_label)
+
+	# Effects and cost in HBox
+	var hbox: HBoxContainer = HBoxContainer.new()
+	vbox.add_child(hbox)
+
+	# Effects
+	var effects_label: Label = Label.new()
+	var effects: Dictionary = campaign.get("effects", {})
+	var traffic_mult: float = effects.get("traffic_multiplier", 1.0)
+	var duration_days: int = campaign.get("duration_days", 0)
+	var duration_text: String = " for %d day%s" % [duration_days, "s" if duration_days != 1 else ""] if duration_days > 0 else " (permanent)"
+	effects_label.text = "Traffic: +%.0f%%%s" % [(traffic_mult - 1.0) * 100, duration_text]
+	effects_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(effects_label)
+
+	# Cost and launch button
+	var cost: float = campaign.get("cost", 0.0)
+	var cost_label: Label = Label.new()
+	cost_label.text = "$%.2f" % cost
+	cost_label.custom_minimum_size.x = 70
+	hbox.add_child(cost_label)
+
+	# Launch button
+	var launch_button: Button = Button.new()
+	var is_unlocked: bool = ProgressionManager.get_current_total_revenue() >= campaign.get("unlock_revenue", 0)
+	var is_active: bool = _is_campaign_active(campaign_id)
+	var can_afford: bool = EconomyManager.can_afford(cost)
+
+	if not is_unlocked:
+		launch_button.text = "🔒 Locked"
+		launch_button.disabled = true
+		launch_button.tooltip_text = "Unlock at $%.2f total revenue" % campaign.get("unlock_revenue", 0)
+	elif is_active:
+		launch_button.text = "✓ Active"
+		launch_button.disabled = true
+	elif not can_afford:
+		launch_button.text = "Can't Afford"
+		launch_button.disabled = true
+	else:
+		launch_button.text = "Launch"
+		launch_button.pressed.connect(_on_launch_campaign.bind(campaign_id, cost))
+
+	launch_button.custom_minimum_size.x = 90
+	hbox.add_child(launch_button)
+
+func _is_campaign_active(campaign_id: String) -> bool:
+	"""Check if a campaign is currently active"""
+	for campaign in active_campaigns:
+		if campaign["id"] == campaign_id:
+			return true
+	return false
+
+func _on_launch_campaign(campaign_id: String, cost: float) -> void:
+	"""Launch a marketing campaign"""
+	if not EconomyManager.can_afford(cost):
+		print("Cannot afford this campaign!")
+		return
+
+	# Try to start campaign
+	if MarketingManager.start_campaign(campaign_id):
+		print("Launched campaign: ", campaign_id)
+		# Refresh the UI to show it as active
+		_setup_marketing_campaigns()
+	else:
+		print("Failed to launch campaign: ", campaign_id)

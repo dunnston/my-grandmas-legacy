@@ -70,22 +70,40 @@ text = "Customers: 0 | Satisfaction: 0%"
 [node name="HSeparator2" type="HSeparator" parent="Panel/VBoxContainer"]
 layout_mode = 2
 
-[node name="IngredientSection" type="VBoxContainer" parent="Panel/VBoxContainer"]
+[node name="TabContainer" type="TabContainer" parent="Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="IngredientTitle" type="Label" parent="Panel/VBoxContainer/IngredientSection"]
+[node name="Ingredients" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer"]
 layout_mode = 2
-text = "Order Ingredients for Tomorrow"
+theme_override_constants/separation = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/TabContainer/Ingredients"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="IngredientContainer" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer/Ingredients/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Marketing" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MarketingInfo" type="Label" parent="Panel/VBoxContainer/TabContainer/Marketing"]
+layout_mode = 2
+text = "Launch marketing campaigns to boost customer traffic"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/IngredientSection"]
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/TabContainer/Marketing"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="IngredientContainer" type="VBoxContainer" parent="Panel/VBoxContainer/IngredientSection"]
+[node name="CampaignContainer" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer/Marketing/ScrollContainer"]
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="HSeparator3" type="HSeparator" parent="Panel/VBoxContainer"]
 layout_mode = 2
