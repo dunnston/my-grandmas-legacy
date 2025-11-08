@@ -12,8 +12,19 @@ extends CanvasLayer
 @onready var start_business_button: Button = $Panel/VBox/ButtonContainer/StartBusinessButton
 @onready var end_business_button: Button = $Panel/VBox/ButtonContainer/EndBusinessButton
 
+# Equipment UI Manager
+var equipment_ui_manager: Node
+
 func _ready() -> void:
 	print("HUD ready")
+
+	# Add to hud group for easy access
+	add_to_group("hud")
+
+	# Create and setup equipment UI manager
+	equipment_ui_manager = preload("res://scripts/ui/equipment_ui_manager.gd").new()
+	add_child(equipment_ui_manager)
+	equipment_ui_manager.setup_uis(self)
 
 	# Connect buttons
 	if start_business_button:
@@ -86,3 +97,8 @@ func _on_end_business_pressed() -> void:
 	"""End business phase button pressed"""
 	print("HUD: Ending Business phase")
 	GameManager.start_cleanup_phase()
+
+# Equipment UI access
+func get_equipment_ui_manager() -> Node:
+	"""Get the equipment UI manager instance"""
+	return equipment_ui_manager

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://storage_ui_001"]
+
+[ext_resource type="PackedScene" uid="uid://equipment_ui_base_001" path="res://scenes/ui/equipment_ui_base.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/storage_ui.gd" id="2"]
+
+[node name="StorageUI" instance=ExtResource("1")]
+script = ExtResource("2")
+
+[node name="Panel" parent="." index="0"]
+[node name="TitleLabel" parent="Panel" index="2"]
+text = "Ingredient Storage"

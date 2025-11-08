@@ -56,14 +56,20 @@ func interact(player: Node3D) -> void:
 	open_storage_ui(player)
 
 func open_storage_ui(player: Node3D) -> void:
-	print("\n=== INGREDIENT STORAGE ===")
-	print("Available ingredients:")
-	InventoryManager.print_inventory(get_inventory_id())
-	print("\nYour inventory:")
-	InventoryManager.print_inventory("player")
+	"""Open the storage UI"""
+	# Find the HUD to get equipment UI manager
+	var hud = get_tree().get_first_node_in_group("hud")
+	if not hud:
+		print("ERROR: Could not find HUD!")
+		return
 
-	print("\nTaking a batch of ingredients...")
-	take_ingredient_batch(player)
+	var ui_manager = hud.get_equipment_ui_manager()
+	if not ui_manager:
+		print("ERROR: Could not find Equipment UI Manager!")
+		return
+
+	# Show storage UI
+	ui_manager.show_storage_ui(get_inventory_id(), player.get_inventory_id())
 
 func take_ingredient_batch(player: Node3D) -> void:
 	# Take a batch of ingredients (enough for multiple recipes)
