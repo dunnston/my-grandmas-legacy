@@ -1,0 +1,131 @@
+[gd_scene load_steps=2 format=3 uid="uid://b4xas2q3nxm5t"]
+
+[ext_resource type="Script" path="res://scripts/ui/recipe_book.gd" id="1"]
+
+[node name="RecipeBook" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -350.0
+offset_right = 500.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+text = "Grandma's Recipe Book (R)"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HSplit" type="HSplitContainer" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 250
+
+[node name="RecipeList" type="PanelContainer" parent="Panel/MarginContainer/VBox/HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBox/HSplit/RecipeList"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/MarginContainer/VBox/HSplit/RecipeList/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="RecipeDetails" type="VBoxContainer" parent="Panel/MarginContainer/VBox/HSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="DetailName" type="Label" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+text = "Select a recipe"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+
+[node name="DetailTier" type="Label" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+text = "Unlock Tier: -"
+
+[node name="DetailPrice" type="Label" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+text = "Sell Price: -"
+
+[node name="DetailTime" type="Label" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+text = "Time: -"
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="IngredientsList" type="RichTextLabel" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Ingredients will appear here"
+fit_content = true
+
+[node name="HSeparator3" type="HSeparator" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+text = "Grandma's Notes:"
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GrandmasNotes" type="RichTextLabel" parent="Panel/MarginContainer/VBox/HSplit/RecipeDetails/ScrollContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Grandma's notes will appear here"
+fit_content = true
+
+[node name="CloseButton" type="Button" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+text = "Close (R or ESC)"

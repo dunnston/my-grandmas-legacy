@@ -349,7 +349,7 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [x] Integrate with save/load system
 - [x] Event effects system (traffic, prices, reputation)
 - [x] Event rewards and consequences
-- [ ] Create event notification UI - needs UI work
+- [x] Create event notification UI
 - [ ] Implement bulk order mechanics (tracking/completion)
 - [ ] Add competition mechanics for festivals
 - [ ] Balance event frequency through playtesting
@@ -359,10 +359,9 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [x] Create StoryManager singleton for narrative
 - [x] Trigger story beats at milestones (auto-connected)
 - [x] Integrate with save/load system
-- [ ] Create story beat UI (letter reading popup) - needs UI work
+- [x] Create story beat UI (letter reading popup)
 - [ ] Add grandmother's photo to bakery (visual asset)
 - [ ] Add newspaper article props (visual asset)
-- [ ] Add recipe book with notes (UI work)
 - [ ] Polish final ending sequence ($50k milestone)
 
 #### Apartment Scene
@@ -374,13 +373,13 @@ This is a living document that tracks the development progress of "My Grandma's 
 
 #### Quality of Life Features
 - [x] Add hotkeys for common actions (Tab, R, Space, +/-, ESC)
-- [x] Add quick inventory access (Tab key) - system ready
+- [x] Add quick inventory access (Tab key)
 - [x] Add batch ingredient purchasing (with bulk discounts!)
 - [x] Add confirmation dialogs for expensive purchases ($100+ threshold)
 - [x] Create UI helper functions (currency, time, color formatting)
-- [ ] Add recipe favorites/pinning - UI implementation needed
+- [x] Implement actual UI panels for inventory/recipe book
+- [ ] Add recipe favorites/pinning - future enhancement
 - [ ] Add undo/redo for planning purchases - future enhancement
-- [ ] Implement actual UI panels for inventory/recipe book
 
 #### Begin Asset Replacement
 - [ ] Identify critical models for replacement

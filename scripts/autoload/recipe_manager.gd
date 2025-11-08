@@ -792,3 +792,43 @@ func load_save_data(data: Dictionary) -> void:
 		for recipe_id in recipes:
 			recipes[recipe_id]["unlocked"] = recipe_id in unlocked_recipes
 		print("Recipes loaded: %d unlocked" % unlocked_recipes.size())
+
+# Helper functions for UI
+func get_all_recipes() -> Dictionary:
+	"""Get all recipes (both locked and unlocked)"""
+	return recipes
+
+func get_all_ingredients() -> Dictionary:
+	"""Get all unique ingredients from all recipes"""
+	var ingredients: Dictionary = {}
+
+	# Common baking ingredients with names
+	var ingredient_data := {
+		"flour": {"name": "Flour", "category": "dry"},
+		"sugar": {"name": "Sugar", "category": "dry"},
+		"eggs": {"name": "Eggs", "category": "dairy"},
+		"butter": {"name": "Butter", "category": "dairy"},
+		"milk": {"name": "Milk", "category": "dairy"},
+		"yeast": {"name": "Yeast", "category": "leavening"},
+		"baking_powder": {"name": "Baking Powder", "category": "leavening"},
+		"vanilla": {"name": "Vanilla Extract", "category": "flavoring"},
+		"cocoa": {"name": "Cocoa Powder", "category": "flavoring"},
+		"chocolate": {"name": "Chocolate", "category": "flavoring"},
+		"cream_cheese": {"name": "Cream Cheese", "category": "dairy"},
+		"heavy_cream": {"name": "Heavy Cream", "category": "dairy"},
+		"salt": {"name": "Salt", "category": "seasoning"},
+		"cinnamon": {"name": "Cinnamon", "category": "spice"},
+		"lemon": {"name": "Lemon", "category": "fruit"},
+		"honey": {"name": "Honey", "category": "sweetener"},
+		"almond_flour": {"name": "Almond Flour", "category": "dry"},
+		"coconut": {"name": "Shredded Coconut", "category": "flavoring"},
+		"raisins": {"name": "Raisins", "category": "fruit"},
+		"walnuts": {"name": "Walnuts", "category": "nuts"},
+		"matcha": {"name": "Matcha Powder", "category": "flavoring"},
+		"cardamom": {"name": "Cardamom", "category": "spice"},
+		"rose_water": {"name": "Rose Water", "category": "flavoring"},
+		"pistachios": {"name": "Pistachios", "category": "nuts"},
+		"saffron": {"name": "Saffron", "category": "spice"}
+	}
+
+	return ingredient_data

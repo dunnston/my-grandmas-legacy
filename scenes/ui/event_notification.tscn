@@ -1,0 +1,114 @@
+[gd_scene load_steps=3 format=3 uid="uid://bck6a2vv5ssg4"]
+
+[ext_resource type="Script" path="res://scripts/ui/event_notification.gd" id="1"]
+
+[sub_resource type="Animation" id="Animation_slide_in"]
+resource_name = "slide_in"
+length = 0.4
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Panel:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, -300), Vector2(0, 20)]
+}
+
+[sub_resource type="Animation" id="Animation_slide_out"]
+resource_name = "slide_out"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Panel:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.3),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector2(0, 20), Vector2(0, -300)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_abc456"]
+_data = {
+"slide_in": SubResource("Animation_slide_in"),
+"slide_out": SubResource("Animation_slide_out")
+}
+
+[node name="EventNotification" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 220.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EventIcon" type="Label" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+text = "📰"
+horizontal_alignment = 1
+
+[node name="EventTitle" type="Label" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+text = "Special Event"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="EventDescription" type="RichTextLabel" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Event description will appear here"
+fit_content = true
+
+[node name="EventEffects" type="Label" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+text = "Effects: None"
+
+[node name="DismissButton" type="Button" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+text = "Dismiss (ESC)"
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_abc456")
+}
+
+[node name="AutoDismissTimer" type="Timer" parent="."]
+wait_time = 8.0
+one_shot = true

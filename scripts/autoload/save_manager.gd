@@ -151,6 +151,10 @@ func _collect_save_data() -> Dictionary:
 	if EventManager:
 		data["event_manager"] = EventManager.get_save_data()
 
+	# Marketing (campaigns, spending)
+	if MarketingManager:
+		data["marketing_manager"] = MarketingManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -194,6 +198,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Events
 	if data.has("event_manager") and EventManager:
 		EventManager.load_save_data(data["event_manager"])
+
+	# Marketing
+	if data.has("marketing_manager") and MarketingManager:
+		MarketingManager.load_save_data(data["marketing_manager"])
 
 	print("Applied save data to all managers")
 
