@@ -14,27 +14,27 @@ var total_lifetime_revenue: float = 0.0
 var reputation: int = 50  # Range: 0-100, starts at 50
 var current_day: int = 1
 
-# Milestone definitions (from GDD)
+# Milestone definitions (from GDD) - matches RecipeManager recipe IDs
 var milestones: Dictionary = {
 	"basic_pastries": {
 		"revenue_threshold": 500.0,
 		"reached": false,
 		"tier_name": "Basic Pastries",
-		"unlocks": ["croissant", "danish", "scone", "cinnamon_roll"],
+		"unlocks": ["croissants", "danish_pastries", "scones", "cinnamon_rolls"],
 		"story_beat": true  # Triggers grandmother's letter
 	},
 	"artisan_breads": {
 		"revenue_threshold": 2000.0,
 		"reached": false,
 		"tier_name": "Artisan Breads",
-		"unlocks": ["sourdough", "baguette", "focaccia", "rye_bread"],
+		"unlocks": ["sourdough", "baguettes", "focaccia", "rye_bread", "multigrain_loaf"],
 		"story_beat": true
 	},
 	"special_occasion": {
 		"revenue_threshold": 5000.0,
 		"reached": false,
 		"tier_name": "Special Occasion Cakes",
-		"unlocks": ["birthday_cake", "wedding_cake", "cupcakes", "layer_cake"],
+		"unlocks": ["birthday_cake", "wedding_cupcakes", "cheesecake", "layer_cake"],
 		"story_beat": true,  # Important story letter
 		"special_unlock": "decorating_station"
 	},
@@ -42,7 +42,7 @@ var milestones: Dictionary = {
 		"revenue_threshold": 10000.0,
 		"reached": false,
 		"tier_name": "Grandma's Secret Recipes",
-		"unlocks": ["grandmas_pie", "secret_cookies", "special_bread", "mystery_cake"],
+		"unlocks": ["grandmas_apple_pie", "secret_recipe_cookies", "family_chocolate_cake", "holiday_specialty_bread"],
 		"story_beat": true,
 		"special_unlock": "recipe_book_complete"
 	},
@@ -50,7 +50,7 @@ var milestones: Dictionary = {
 		"revenue_threshold": 25000.0,
 		"reached": false,
 		"tier_name": "International Treats",
-		"unlocks": ["cronut", "macarons", "tiramisu", "baklava"],
+		"unlocks": ["french_macarons", "german_stollen", "italian_biscotti", "japanese_melon_pan"],
 		"story_beat": true,
 		"special_unlock": "bakery_expansion"
 	},
@@ -58,7 +58,7 @@ var milestones: Dictionary = {
 		"revenue_threshold": 50000.0,
 		"reached": false,
 		"tier_name": "Legendary Bakes",
-		"unlocks": ["legendary_bread", "ultimate_cake", "perfect_pastry"],
+		"unlocks": ["legendary_signature_cake", "championship_recipe", "town_festival_winner"],
 		"story_beat": true,
 		"special_unlock": "game_ending"
 	}
@@ -153,9 +153,18 @@ func unlock_recipe(recipe_id: String) -> void:
 		return  # Already unlocked
 
 	unlocked_recipes.append(recipe_id)
-	var recipe_name: String = recipe_id.replace("_", " ").capitalize()
-	print("Recipe unlocked: %s" % recipe_name)
-	recipe_unlocked.emit(recipe_id, recipe_name)
+
+	# Also unlock in RecipeManager if it exists
+	if RecipeManager:
+		RecipeManager.unlock_recipe(recipe_id)
+		var recipe_data: Dictionary = RecipeManager.get_recipe(recipe_id)
+		var recipe_name: String = recipe_data.get("name", recipe_id.replace("_", " ").capitalize())
+		print("Recipe unlocked: %s" % recipe_name)
+		recipe_unlocked.emit(recipe_id, recipe_name)
+	else:
+		var recipe_name: String = recipe_id.replace("_", " ").capitalize()
+		print("Recipe unlocked: %s" % recipe_name)
+		recipe_unlocked.emit(recipe_id, recipe_name)
 
 func is_recipe_unlocked(recipe_id: String) -> bool:
 	"""Check if a recipe is unlocked"""
