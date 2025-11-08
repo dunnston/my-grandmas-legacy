@@ -11,9 +11,9 @@
 [ext_resource type="PackedScene" uid="uid://planning_menu001" path="res://scenes/ui/planning_menu.tscn" id="9_planning"]
 [ext_resource type="PackedScene" uid="uid://cf3c4wqwx6lhm" path="res://scenes/ui/dev_menu.tscn" id="10_devmenu"]
 [ext_resource type="PackedScene" uid="uid://c3v8r1p2mxn4s" path="res://scenes/ui/quick_inventory.tscn" id="11_quickinv"]
-[ext_resource type="PackedScene" uid="uid://b4w9s2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
-[ext_resource type="PackedScene" uid="uid://d5x0t3r4oym6u" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
-[ext_resource type="PackedScene" uid="uid://e6y1u4s5pzn7v" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
+[ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
+[ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
+[ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
