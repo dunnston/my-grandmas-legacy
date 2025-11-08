@@ -82,15 +82,32 @@ func process_checkout(customer: Node3D) -> void:
 	var total_cost: float = customer.get_total_cost()
 
 	print("Customer wants to buy:")
+	var actual_total: float = 0.0
 	for item_data in items:
 		var item_id: String = item_data["item_id"]
 		var quantity: int = item_data["quantity"]
 		var recipe: Dictionary = RecipeManager.get_recipe(item_id)
 		var item_name: String = recipe.get("name", item_id)
-		var price: float = recipe.get("base_price", 0.0)
-		print("  - %dx %s ($%.2f each)" % [quantity, item_name, price])
+		var base_price: float = recipe.get("base_price", 0.0)
 
-	print("Total: $%.2f" % total_cost)
+		# Get quality metadata from display case to calculate actual price
+		var metadata: Dictionary = InventoryManager.get_item_metadata("display_case", item_id)
+		var price: float = base_price
+
+		if metadata.has("quality_data"):
+			var quality_data = metadata.quality_data
+			price = QualityManager.get_price_for_quality(base_price, quality_data)
+			var quality_str = " [%s - %.0f%%]" % [quality_data.get("tier_name", ""), quality_data.get("quality", 0.0)]
+			if quality_data.get("is_legendary", false):
+				quality_str += " ✨LEGENDARY"
+			print("  - %dx %s ($%.2f each%s)" % [quantity, item_name, price, quality_str])
+		else:
+			print("  - %dx %s ($%.2f each)" % [quantity, item_name, price])
+
+		actual_total += price * quantity
+
+	print("Total: $%.2f (Quality-adjusted!)" % actual_total)
+	total_cost = actual_total  # Use quality-adjusted total
 
 	# Check if items are available in display case
 	var can_fulfill: bool = _check_item_availability(items)

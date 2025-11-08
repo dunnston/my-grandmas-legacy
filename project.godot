@@ -32,6 +32,7 @@ QualityManager="*res://scripts/autoload/quality_manager.gd"
 UpgradeManager="*res://scripts/autoload/upgrade_manager.gd"
 CleanlinessManager="*res://scripts/autoload/cleanliness_manager.gd"
 SceneManager="*res://scripts/autoload/scene_manager.gd"
+AchievementManager="*res://scripts/autoload/achievement_manager.gd"
 
 [input]
 

@@ -19,44 +19,41 @@ var current_recipe: Dictionary = {}
 var current_recipe_id: String = ""
 var player_nearby: Node3D = null
 
-# Crafting recipes (Phase 2: 3 starter recipes)
-const RECIPES = {
-	"white_bread": {
-		"name": "White Bread Dough",
-		"ingredients": {
-			"flour": 2,
-			"yeast": 1,
-			"salt": 1
-		},
-		"result": "white_bread_dough",
-		"time": 60.0
-	},
-	"chocolate_chip_cookies": {
-		"name": "Cookie Dough",
-		"ingredients": {
-			"flour": 1,
-			"sugar": 1,
-			"butter": 1,
-			"eggs": 1,
-			"chocolate_chips": 2
-		},
-		"result": "cookie_dough",
-		"time": 45.0
-	},
-	"blueberry_muffins": {
-		"name": "Muffin Batter",
-		"ingredients": {
-			"flour": 2,
-			"sugar": 1,
-			"eggs": 1,
-			"milk": 1,
-			"blueberries": 2,
-			"butter": 1
-		},
-		"result": "muffin_batter",
-		"time": 50.0
-	}
-}
+# Note: Recipes are now loaded dynamically from RecipeManager
+# This allows access to all 27 recipes instead of just 3!
+
+# Helper: Convert recipe_id to dough/batter result
+func _get_dough_result(recipe_id: String) -> String:
+	# Map recipe IDs to their intermediate product (dough/batter)
+	match recipe_id:
+		"white_bread": return "white_bread_dough"
+		"chocolate_chip_cookies": return "cookie_dough"
+		"blueberry_muffins": return "muffin_batter"
+		"croissants": return "croissant_dough"
+		"danish_pastries": return "danish_dough"
+		"scones": return "scone_dough"
+		"cinnamon_rolls": return "cinnamon_roll_dough"
+		"sourdough": return "sourdough_dough"
+		"baguettes": return "baguette_dough"
+		"focaccia": return "focaccia_dough"
+		"rye_bread": return "rye_dough"
+		"multigrain_loaf": return "multigrain_dough"
+		"birthday_cake": return "birthday_cake_batter"
+		"wedding_cupcakes": return "wedding_cupcake_batter"
+		"cheesecake": return "cheesecake_batter"
+		"layer_cake": return "layer_cake_batter"
+		"grandmothers_apple_pie": return "apple_pie_dough"
+		"secret_recipe_cookies": return "secret_cookie_dough"
+		"family_chocolate_cake": return "family_chocolate_batter"
+		"holiday_specialty_bread": return "holiday_bread_dough"
+		"french_macarons": return "macaron_batter"
+		"german_stollen": return "stollen_dough"
+		"italian_biscotti": return "biscotti_dough"
+		"japanese_melon_pan": return "melon_pan_dough"
+		"grandmothers_legendary_cake": return "legendary_cake_batter"
+		"championship_recipe": return "championship_dough"
+		"town_festival_winner": return "festival_winner_dough"
+		_: return recipe_id + "_dough"  # Fallback
 
 func _ready() -> void:
 	# Create inventory for this station
@@ -98,22 +95,34 @@ func interact(player: Node3D) -> void:
 
 func open_crafting_ui(player: Node3D) -> void:
 	print("\n=== MIXING BOWL ===")
-	print("Available recipes:")
-	for recipe_id in RECIPES:
-		print("  - ", RECIPES[recipe_id]["name"])
+
+	# Get all unlocked recipes from RecipeManager
+	var unlocked_recipes: Array[Dictionary] = RecipeManager.get_all_unlocked_recipes()
+
+	if unlocked_recipes.is_empty():
+		print("No recipes unlocked yet!")
+		return
+
+	print("Available recipes (%d unlocked):" % unlocked_recipes.size())
+	for recipe in unlocked_recipes:
+		print("  - ", recipe["name"])
+
 	print("\nYour inventory:")
 	InventoryManager.print_inventory("player")
 	print("\nChecking which recipes you can make...")
 
-	# Check each recipe to see if player has ingredients
+	# Get player's current inventory
+	var player_inventory: Dictionary = InventoryManager.get_inventory("player")
+
+	# Check each unlocked recipe to see if player has ingredients
 	var craftable_recipe: Dictionary = {}
 	var craftable_recipe_id: String = ""
-	for recipe_id in RECIPES:
-		var recipe: Dictionary = RECIPES[recipe_id]
-		if check_recipe_ingredients("player", recipe):
+
+	for recipe in unlocked_recipes:
+		if RecipeManager.can_craft_recipe(recipe["id"], player_inventory):
 			print("✓ Can make: ", recipe["name"])
 			craftable_recipe = recipe
-			craftable_recipe_id = recipe_id
+			craftable_recipe_id = recipe["id"]
 			break  # Use first craftable recipe found
 		else:
 			print("✗ Missing ingredients for: ", recipe["name"])
@@ -125,34 +134,30 @@ func open_crafting_ui(player: Node3D) -> void:
 		print("\nYou don't have ingredients for any recipe.")
 		print("Go to the ingredient storage first!")
 
-func check_recipe_ingredients(inventory_id: String, recipe: Dictionary) -> bool:
-	for ingredient in recipe.ingredients:
-		var required: int = recipe.ingredients[ingredient]
-		if not InventoryManager.has_item(inventory_id, ingredient, required):
-			return false
-	return true
-
 func transfer_ingredients_and_start(from_inventory: String, recipe: Dictionary, recipe_id: String = "") -> void:
 	# Transfer ingredients from player to mixing bowl
 	var station_inventory = get_inventory_id()
+	var ingredients: Dictionary = recipe.get("ingredients", {})
 
-	for ingredient in recipe.ingredients:
-		var quantity: int = recipe.ingredients[ingredient]
+	for ingredient in ingredients:
+		var quantity: int = ingredients[ingredient]
 		if not InventoryManager.transfer_item(from_inventory, station_inventory, ingredient, quantity):
 			print("Error transferring ", ingredient)
 			return
 
 	start_crafting(recipe, recipe_id)
 
+# Removed check_recipe_ingredients() - using RecipeManager.can_craft_recipe() instead
+
 func start_crafting(recipe: Dictionary, recipe_id: String = "") -> void:
 	current_recipe = recipe
 	current_recipe_id = recipe_id
 	is_crafting = true
 	crafting_timer = 0.0
-	mixing_time = recipe.time
+	mixing_time = recipe.get("mixing_time", 60.0)
 
-	print("Started mixing ", recipe.name, "! Wait ", mixing_time, " seconds...")
-	crafting_started.emit(recipe.name)
+	print("Started mixing ", recipe.get("name", "Unknown"), "! Wait ", mixing_time, " seconds...")
+	crafting_started.emit(recipe.get("name", "Unknown"))
 
 	# Visual feedback (change color while mixing)
 	if mesh and mesh.get_surface_override_material_count() > 0:
@@ -161,16 +166,19 @@ func start_crafting(recipe: Dictionary, recipe_id: String = "") -> void:
 			mat.albedo_color = Color(0.8, 0.6, 0.3)  # Mixing color
 
 func complete_crafting() -> void:
-	print("Mixing complete! ", current_recipe.result, " is ready!")
+	# Get the dough/batter result for this recipe
+	var result: String = _get_dough_result(current_recipe_id)
+
+	print("Mixing complete! ", result, " is ready!")
 	print("(Quality will be determined when baked in the oven)")
 
 	# Clear station ingredients (they were used)
 	InventoryManager.clear_inventory(get_inventory_id())
 
 	# Add result to player inventory
-	InventoryManager.add_item("player", current_recipe.result, 1)
+	InventoryManager.add_item("player", result, 1)
 
-	crafting_complete.emit(current_recipe.result)
+	crafting_complete.emit(result)
 
 	# Reset state
 	is_crafting = false
