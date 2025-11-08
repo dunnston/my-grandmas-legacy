@@ -26,6 +26,10 @@ signal next_day_started()
 var staff_hiring_panel: VBoxContainer
 var staff_tab_index: int = -1
 
+# Build shop panel (created dynamically)
+var build_shop_panel: VBoxContainer
+var build_shop_tab_index: int = -1
+
 # State
 var daily_report: Dictionary = {}
 var ingredient_order: Dictionary = {}
@@ -37,11 +41,17 @@ const INGREDIENT_STORAGE_ID: String = "ingredient_storage_IngredientStorage"  # 
 func _ready() -> void:
 	hide()  # Hidden by default
 
+	# Add to planning_menu group for easy access
+	add_to_group("planning_menu")
+
 	if next_day_button:
 		next_day_button.pressed.connect(_on_next_day_pressed)
 
 	# Create staff hiring tab
 	_create_staff_tab()
+
+	# Create build shop tab
+	_create_build_shop_tab()
 
 	print("PlanningMenu initialized")
 
@@ -55,6 +65,7 @@ func open_menu() -> void:
 	_setup_ingredient_ordering()
 	_setup_marketing_campaigns()
 	_setup_staff_hiring()
+	_setup_build_shop()
 
 	print("\n=== PLANNING PHASE ===")
 	print("Review your day and prepare for tomorrow!")
@@ -383,3 +394,28 @@ func _setup_staff_hiring() -> void:
 	"""Refresh the staff hiring panel"""
 	if staff_hiring_panel and staff_hiring_panel.has_method("refresh_display"):
 		staff_hiring_panel.refresh_display()
+
+func _create_build_shop_tab() -> void:
+	"""Create the Build Shop tab in the TabContainer"""
+	if not tab_container:
+		print("ERROR: TabContainer not found!")
+		return
+
+	# Create a new tab for Build Shop
+	var build_scroll: ScrollContainer = ScrollContainer.new()
+	build_scroll.name = "Build Shop"
+	tab_container.add_child(build_scroll)
+
+	# Load the build shop script
+	var BuildShopScript = load("res://scripts/ui/build_shop.gd")
+	build_shop_panel = BuildShopScript.new()
+	build_shop_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	build_scroll.add_child(build_shop_panel)
+
+	build_shop_tab_index = tab_container.get_child_count() - 1
+	print("Build Shop tab created at index: ", build_shop_tab_index)
+
+func _setup_build_shop() -> void:
+	"""Refresh the build shop panel"""
+	if build_shop_panel and build_shop_panel.has_method("_refresh_items"):
+		build_shop_panel._refresh_items()
