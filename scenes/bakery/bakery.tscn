@@ -132,16 +132,18 @@ gizmo_extents = 0.5
 
 [node name="Customers" type="Node3D" parent="."]
 
-[node name="HUD" parent="." instance=ExtResource("8_hud")]
+[node name="UILayer" type="CanvasLayer" parent="."]
 
-[node name="PlanningMenu" parent="." instance=ExtResource("9_planning")]
+[node name="HUD" parent="UILayer" instance=ExtResource("8_hud")]
 
-[node name="DevMenu" parent="." instance=ExtResource("10_devmenu")]
+[node name="PlanningMenu" parent="UILayer" instance=ExtResource("9_planning")]
 
-[node name="QuickInventory" parent="." instance=ExtResource("11_quickinv")]
+[node name="DevMenu" parent="UILayer" instance=ExtResource("10_devmenu")]
 
-[node name="RecipeBook" parent="." instance=ExtResource("12_recipebook")]
+[node name="QuickInventory" parent="UILayer" instance=ExtResource("11_quickinv")]
 
-[node name="StoryLetter" parent="." instance=ExtResource("13_storyletter")]
+[node name="RecipeBook" parent="UILayer" instance=ExtResource("12_recipebook")]
 
-[node name="EventNotification" parent="." instance=ExtResource("14_eventnotif")]
+[node name="StoryLetter" parent="UILayer" instance=ExtResource("13_storyletter")]
+
+[node name="EventNotification" parent="UILayer" instance=ExtResource("14_eventnotif")]
