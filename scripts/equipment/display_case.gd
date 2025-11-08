@@ -37,7 +37,19 @@ func get_interaction_prompt() -> String:
 	return "[E] Stock Display Case"
 
 func interact(player: Node3D) -> void:
-	open_display_ui(player)
+	open_visual_display_ui(player)
+
+func open_visual_display_ui(player: Node3D) -> void:
+	"""Open the visual UI for the display case"""
+	var hud = get_tree().get_first_node_in_group("hud")
+	if not hud:
+		print("ERROR: Could not find HUD!")
+		return
+	var ui_manager = hud.get_equipment_ui_manager()
+	if not ui_manager:
+		print("ERROR: Could not find Equipment UI Manager!")
+		return
+	ui_manager.show_display_case_ui(get_inventory_id(), player.get_inventory_id())
 
 func open_display_ui(player: Node3D) -> void:
 	print("\n=== DISPLAY CASE ===")

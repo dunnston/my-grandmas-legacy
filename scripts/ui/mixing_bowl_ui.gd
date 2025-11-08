@@ -11,16 +11,20 @@ var timer_label: Label
 var status_label: Label
 var finished_product_button: Button
 
+var status_container: VBoxContainer
+var status_display_created: bool = false
+
 func _ready() -> void:
 	super._ready()
-	equipment_label.text = "Mixing Bowl"
-
-	# Create status display
-	_create_status_display()
+	if equipment_label:
+		equipment_label.text = "Mixing Bowl"
 
 func _create_status_display() -> void:
-	"""Create timer and status labels"""
-	var status_container = VBoxContainer.new()
+	"""Create timer and status labels (called lazily on first open)"""
+	if status_display_created or not equipment_container:
+		return
+
+	status_container = VBoxContainer.new()
 	status_container.custom_minimum_size = Vector2(0, 60)
 
 	status_label = Label.new()
@@ -34,12 +38,16 @@ func _create_status_display() -> void:
 	status_container.add_child(timer_label)
 
 	# Add to equipment side, after label
-	equipment_container.get_parent().add_child(status_container)
-	equipment_container.get_parent().move_child(status_container, 1)
+	var parent = equipment_container.get_parent()
+	if parent:
+		parent.add_child(status_container)
+		parent.move_child(status_container, 1)
+		status_display_created = true
 
 func open_ui_with_equipment(equipment_inv_id: String, player_inv_id: String, equipment_node: Node) -> void:
 	"""Open UI with reference to mixing bowl equipment"""
 	mixing_bowl_script = equipment_node
+	_create_status_display()  # Create status display on first open
 	open_ui(equipment_inv_id, player_inv_id)
 
 func _process(delta: float) -> void:
