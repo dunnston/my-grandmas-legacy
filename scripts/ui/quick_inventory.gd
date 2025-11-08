@@ -150,7 +150,8 @@ func _on_close_pressed() -> void:
 	"""Close button pressed"""
 	hide_inventory()
 
-func _on_inventory_changed() -> void:
+func _on_inventory_changed(inventory_id: String) -> void:
 	"""Called when inventory changes - refresh if visible"""
-	if is_visible:
+	# Only refresh if the player inventory changed
+	if inventory_id == "player" and is_visible:
 		refresh_inventory()
