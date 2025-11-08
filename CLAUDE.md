@@ -169,11 +169,13 @@ See [PLAN.md](PLAN.md) for detailed task breakdowns.
 ## Common Tasks Reference
 
 ### Adding a New Recipe
-1. Create recipe resource file in `resources/recipes/`
-2. Define ingredients array, times, prices
-3. Add to RecipeManager's recipe dictionary
-4. Associate with unlock milestone in ProgressionManager
-5. Test crafting workflow in editor
+1. Add to `RecipeManager` using `register_recipe()` with base values
+2. Define ingredients array, mixing_time, baking_time, base_price
+3. **If using new ingredients:** Add prices to `balance_config.gd` ECONOMY.ingredient_prices
+4. (Optional) Add recipe reference to `balance_config.gd` RECIPES.recipes
+5. Associate with unlock milestone in ProgressionManager
+6. Test crafting workflow and profitability in editor
+7. **See "Balance System" section below for full details**
 
 ### Adding Equipment
 1. Create scene in `scenes/bakery/equipment/`
@@ -188,6 +190,228 @@ See [PLAN.md](PLAN.md) for detailed task breakdowns.
 3. Use print() to debug state
 4. Check debugger for errors/warnings
 5. Test edge cases (empty inventory, etc.)
+
+---
+
+## Balance System (IMPORTANT!)
+
+### Overview
+All game balance parameters are centralized in `scripts/autoload/balance_config.gd`. This file contains 200+ tweakable values that control timing, economy, progression, and gameplay feel.
+
+**Key Documents:**
+- `scripts/autoload/balance_config.gd` - Central balance configuration (edit this to tweak balance)
+- `BALANCE_ANALYSIS.md` - Comprehensive analysis of current balance state
+- `BALANCE_QUICKSTART.md` - Quick reference for common tweaks
+
+### How the Balance System Works
+
+The system uses **automatic multipliers** that apply when content is registered:
+
+```gd
+# In balance_config.gd
+RECIPES = {
+    "mixing_time_multiplier": 1.0,      # Affects ALL recipes automatically
+    "baking_time_multiplier": 0.5,      # Makes all baking 2x faster
+    "price_multiplier_global": 1.5,     # Makes all recipes 50% more expensive
+}
+```
+
+When you add a recipe to `recipe_manager.gd`, these multipliers apply automatically. You don't need to update balance_config.gd unless you want to tweak individual values.
+
+### When Adding New Recipes
+
+#### Required Steps:
+1. Add recipe to `recipe_manager.gd` using `register_recipe()` (as usual)
+2. Set base values (mixing_time, baking_time, base_price)
+3. **That's it!** Multipliers apply automatically
+
+#### Optional Step:
+Add recipe reference to `balance_config.gd` for documentation:
+```gd
+# In balance_config.gd RECIPES.recipes section (~line 130-250)
+"your_new_recipe": {
+    "mixing_time": 60.0,
+    "baking_time": 300.0,
+    "base_price": 25.0,
+},
+```
+
+**Why optional?** The recipe works without this. Adding it:
+- Documents all recipes in one place
+- Allows the `get_recipe_price()` helper to calculate tier multipliers
+- Makes balance testing easier
+
+#### Example:
+```gd
+# In recipe_manager.gd
+register_recipe({
+    "id": "pain_au_chocolat",
+    "name": "Pain au Chocolat",
+    "ingredients": {"flour": 2, "butter": 2, "chocolate": 1},
+    "mixing_time": 90.0,          # Will be × mixing_time_multiplier
+    "baking_time": 360.0,         # Will be × baking_time_multiplier
+    "base_price": 28.0,           # Will be × price multipliers
+})
+```
+
+### When Adding New Ingredients
+
+#### Required Steps:
+1. Add price to `balance_config.gd` ECONOMY.ingredient_prices (~line 46-85):
+```gd
+"ingredient_prices": {
+    "flour": 2.0,
+    # ... existing ingredients ...
+    "dark_chocolate": 8.0,     # ADD THIS for new ingredient
+    "pistachios": 10.0,        # ADD THIS for new ingredient
+}
+```
+
+2. (Optional) Add starting stock to STARTING_RESOURCES (~line 505-530):
+```gd
+"dark_chocolate": 5,           # Players start with 5 units
+```
+
+**Why required?** `EconomyManager` loads prices from BalanceConfig on startup. Missing ingredients will have $0 cost, breaking the economy!
+
+### When Adding New Equipment/Upgrades
+
+#### Required Steps:
+Add costs and stats to `balance_config.gd` EQUIPMENT section (~line 389-450):
+```gd
+EQUIPMENT = {
+    # ... existing equipment ...
+
+    "decorating_station_cost": 1500.0,
+    "decorating_station_unlock": 5000.0,
+    "decorating_station_quality_bonus": 5,
+}
+```
+
+Then in your equipment script:
+```gd
+func _ready():
+    upgrade_cost = BalanceConfig.EQUIPMENT.decorating_station_cost
+    quality_bonus = BalanceConfig.EQUIPMENT.decorating_station_quality_bonus
+```
+
+### When Adding New Game Systems
+
+For new managers or major systems:
+
+1. **Add config section** to `balance_config.gd`:
+```gd
+const YOUR_SYSTEM = {
+    "base_value": 50.0,
+    "decay_rate": 2.0,
+    "max_threshold": 100,
+}
+```
+
+2. **Load in your manager** script:
+```gd
+func _ready():
+    base_value = BalanceConfig.YOUR_SYSTEM.base_value
+    decay_rate = BalanceConfig.YOUR_SYSTEM.decay_rate
+```
+
+3. **Document** in BALANCE_ANALYSIS.md (add new section with parameter table)
+
+### Balance System Maintenance Checklist
+
+Use this checklist when adding content:
+
+**Adding a Recipe:**
+- [ ] Add to `recipe_manager.gd` with `register_recipe()`
+- [ ] Test that multipliers apply (check in-game prices/times)
+- [ ] (Optional) Add to `balance_config.gd` RECIPES.recipes for reference
+
+**Adding an Ingredient:**
+- [ ] Add price to `balance_config.gd` ECONOMY.ingredient_prices
+- [ ] (Optional) Add starting stock to STARTING_RESOURCES
+- [ ] Test that recipes using it calculate cost correctly
+
+**Adding Equipment:**
+- [ ] Add cost/stats to `balance_config.gd` EQUIPMENT
+- [ ] Update equipment script to load from BalanceConfig
+- [ ] Add unlock threshold if progression-gated
+
+**Adding New System:**
+- [ ] Create const section in `balance_config.gd`
+- [ ] Load values in system's `_ready()` function
+- [ ] Document in BALANCE_ANALYSIS.md
+
+### Common Mistakes to Avoid
+
+❌ **Forgetting ingredient prices**
+```gd
+# recipe_manager.gd - added new ingredient
+"ingredients": {"saffron": 2}
+
+# Forgot to add to balance_config.gd!
+# Result: Saffron costs $0, recipe is too profitable
+```
+
+✅ **Always add ingredient price:**
+```gd
+# balance_config.gd
+"saffron": 15.0,
+```
+
+❌ **Hardcoding values that should scale**
+```gd
+var upgrade_cost = 2000.0  # Bad: can't balance easily
+```
+
+✅ **Load from BalanceConfig:**
+```gd
+var upgrade_cost = BalanceConfig.EQUIPMENT.oven_tier_1_cost
+```
+
+❌ **Updating individual recipe times instead of multiplier**
+```gd
+# Changing 27 recipes individually = tedious
+"white_bread": { "baking_time": 150.0 }
+"cookies": { "baking_time": 90.0 }
+# ...
+```
+
+✅ **Use global multiplier:**
+```gd
+"baking_time_multiplier": 0.5  # One line affects all recipes
+```
+
+### Quick Balance Testing
+
+After adding content, test:
+
+1. **Run game** (F5)
+2. **Check profitability** - New recipe should make profit at normal quality
+3. **Check timing** - Recipe should complete within business day at 1x speed
+4. **Check prices** - Compare to similar-tier recipes
+
+If values feel off:
+1. Open `balance_config.gd`
+2. Adjust individual recipe values or multipliers
+3. Press F5 to test
+4. Repeat until balanced
+
+### Balance System Philosophy
+
+**The Goal:** Make balancing easy by centralizing all numbers in one place.
+
+**Best Practices:**
+- Use **global multipliers** for mass changes (all recipes faster/cheaper)
+- Use **tier multipliers** for category changes (just starter recipes cheaper)
+- Use **individual values** for fine-tuning specific recipes
+- **Document changes** with comments explaining why
+- **Test frequently** - balance changes can have cascading effects
+
+**Workflow:**
+```
+New Content → Hardcode initially → Test → Stabilize → Move to BalanceConfig
+Balance Tweaks → Edit BalanceConfig → Test → Iterate → Commit when good
+```
 
 ---
 
@@ -266,9 +490,12 @@ When working with Claude on this project:
 - ✅ Use feature branches, never commit to main
 - ✅ Refer to GDD.md for design details (but don't read entire file every time)
 - ✅ Update PLAN.md checkboxes as tasks complete
+- ✅ **Add new ingredient prices to balance_config.gd** when adding recipes
+- ✅ **Use BalanceConfig for all tweakable numbers** (don't hardcode)
 - ❌ Don't use npm, node, or web dev tools
 - ❌ Don't add art assets until gameplay is proven
 - ❌ Don't skip testing phases
+- ❌ Don't forget to update balance_config.gd when adding content
 
 ---
 

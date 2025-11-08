@@ -2,6 +2,10 @@ extends Node
 
 # GameManager - Singleton for managing game state, phases, and time
 # Handles the daily cycle and phase transitions
+#
+# BALANCE CONFIG INTEGRATION:
+# Time constants are now loaded from BalanceConfig.
+# To adjust timing balance, modify scripts/autoload/balance_config.gd
 
 # Signals
 signal phase_changed(new_phase: Phase)
@@ -26,14 +30,20 @@ var is_paused: bool = false
 var game_time: float = 0.0  # Time of day in seconds (0 = midnight, 32400 = 9 AM)
 var phase_start_time: float = 0.0
 
-# Constants
-const SECONDS_PER_GAME_HOUR: float = 60.0  # 1 game hour = 60 real seconds at 1x speed
-const BUSINESS_START_HOUR: int = 9  # 9 AM
-const BUSINESS_END_HOUR: int = 17  # 5 PM
+# Time constants - loaded from BalanceConfig
+var SECONDS_PER_GAME_HOUR: float = 60.0
+var BUSINESS_START_HOUR: int = 9
+var BUSINESS_END_HOUR: int = 17
 
 func _ready() -> void:
+	# Load balance config values
+	SECONDS_PER_GAME_HOUR = BalanceConfig.TIME.seconds_per_game_hour
+	BUSINESS_START_HOUR = BalanceConfig.TIME.business_start_hour
+	BUSINESS_END_HOUR = BalanceConfig.TIME.business_end_hour
+
 	print("GameManager initialized")
 	print("Starting Day ", current_day, " - Phase: BAKING")
+	print("Business hours: ", BUSINESS_START_HOUR, ":00 to ", BUSINESS_END_HOUR, ":00")
 
 func _process(delta: float) -> void:
 	if not is_paused:
