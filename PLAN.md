@@ -371,11 +371,11 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Polish final ending sequence ($50k milestone)
 
 #### Apartment Scene
-- [ ] Create Apartment.tscn (upstairs)
-- [ ] Add basic furniture and decorations (CSG)
-- [ ] Add transition between bakery and apartment
-- [ ] Add sleep interaction (optional time skip)
-- [ ] Add decorative interactions (TV, bookshelf)
+- [x] Create Apartment.tscn (upstairs) ✅ COMPLETE!
+- [x] Add basic furniture and decorations (CSG)
+- [x] Add transition between bakery and apartment (SceneManager)
+- [x] Add sleep interaction placeholder (optional time skip)
+- [x] Add decorative interactions (TV, bookshelf, photo)
 
 #### Quality of Life Features
 - [x] Add hotkeys for common actions (Tab, R, Space, +/-, ESC)
