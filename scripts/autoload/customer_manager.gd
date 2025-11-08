@@ -302,6 +302,10 @@ func get_projected_daily_customers() -> int:
 
 # Save/Load support
 func get_save_data() -> Dictionary:
+	# Clear active customers before saving to prevent stale customer state
+	# Customers will naturally respawn when business phase starts
+	clear_all_customers()
+
 	return {
 		"customers_served_today": customers_served_today,
 		"total_satisfaction_today": total_satisfaction_today
