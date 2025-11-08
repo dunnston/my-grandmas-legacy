@@ -430,12 +430,14 @@ func _get_price_tolerance_range(item_id: String, metadata: Dictionary) -> Dictio
 		elif quality < 70:  # Poor quality
 			max_tolerance -= BalanceConfig.CUSTOMERS.quality_poor_price_penalty
 
-	# Reputation affects tolerance
-	if ReputationManager:
-		var reputation = ReputationManager.get_reputation()
-		if reputation >= 75:
-			max_tolerance += BalanceConfig.CUSTOMERS.reputation_high_price_bonus
-		elif reputation < 30:
-			max_tolerance -= BalanceConfig.CUSTOMERS.reputation_low_price_penalty
+	# Reputation affects tolerance (if ReputationManager exists)
+	# Note: ReputationManager not yet implemented, will use when available
+	# TODO: Integrate with ReputationManager when Phase 3 systems are complete
+	# if ReputationManager:
+	# 	var reputation = ReputationManager.get_reputation()
+	# 	if reputation >= 75:
+	# 		max_tolerance += BalanceConfig.CUSTOMERS.reputation_high_price_bonus
+	# 	elif reputation < 30:
+	# 		max_tolerance -= BalanceConfig.CUSTOMERS.reputation_low_price_penalty
 
 	return {"min": min_tolerance, "max": max_tolerance}
