@@ -23,7 +23,7 @@ const DISPLAY_CASE_UI_SCENE = preload("res://scenes/ui/display_case_ui.tscn")
 func _ready() -> void:
 	print("EquipmentUIManager ready")
 
-func setup_uis(parent: Control) -> void:
+func setup_uis(parent: Node) -> void:
 	"""Initialize all UI instances and add them to parent"""
 	# Create UIs
 	storage_ui = STORAGE_UI_SCENE.instantiate()
