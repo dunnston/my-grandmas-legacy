@@ -155,6 +155,10 @@ func _collect_save_data() -> Dictionary:
 	if MarketingManager:
 		data["marketing_manager"] = MarketingManager.get_save_data()
 
+	# Upgrades (purchased upgrades)
+	if UpgradeManager:
+		data["upgrade_manager"] = UpgradeManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -202,6 +206,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Marketing
 	if data.has("marketing_manager") and MarketingManager:
 		MarketingManager.load_save_data(data["marketing_manager"])
+
+	# Upgrades
+	if data.has("upgrade_manager") and UpgradeManager:
+		UpgradeManager.load_save_data(data["upgrade_manager"])
 
 	print("Applied save data to all managers")
 

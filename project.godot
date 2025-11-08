@@ -29,6 +29,7 @@ UIManager="*res://scripts/autoload/ui_manager.gd"
 EventManager="*res://scripts/autoload/event_manager.gd"
 MarketingManager="*res://scripts/autoload/marketing_manager.gd"
 QualityManager="*res://scripts/autoload/quality_manager.gd"
+UpgradeManager="*res://scripts/autoload/upgrade_manager.gd"
 SceneManager="*res://scripts/autoload/scene_manager.gd"
 
 [input]
