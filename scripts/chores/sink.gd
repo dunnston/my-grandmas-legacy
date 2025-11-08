@@ -103,3 +103,26 @@ func get_progress() -> float:
 	if not is_washing:
 		return 0.0
 	return wash_timer / wash_time
+
+# ============================================================================
+# AUTOMATION METHODS (for staff AI)
+# ============================================================================
+
+func needs_cleaning() -> bool:
+	"""Check if this station needs cleaning (called by Cleaner AI)"""
+	return not CleanlinessManager.is_chore_completed("dishes") and not is_washing
+
+func get_cleanup_duration() -> float:
+	"""Get how long this task takes (called by Cleaner AI)"""
+	return wash_time
+
+func auto_clean(quality_mult: float = 1.0) -> bool:
+	"""Clean automatically (called by Cleaner AI)"""
+	if not needs_cleaning():
+		return false
+
+	# Instant completion for AI (already spent time in AI logic)
+	CleanlinessManager.complete_chore("dishes")
+	print("[Sink] Auto-cleaned dishes (quality: ", int(quality_mult * 100), "%)")
+	dishes_washed.emit()
+	return true

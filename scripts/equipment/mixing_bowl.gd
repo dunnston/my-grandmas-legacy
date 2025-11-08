@@ -199,3 +199,25 @@ func get_crafting_progress() -> float:
 	if not is_crafting:
 		return 0.0
 	return crafting_timer / mixing_time
+
+# ============================================================================
+# AUTOMATION METHODS (for staff AI)
+# ============================================================================
+
+func auto_start_recipe(recipe_id: String, recipe_data: Dictionary, quality_mult: float = 1.0) -> bool:
+	"""Start a recipe automatically (called by Baker AI)"""
+	if is_crafting:
+		return false
+
+	current_recipe_id = recipe_id
+	current_recipe = recipe_data
+	is_crafting = true
+	crafting_timer = 0.0
+
+	# Apply quality multiplier to the result (stored for when crafting completes)
+	if not current_recipe.has("quality_multiplier"):
+		current_recipe["quality_multiplier"] = quality_mult
+
+	print("[MixingBowl] Auto-started recipe: ", recipe_data.name, " (quality: ", int(quality_mult * 100), "%)")
+	crafting_started.emit(recipe_data.name)
+	return true

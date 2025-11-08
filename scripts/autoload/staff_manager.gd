@@ -61,9 +61,9 @@ var skill_quality_multipliers: Dictionary = {
 
 func _ready() -> void:
 	print("StaffManager initialized")
-	# Connect to day change signal
+	# Connect to day change and phase change signals
 	if GameManager:
-		GameManager.day_ended.connect(_on_day_ended)
+		GameManager.day_changed.connect(_on_day_changed)
 		GameManager.phase_changed.connect(_on_phase_changed)
 
 	# Generate initial applicant pool
@@ -216,12 +216,12 @@ func _check_skill_improvement(staff_id: String) -> void:
 		print(staff_data.name, " improved to ", staff_data.skill, " stars!")
 		staff_skill_improved.emit(staff_id, staff_data.skill)
 
-func _on_day_ended() -> void:
-	"""Called when day ends - pay wages and handle weekly events"""
+func _on_day_changed(new_day: int) -> void:
+	"""Called when day changes - pay wages and handle weekly events"""
 	pay_daily_wages()
 
 	# Refresh applicants weekly (every 7 days)
-	if GameManager and GameManager.current_day % 7 == 0:
+	if new_day % 7 == 0:
 		refresh_applicants()
 
 # ============================================================================

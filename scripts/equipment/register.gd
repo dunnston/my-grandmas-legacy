@@ -185,3 +185,58 @@ func get_current_customer_info() -> Dictionary:
 			"mood": current_customer.get_mood()
 		}
 	return {}
+
+# ============================================================================
+# AUTOMATION METHODS (for staff AI)
+# ============================================================================
+
+func get_waiting_customer() -> Node3D:
+	"""Get next waiting customer (called by Cashier AI)"""
+	if current_customer:
+		return null  # Already serving someone
+
+	var waiting: Array[Node3D] = CustomerManager.get_customers_waiting_at_register()
+	if waiting.size() > 0:
+		return waiting[0]
+	return null
+
+func auto_process_customer(customer: Node3D) -> bool:
+	"""Process a customer checkout automatically (called by Cashier AI)"""
+	if current_customer or not customer:
+		return false
+
+	# Check if customer has selected items
+	if not customer.has_method("get_selected_items"):
+		return false
+
+	var items: Array = customer.get_selected_items()
+	if items.is_empty():
+		print("[Register] Customer has no items")
+		return false
+
+	# Check availability
+	if not _check_item_availability(items):
+		print("[Register] Items not available")
+		return false
+
+	# Process the sale
+	var total_price: float = customer.get_total_cost()
+
+	# Remove items from display
+	_remove_items_from_display(items)
+
+	# Add money
+	EconomyManager.add_money(total_price, "Sale")
+
+	# Update customer satisfaction
+	if customer.has_method("complete_purchase"):
+		customer.complete_purchase()
+
+	# Track the sale
+	if CustomerManager:
+		CustomerManager.record_sale(items, total_price)
+
+	print("[Register] Auto-processed sale: $%.2f" % total_price)
+	sale_completed.emit(items, total_price)
+
+	return true
