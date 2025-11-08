@@ -319,8 +319,9 @@ This is a living document that tracks the development progress of "My Grandma's 
 ### Tasks
 
 #### Complete Recipe Catalog
-- [ ] Implement all 27 recipes with proper data
-- [ ] Test each recipe's crafting workflow
+- [x] Implement all 27 recipes with proper data
+- [x] Connect recipes to milestone unlock system
+- [ ] Test each recipe's crafting workflow in-game
 - [ ] Balance costs and sell prices for each
 - [ ] Add quality variations for each recipe
 - [ ] Implement legendary item chance (5% on perfect)
@@ -350,13 +351,15 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Balance event frequency and impact
 
 #### Story Implementation
-- [ ] Write grandmother's letters for each milestone
-- [ ] Create story beat UI (letter reading popup)
-- [ ] Trigger story beats at milestones
-- [ ] Add grandmother's photo to bakery
-- [ ] Add newspaper article props
-- [ ] Add recipe book with notes
-- [ ] Implement final ending sequence ($50k milestone)
+- [x] Write grandmother's letters for each milestone (7 letters complete)
+- [x] Create StoryManager singleton for narrative
+- [x] Trigger story beats at milestones (auto-connected)
+- [x] Integrate with save/load system
+- [ ] Create story beat UI (letter reading popup) - needs UI work
+- [ ] Add grandmother's photo to bakery (visual asset)
+- [ ] Add newspaper article props (visual asset)
+- [ ] Add recipe book with notes (UI work)
+- [ ] Polish final ending sequence ($50k milestone)
 
 #### Apartment Scene
 - [ ] Create Apartment.tscn (upstairs)

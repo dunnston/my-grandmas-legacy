@@ -41,7 +41,7 @@ func save_game(slot: String = DEFAULT_SAVE_SLOT) -> bool:
 	save_data["metadata"] = {
 		"save_slot": slot,
 		"save_time": Time.get_datetime_string_from_system(),
-		"game_version": "0.3.0",  # Phase 3
+		"game_version": "0.4.0",  # Phase 4
 		"day": GameManager.get_current_day(),
 		"cash": EconomyManager.get_current_cash(),
 		"reputation": ProgressionManager.get_reputation() if ProgressionManager else 50,
@@ -143,6 +143,10 @@ func _collect_save_data() -> Dictionary:
 	if ProgressionManager:
 		data["progression_manager"] = ProgressionManager.get_save_data()
 
+	# Story (letters read, narrative state)
+	if StoryManager:
+		data["story_manager"] = StoryManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -178,6 +182,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Progression
 	if data.has("progression_manager") and ProgressionManager:
 		ProgressionManager.load_save_data(data["progression_manager"])
+
+	# Story
+	if data.has("story_manager") and StoryManager:
+		StoryManager.load_save_data(data["story_manager"])
 
 	print("Applied save data to all managers")
 
