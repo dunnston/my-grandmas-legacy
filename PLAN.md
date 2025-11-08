@@ -331,11 +331,14 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Balance costs and sell prices for each
 
 #### Upgrade Catalog Expansion
-- [ ] Add all furniture options (tables, chairs, shelving)
-- [ ] Add decoration options (paint, wallpaper, flooring, lighting)
-- [ ] Add structural upgrades (wall repairs, expansion)
-- [ ] Implement visual changes for aesthetic upgrades
-- [ ] Create upgrade preview system
+- [x] Add all furniture options (tables, chairs, shelving, counters) ✅ 10 upgrades
+- [x] Add decoration options (paint, wallpaper, flooring, lighting, art, plants) ✅ 14 upgrades
+- [x] Add structural upgrades (wall repairs, windows, expansion) ✅ 6 upgrades
+- [x] Add equipment upgrades (ovens, mixers, displays, registers) ✅ 10 upgrades
+- [x] Create UpgradeManager singleton with 40+ total upgrades
+- [x] Integrate with save/load system
+- [ ] Implement visual changes for aesthetic upgrades (future - needs 3D models)
+- [ ] Create upgrade preview system (future enhancement)
 
 #### Marketing System
 - [x] Implement MarketingManager singleton with 8 campaign types
