@@ -12,13 +12,13 @@ signal ui_closed()
 var equipment_inventory_id: String = ""
 var player_inventory_id: String = ""
 
-# UI Components
-@onready var panel: Panel = $Panel
-@onready var equipment_container: VBoxContainer = $Panel/HBoxContainer/EquipmentSide/ItemList
-@onready var player_container: VBoxContainer = $Panel/HBoxContainer/PlayerSide/ItemList
-@onready var equipment_label: Label = $Panel/HBoxContainer/EquipmentSide/Label
-@onready var player_label: Label = $Panel/HBoxContainer/PlayerSide/Label
-@onready var close_button: Button = $Panel/CloseButton
+# UI Components (get dynamically to support scene inheritance)
+var panel: Panel = null
+var equipment_container: VBoxContainer = null
+var player_container: VBoxContainer = null
+var equipment_label: Label = null
+var player_label: Label = null
+var close_button: Button = null
 
 # Item button cache
 var equipment_buttons: Array[Button] = []
@@ -26,11 +26,27 @@ var player_buttons: Array[Button] = []
 
 func _ready() -> void:
 	visible = false
+	_get_ui_nodes()
 
 	if close_button:
 		close_button.pressed.connect(_on_close_pressed)
 
 	print("EquipmentUIBase ready")
+
+func _get_ui_nodes() -> void:
+	"""Get UI node references - called in _ready to support scene inheritance"""
+	panel = get_node_or_null("Panel")
+	if panel:
+		equipment_container = panel.get_node_or_null("HBoxContainer/EquipmentSide/ScrollContainer/ItemList")
+		player_container = panel.get_node_or_null("HBoxContainer/PlayerSide/ScrollContainer/ItemList")
+		equipment_label = panel.get_node_or_null("HBoxContainer/EquipmentSide/Label")
+		player_label = panel.get_node_or_null("HBoxContainer/PlayerSide/Label")
+		close_button = panel.get_node_or_null("CloseButton")
+
+	if not equipment_container:
+		push_error("EquipmentUIBase: Could not find equipment_container at Panel/HBoxContainer/EquipmentSide/ScrollContainer/ItemList")
+	if not player_container:
+		push_error("EquipmentUIBase: Could not find player_container at Panel/HBoxContainer/PlayerSide/ScrollContainer/ItemList")
 
 func open_ui(equipment_inv_id: String, player_inv_id: String) -> void:
 	"""Open the equipment UI with specified inventories"""
@@ -63,6 +79,10 @@ func _refresh_equipment_inventory() -> void:
 		button.queue_free()
 	equipment_buttons.clear()
 
+	if not equipment_container:
+		push_error("EquipmentUIBase: equipment_container is null! Scene structure may be incorrect.")
+		return
+
 	# Get inventory
 	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
 
@@ -81,6 +101,10 @@ func _refresh_player_inventory() -> void:
 	for button in player_buttons:
 		button.queue_free()
 	player_buttons.clear()
+
+	if not player_container:
+		push_error("EquipmentUIBase: player_container is null! Scene structure may be incorrect.")
+		return
 
 	# Get inventory
 	var inventory = InventoryManager.get_inventory(player_inventory_id)
