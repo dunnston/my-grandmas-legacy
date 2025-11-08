@@ -1,6 +1,7 @@
 extends Node3D
 
 # DisplayCase - Store finished goods for sale (Phase 2 will handle customers)
+# TODO: Extend to support quality tiers - requires InventoryManager to store item metadata
 
 signal item_stocked(item_id: String, quantity: int)
 signal item_removed(item_id: String, quantity: int)
@@ -41,6 +42,7 @@ func interact(player: Node3D) -> void:
 func open_display_ui(player: Node3D) -> void:
 	print("\n=== DISPLAY CASE ===")
 	print("Stock your baked goods here for customers to buy")
+	print("(Quality tracking coming soon - will affect prices!)")
 	print("\nYour inventory:")
 	InventoryManager.print_inventory("player")
 	print("\nCurrent display:")

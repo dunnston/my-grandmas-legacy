@@ -321,10 +321,14 @@ This is a living document that tracks the development progress of "My Grandma's 
 #### Complete Recipe Catalog
 - [x] Implement all 27 recipes with proper data
 - [x] Connect recipes to milestone unlock system
+- [x] Add quality variations for each recipe (QualityManager created!)
+- [x] Implement legendary item chance (5% on perfect)
+- [x] Create QualityManager singleton with quality tiers
+- [x] Implement timing-based quality calculation
+- [x] Add equipment tier bonus system
+- [ ] Integrate quality system with equipment (oven/mixer) - NEXT
 - [ ] Test each recipe's crafting workflow in-game
 - [ ] Balance costs and sell prices for each
-- [ ] Add quality variations for each recipe
-- [ ] Implement legendary item chance (5% on perfect)
 
 #### Upgrade Catalog Expansion
 - [ ] Add all furniture options (tables, chairs, shelving)
@@ -334,13 +338,14 @@ This is a living document that tracks the development progress of "My Grandma's 
 - [ ] Create upgrade preview system
 
 #### Marketing System
-- [ ] Add Marketing tab in Planning phase
-- [ ] Implement Newspaper ad (cost, boost, duration)
-- [ ] Implement Social Media campaign
-- [ ] Implement Radio/TV advertising
-- [ ] Implement Billboard (permanent boost)
-- [ ] Show active campaigns in Planning phase
-- [ ] Apply traffic bonuses during active campaigns
+- [x] Implement MarketingManager singleton with 8 campaign types
+- [x] Implement Newspaper ad (cost, boost, duration)
+- [x] Implement Social Media campaign
+- [x] Implement Radio/TV advertising
+- [x] Implement Billboard (permanent boost)
+- [x] Apply traffic bonuses during active campaigns
+- [x] Integrate with save/load system
+- [ ] Add Marketing tab UI in Planning phase (backend ready!)
 
 #### Special Events System
 - [x] Create EventManager singleton
