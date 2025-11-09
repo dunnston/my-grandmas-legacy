@@ -223,12 +223,12 @@ func start_baking(item_id: String, quality_data: Dictionary = {}) -> bool:
 		light.light_color = Color(1.0, 0.6, 0.2)  # Orange glow
 
 	if mesh:
-		# Safely set material emission
-		var mat = mesh.get_surface_override_material(0)
+		# CSGBox3D uses .material property, not surface override
+		var mat = mesh.material
 		if not mat:
 			# Create material if it doesn't exist
 			mat = StandardMaterial3D.new()
-			mesh.set_surface_override_material(0, mat)
+			mesh.material = mat
 		if mat and mat is StandardMaterial3D:
 			mat.emission_enabled = true
 			mat.emission = Color(1.0, 0.4, 0.1)
@@ -312,8 +312,8 @@ func complete_baking_slot(slot_index: int) -> void:
 			light.visible = false
 
 		if mesh:
-			# Safely disable material emission
-			var mat = mesh.get_surface_override_material(0)
+			# CSGBox3D uses .material property, not surface override
+			var mat = mesh.material
 			if mat and mat is StandardMaterial3D:
 				mat.emission_enabled = false
 
