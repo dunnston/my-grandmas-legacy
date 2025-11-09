@@ -7,6 +7,8 @@ extends EquipmentUIBase
 var oven_script: Node = null
 var last_slot_count: int = 0
 var last_finished_count: int = 0
+var slot_timer_labels: Array[Label] = []  # Track timer labels for live updates
+var slot_buttons: Array[Button] = []  # Track slot buttons for live updates
 
 func _ready() -> void:
 	super._ready()
@@ -23,7 +25,10 @@ func _process(delta: float) -> void:
 	if not visible or not oven_script:
 		return
 
-	# Only refresh if slot count or finished items changed
+	# Update timer labels every frame without rebuilding UI
+	_update_timer_displays()
+
+	# Only rebuild UI if slot count or finished items changed
 	var current_slot_count = oven_script.baking_slots.size() if "baking_slots" in oven_script else 0
 	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
 	var current_finished_count = 0
@@ -36,6 +41,41 @@ func _process(delta: float) -> void:
 		last_finished_count = current_finished_count
 		_refresh_equipment_inventory()
 
+func _update_timer_displays() -> void:
+	"""Update timer text without rebuilding UI"""
+	if not oven_script or "baking_slots" not in oven_script:
+		return
+
+	# Update each slot's timer and button text
+	for i in range(min(slot_timer_labels.size(), oven_script.baking_slots.size())):
+		var slot = oven_script.baking_slots[i]
+		var timer_label = slot_timer_labels[i]
+		var slot_button = slot_buttons[i]
+
+		if not is_instance_valid(timer_label) or not is_instance_valid(slot_button):
+			continue
+
+		var progress_percent = (slot.timer / slot.target_time) * 100 if slot.target_time > 0 else 0
+		var remaining = slot.target_time - slot.timer
+		var is_done = slot.timer >= slot.target_time
+		var display_name = _get_item_display_name(slot.item_id)
+
+		# Update button text
+		if is_done:
+			slot_button.text = "✓ Slot %d: %s (DONE)" % [i + 1, display_name]
+			slot_button.modulate = Color(0.2, 1.0, 0.2)
+		else:
+			slot_button.text = "Slot %d: %s (%.0f%%)" % [i + 1, display_name, progress_percent]
+			slot_button.modulate = Color(1.0, 1.0, 1.0)
+
+		# Update timer label
+		if is_done:
+			timer_label.text = "Ready to remove!"
+			timer_label.modulate = Color(0.2, 1.0, 0.2)
+		else:
+			timer_label.text = "%.1fs / %.1fs remaining" % [remaining, slot.target_time]
+			timer_label.modulate = Color(0.8, 0.8, 0.8)
+
 func _refresh_equipment_inventory() -> void:
 	"""Override to show baking slots with individual timers"""
 	# Clear ALL children from equipment_container
@@ -43,6 +83,8 @@ func _refresh_equipment_inventory() -> void:
 		equipment_container.remove_child(child)
 		child.queue_free()  # Use queue_free() - safe now that we don't refresh every frame
 	equipment_buttons.clear()
+	slot_timer_labels.clear()
+	slot_buttons.clear()
 
 	if not oven_script:
 		return
@@ -107,6 +149,7 @@ func _refresh_equipment_inventory() -> void:
 			item_button.pressed.connect(_on_oven_slot_clicked.bind(slot_index))
 			item_container.add_child(item_button)
 			equipment_buttons.append(item_button)  # Track the button, not the container
+			slot_buttons.append(item_button)  # Also track for live updates
 
 			# Timer label
 			var timer_label = Label.new()
@@ -118,7 +161,7 @@ func _refresh_equipment_inventory() -> void:
 				timer_label.modulate = Color(0.8, 0.8, 0.8)
 			timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			item_container.add_child(timer_label)
-			# Don't append labels to equipment_buttons
+			slot_timer_labels.append(timer_label)  # Track for live updates
 
 			equipment_container.add_child(item_container)
 
