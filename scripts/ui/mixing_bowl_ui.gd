@@ -78,6 +78,11 @@ func open_ui_with_equipment(equipment_inv_id: String, player_inv_id: String, equ
 	"""Open UI with reference to mixing bowl equipment"""
 	mixing_bowl_script = equipment_node
 	_create_status_display()  # Create status display on first open
+
+	# Update right side label to "Your Recipes"
+	if player_label:
+		player_label.text = "Your Recipes"
+
 	open_ui(equipment_inv_id, player_inv_id)
 
 func _process(delta: float) -> void:
@@ -104,28 +109,57 @@ func _process(delta: float) -> void:
 		timer_label.text = "Add ingredients to start"
 
 func _refresh_equipment_inventory() -> void:
-	"""Override to show available recipes instead of ingredients"""
+	"""Override to show mixing state on left side"""
 	# Clear existing buttons
 	for child in equipment_container.get_children():
 		equipment_container.remove_child(child)
 		child.queue_free()
 	equipment_buttons.clear()
 
-	# If currently mixing or has finished product, show that state
+	# Show mixing state or idle message
 	if mixing_bowl_script and (mixing_bowl_script.is_mixing or mixing_bowl_script.has_finished_item):
 		_show_mixing_state()
+	else:
+		# Show idle message
+		var idle_label = Label.new()
+		idle_label.text = "Select a recipe to begin"
+		idle_label.modulate = Color(0.7, 0.7, 0.7)
+		idle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		equipment_container.add_child(idle_label)
+		equipment_buttons.append(idle_label)
+
+func _refresh_player_inventory() -> void:
+	"""Override to show available recipes instead of player inventory"""
+	# Clear existing buttons
+	for child in player_container.get_children():
+		player_container.remove_child(child)
+		child.queue_free()
+	player_buttons.clear()
+
+	# Don't show recipes while mixing or when finished product is ready
+	if mixing_bowl_script and (mixing_bowl_script.is_mixing or mixing_bowl_script.has_finished_item):
+		var waiting_label = Label.new()
+		if mixing_bowl_script.has_finished_item:
+			waiting_label.text = "Collect finished product\nfrom left side →"
+		else:
+			waiting_label.text = "Mixing in progress...\nPlease wait"
+		waiting_label.modulate = Color(0.7, 0.7, 0.7)
+		waiting_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		player_container.add_child(waiting_label)
+		player_buttons.append(waiting_label)
 		return
 
-	# Show unlocked recipes
-	var recipes_label = Label.new()
-	recipes_label.text = "Available Recipes (hover for ingredients):"
-	recipes_label.modulate = Color(0.9, 0.9, 0.9)
-	equipment_container.add_child(recipes_label)
-	equipment_buttons.append(recipes_label)
+	# Show hint text
+	var hint_label = Label.new()
+	hint_label.text = "Hover for ingredients"
+	hint_label.modulate = Color(0.6, 0.6, 0.6)
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	player_container.add_child(hint_label)
+	player_buttons.append(hint_label)
 
 	var separator = HSeparator.new()
-	equipment_container.add_child(separator)
-	equipment_buttons.append(separator)
+	player_container.add_child(separator)
+	player_buttons.append(separator)
 
 	# Get player inventory
 	var player_inv = InventoryManager.get_inventory(player_inventory_id)
@@ -137,15 +171,15 @@ func _refresh_equipment_inventory() -> void:
 		var no_recipes_label = Label.new()
 		no_recipes_label.text = "No recipes unlocked yet!"
 		no_recipes_label.modulate = Color(0.6, 0.6, 0.6)
-		equipment_container.add_child(no_recipes_label)
-		equipment_buttons.append(no_recipes_label)
+		player_container.add_child(no_recipes_label)
+		player_buttons.append(no_recipes_label)
 		return
 
 	# Show each recipe as a button
 	for recipe in unlocked_recipes:
 		var recipe_button = _create_recipe_button(recipe, player_inv)
-		equipment_container.add_child(recipe_button)
-		equipment_buttons.append(recipe_button)
+		player_container.add_child(recipe_button)
+		player_buttons.append(recipe_button)
 
 func _show_mixing_state() -> void:
 	"""Show mixing progress or finished product"""
