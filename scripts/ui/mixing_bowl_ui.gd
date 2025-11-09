@@ -126,7 +126,7 @@ func _refresh_equipment_inventory() -> void:
 		idle_label.modulate = Color(0.7, 0.7, 0.7)
 		idle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		equipment_container.add_child(idle_label)
-		equipment_buttons.append(idle_label)
+		# Don't append labels to equipment_buttons (typed as Array[Button])
 
 func _refresh_player_inventory() -> void:
 	"""Override to show available recipes instead of player inventory"""
@@ -146,7 +146,7 @@ func _refresh_player_inventory() -> void:
 		waiting_label.modulate = Color(0.7, 0.7, 0.7)
 		waiting_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		player_container.add_child(waiting_label)
-		player_buttons.append(waiting_label)
+		# Don't append labels to player_buttons (typed as Array[Button])
 		return
 
 	# Show hint text
@@ -155,11 +155,11 @@ func _refresh_player_inventory() -> void:
 	hint_label.modulate = Color(0.6, 0.6, 0.6)
 	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	player_container.add_child(hint_label)
-	player_buttons.append(hint_label)
+	# Don't append labels to player_buttons
 
 	var separator = HSeparator.new()
 	player_container.add_child(separator)
-	player_buttons.append(separator)
+	# Don't append separators to player_buttons
 
 	# Get player inventory
 	var player_inv = InventoryManager.get_inventory(player_inventory_id)

@@ -17,7 +17,7 @@ func _refresh_equipment_inventory() -> void:
 	if not storage_inventory.is_empty():
 		var separator = HSeparator.new()
 		equipment_container.add_child(separator)
-		equipment_buttons.append(separator)
+		# Don't append separators to equipment_buttons (typed as Array[Button])
 
 		var transfer_all_button = Button.new()
 		transfer_all_button.text = "⬇ Transfer All to Inventory"
@@ -25,7 +25,7 @@ func _refresh_equipment_inventory() -> void:
 		transfer_all_button.modulate = Color(0.2, 0.8, 1.0)  # Blue color
 		transfer_all_button.pressed.connect(_on_transfer_all_pressed)
 		equipment_container.add_child(transfer_all_button)
-		equipment_buttons.append(transfer_all_button)
+		equipment_buttons.append(transfer_all_button)  # Only append actual buttons
 
 func _on_equipment_item_clicked(item_id: String) -> void:
 	"""Transfer item from storage to player inventory"""
