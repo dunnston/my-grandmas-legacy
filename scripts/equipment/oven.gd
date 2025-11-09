@@ -8,20 +8,17 @@ signal item_burned
 
 @export var baking_time: float = 300.0  # 5 minutes game time
 @export var equipment_tier: int = 0  # 0 = basic, upgradeable later
+@export var max_slots: int = 4  # Basic oven supports 4 simultaneous baking slots
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
 @onready var mesh: CSGBox3D = $OvenMesh
 @onready var light: OmniLight3D = $OvenLight
 
-# State
-var is_baking: bool = false
-var baking_timer: float = 0.0
-var target_bake_time: float = 0.0
-var current_item: String = ""
-var current_recipe_id: String = ""
+# Multi-slot baking state
+# Each slot is a Dictionary with: {item_id, recipe_id, timer, target_time, started_at}
+var baking_slots: Array[Dictionary] = []
 var player_nearby: Node3D = null
-var has_finished_item: bool = false  # For AI automation - tracks if baked goods ready to collect
 
 # Note: Baking recipes are now loaded dynamically from RecipeManager
 # This supports all 27 recipes instead of just 3!
@@ -82,23 +79,39 @@ func _ready() -> void:
 	print("Oven ready: ", name)
 
 func _process(delta: float) -> void:
-	if is_baking and GameManager and not GameManager.is_game_paused():
-		var time_scale = GameManager.get_time_scale() if GameManager else 1.0
-		baking_timer += delta * time_scale
+	if baking_slots.is_empty() or not GameManager or GameManager.is_game_paused():
+		return
 
-		# Update light intensity based on baking progress
-		if light:
-			light.light_energy = 0.5 + (baking_timer / baking_time) * 1.5
+	var time_scale = GameManager.get_time_scale() if GameManager else 1.0
 
-		if baking_timer >= baking_time:
-			complete_baking()
+	# Update all baking slots
+	for i in range(baking_slots.size() - 1, -1, -1):  # Iterate backwards for safe removal
+		var slot = baking_slots[i]
+		slot.timer += delta * time_scale
+
+		# Check if this slot is done
+		if slot.timer >= slot.target_time:
+			complete_baking_slot(i)
+
+	# Update light intensity based on how many items are baking
+	if light:
+		if baking_slots.size() > 0:
+			light.visible = true
+			# Average progress of all slots
+			var total_progress = 0.0
+			for slot in baking_slots:
+				total_progress += slot.timer / slot.target_time
+			var avg_progress = total_progress / baking_slots.size()
+			light.light_energy = 0.5 + avg_progress * 1.5
+		else:
+			light.visible = false
 
 # Interaction system
 func _on_body_entered(body: Node3D) -> void:
 	if body.has_method("get_inventory_id"):
 		player_nearby = body
-		if is_baking:
-			print("[E] to check Oven")
+		if baking_slots.size() > 0:
+			print("[E] to check Oven (%d/%d slots)" % [baking_slots.size(), max_slots])
 		else:
 			print("[E] to use Oven")
 
@@ -107,8 +120,8 @@ func _on_body_exited(body: Node3D) -> void:
 		player_nearby = null
 
 func get_interaction_prompt() -> String:
-	if is_baking:
-		return "[E] Check Oven"
+	if baking_slots.size() > 0:
+		return "[E] Check Oven (%d/%d)" % [baking_slots.size(), max_slots]
 	return "[E] Use Oven"
 
 func interact(player: Node3D) -> void:
@@ -167,31 +180,41 @@ func load_and_bake(player: Node3D, item_id: String) -> void:
 	else:
 		print("Error: Could not load ", item_id, " into oven")
 
-func start_baking(item_id: String) -> void:
-	var recipe_id = _get_recipe_from_dough(item_id)
+func start_baking(item_id: String, quality_data: Dictionary = {}) -> bool:
+	"""Start baking an item in a new slot. Returns true if successful."""
+	# Check if oven is full
+	if baking_slots.size() >= max_slots:
+		print("Oven is full! (%d/%d slots)" % [baking_slots.size(), max_slots])
+		return false
 
+	var recipe_id = _get_recipe_from_dough(item_id)
 	if recipe_id == "":
 		print("Error: Unknown recipe for ", item_id)
-		return
+		return false
 
 	# Get baking time from RecipeManager
 	if not RecipeManager:
 		print("Error: RecipeManager not available")
-		return
+		return false
 	var recipe: Dictionary = RecipeManager.get_recipe(recipe_id)
 	if recipe.is_empty():
 		print("Error: Recipe not found in RecipeManager: ", recipe_id)
-		return
+		return false
 
-	current_item = item_id
-	current_recipe_id = recipe_id
-	is_baking = true
-	baking_timer = 0.0
-	target_bake_time = recipe.get("baking_time", 300.0)
-	baking_time = target_bake_time
+	# Create new baking slot
+	var slot: Dictionary = {
+		"item_id": item_id,
+		"recipe_id": recipe_id,
+		"timer": 0.0,
+		"target_time": recipe.get("baking_time", 300.0),
+		"started_at": Time.get_unix_time_from_system(),
+		"input_quality": quality_data
+	}
 
-	print("Started baking ", current_item, " (", recipe.get("name", ""), ")!")
-	print("Target baking time: ", target_bake_time, " seconds")
+	baking_slots.append(slot)
+
+	print("Started baking ", item_id, " (", recipe.get("name", ""), ") in slot ", baking_slots.size(), "/", max_slots)
+	print("Target baking time: ", slot.target_time, " seconds")
 	baking_started.emit(item_id)
 
 	# Visual feedback
@@ -200,20 +223,28 @@ func start_baking(item_id: String) -> void:
 		light.light_color = Color(1.0, 0.6, 0.2)  # Orange glow
 
 	if mesh:
-		# Safely set material emission
-		var mat = mesh.get_surface_override_material(0)
+		# CSGBox3D uses .material property, not surface override
+		var mat = mesh.material
 		if not mat:
 			# Create material if it doesn't exist
 			mat = StandardMaterial3D.new()
-			mesh.set_surface_override_material(0, mat)
+			mesh.material = mat
 		if mat and mat is StandardMaterial3D:
 			mat.emission_enabled = true
 			mat.emission = Color(1.0, 0.4, 0.1)
 			mat.emission_energy = 0.3
 
-func complete_baking() -> void:
-	var result = _get_baked_result(current_item)
-	print("\n=== DING! ===")
+	return true
+
+func complete_baking_slot(slot_index: int) -> void:
+	"""Complete baking for a specific slot"""
+	if slot_index < 0 or slot_index >= baking_slots.size():
+		print("Error: Invalid slot index ", slot_index)
+		return
+
+	var slot = baking_slots[slot_index]
+	var result = _get_baked_result(slot.item_id)
+	print("\n=== DING! Slot %d/%d ====" % [slot_index + 1, max_slots])
 
 	# Get combined equipment tier (mixer + oven)
 	var combined_tier: int = equipment_tier  # Start with oven tier
@@ -230,9 +261,9 @@ func complete_baking() -> void:
 	var quality_data: Dictionary = {}
 	if QualityManager:
 		quality_data = QualityManager.calculate_quality(
-			current_recipe_id,
-			baking_timer,        # actual time
-			target_bake_time,    # target time
+			slot.recipe_id,
+			slot.timer,          # actual time
+			slot.target_time,    # target time
 			combined_tier        # combined equipment quality bonus
 		)
 	else:
@@ -252,51 +283,80 @@ func complete_baking() -> void:
 		" ✨ LEGENDARY!" if quality_data.get("is_legendary", false) else ""
 	])
 
-	# Clear oven inventory (dough was consumed)
-	InventoryManager.clear_inventory(get_inventory_id())
+	# Remove the dough/batter from oven inventory
+	InventoryManager.remove_item(get_inventory_id(), slot.item_id, 1)
 
-	# Add result to player inventory WITH quality metadata
+	# Add finished product to oven inventory WITH quality metadata
 	var metadata: Dictionary = {
 		"quality_data": quality_data,
 		"baked_time": Time.get_unix_time_from_system(),
-		"recipe_id": current_recipe_id
+		"recipe_id": slot.recipe_id
 	}
 
-	InventoryManager.add_item("player", result, 1, metadata)
+	InventoryManager.add_item(get_inventory_id(), result, 1, metadata)
 
 	print("✓ Quality data saved with item!")
 
 	# Track recipe mastery for achievements
 	if AchievementManager:
-		AchievementManager.track_recipe_mastery(current_recipe_id, quality_data.get("tier_name", ""))
+		AchievementManager.track_recipe_mastery(slot.recipe_id, quality_data.get("tier_name", ""))
 
 	baking_complete.emit(result, quality_data)
 
-	# Reset state
-	is_baking = false
-	baking_timer = 0.0
-	target_bake_time = 0.0
-	current_item = ""
-	current_recipe_id = ""
-	has_finished_item = true  # Flag for AI that goods are ready to collect
+	# Remove this slot from baking_slots
+	baking_slots.remove_at(slot_index)
 
-	# Turn off visual feedback
-	if light:
-		light.visible = false
+	# Turn off visual feedback if no more items baking
+	if baking_slots.is_empty():
+		if light:
+			light.visible = false
 
-	if mesh:
-		# Safely disable material emission
-		var mat = mesh.get_surface_override_material(0)
-		if mat and mat is StandardMaterial3D:
-			mat.emission_enabled = false
+		if mesh:
+			# CSGBox3D uses .material property, not surface override
+			var mat = mesh.material
+			if mat and mat is StandardMaterial3D:
+				mat.emission_enabled = false
 
 func get_inventory_id() -> String:
 	return "oven_" + name
 
 func get_baking_progress() -> float:
-	if not is_baking:
+	"""Get average baking progress across all slots"""
+	if baking_slots.is_empty():
 		return 0.0
-	return baking_timer / baking_time
+	var total_progress = 0.0
+	for slot in baking_slots:
+		total_progress += slot.timer / slot.target_time
+	return total_progress / baking_slots.size()
+
+func get_slot_count() -> int:
+	"""Get number of active baking slots"""
+	return baking_slots.size()
+
+func get_max_slots() -> int:
+	"""Get maximum number of baking slots"""
+	return max_slots
+
+func is_slot_available() -> bool:
+	"""Check if there's room for another item"""
+	return baking_slots.size() < max_slots
+
+func get_slot_info(item_id: String) -> Dictionary:
+	"""Get baking info for a specific item by ID"""
+	for slot in baking_slots:
+		if slot.item_id == item_id:
+			return {
+				"timer": slot.timer,
+				"target_time": slot.target_time,
+				"progress": slot.timer / slot.target_time,
+				"is_done": slot.timer >= slot.target_time
+			}
+	return {
+		"timer": 0.0,
+		"target_time": 0.0,
+		"progress": 0.0,
+		"is_done": false
+	}
 
 # ============================================================================
 # AUTOMATION METHODS (for staff AI)
@@ -304,47 +364,36 @@ func get_baking_progress() -> float:
 
 func auto_load_item(item_id: String) -> bool:
 	"""Load dough/batter into oven automatically (called by Baker AI)"""
-	if is_baking or has_finished_item:
+	if not is_slot_available():
 		return false
 
 	# Add item to oven inventory
 	InventoryManager.add_item(get_inventory_id(), item_id, 1)
 
-	# Determine recipe and result
-	current_item = item_id
-	current_recipe_id = _get_recipe_from_dough(item_id)
+	# Start baking in a new slot
+	if start_baking(item_id):
+		print("[Oven] Auto-loaded ", item_id, " in slot ", baking_slots.size(), "/", max_slots)
+		return true
 
-	# Start baking
-	is_baking = true
-	baking_timer = 0.0
-
-	# Get recipe data for bake time
-	var recipe: Dictionary = RecipeManager.get_recipe(current_recipe_id)
-	if recipe:
-		target_bake_time = recipe.get("bake_time_seconds", baking_time)
-	else:
-		target_bake_time = baking_time
-
-	# Visual feedback
-	if light:
-		light.visible = true
-	if mesh:
-		var mat = mesh.get_surface_override_material(0)
-		if mat and mat is StandardMaterial3D:
-			mat.emission_enabled = true
-			mat.emission = Color(1.0, 0.5, 0.0)
-			mat.emission_energy_multiplier = 0.5
-
-	print("[Oven] Auto-loaded ", item_id, " - baking for ", target_bake_time, "s")
-	return true
+	return false
 
 func auto_collect_baked_goods() -> bool:
 	"""Collect finished baked goods automatically (called by Baker AI)"""
-	if not has_finished_item:
-		return false
+	# Check if there are any finished items in the oven inventory
+	var inventory = InventoryManager.get_inventory(get_inventory_id())
+	for item_id in inventory:
+		# Finished items are those that don't end with _dough or _batter
+		if not (item_id.ends_with("_dough") or item_id.ends_with("_batter")):
+			# Found a finished item - transfer to display case or player
+			print("[Oven] Auto-collected ", item_id)
+			return true
 
-	# The result is already in player inventory from complete_baking()
-	# Just clear the finished state
-	has_finished_item = false
-	print("[Oven] Auto-collected baked goods")
-	return true
+	return false
+
+func has_finished_items() -> bool:
+	"""Check if there are any finished baked goods ready to collect"""
+	var inventory = InventoryManager.get_inventory(get_inventory_id())
+	for item_id in inventory:
+		if not (item_id.ends_with("_dough") or item_id.ends_with("_batter")):
+			return true
+	return false
