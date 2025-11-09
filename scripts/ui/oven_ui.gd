@@ -110,21 +110,27 @@ func _refresh_equipment_inventory() -> void:
 
 	# Also show finished items in the oven inventory (these are done baking)
 	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
+	var has_finished_products = false
+
 	for item_id in inventory:
 		# Only show finished products (not dough/batter)
 		if not (item_id.ends_with("_dough") or item_id.ends_with("_batter")):
 			var quantity = inventory[item_id]
 			if quantity > 0:
-				var separator2 = HSeparator.new()
-				equipment_container.add_child(separator2)
-				# Don't append separators to equipment_buttons
+				# Add separator and header only once
+				if not has_finished_products:
+					var separator2 = HSeparator.new()
+					equipment_container.add_child(separator2)
+					# Don't append separators to equipment_buttons
 
-				var finished_label = Label.new()
-				finished_label.text = "Finished Products:"
-				finished_label.modulate = Color(0.2, 1.0, 0.2)
-				equipment_container.add_child(finished_label)
-				# Don't append labels to equipment_buttons
+					var finished_label = Label.new()
+					finished_label.text = "Finished Products:"
+					finished_label.modulate = Color(0.2, 1.0, 0.2)
+					equipment_container.add_child(finished_label)
+					# Don't append labels to equipment_buttons
+					has_finished_products = true
 
+				# Create button for each finished product type
 				var item_button = Button.new()
 				var display_name = _get_item_display_name(item_id)
 				item_button.text = "✓ %s x%d (Click to collect)" % [display_name, quantity]
@@ -133,7 +139,7 @@ func _refresh_equipment_inventory() -> void:
 				item_button.pressed.connect(_on_oven_item_clicked.bind(item_id))
 				equipment_container.add_child(item_button)
 				equipment_buttons.append(item_button)  # Only append actual buttons
-				break  # Only show this section once
+				print("[OvenUI] Added finished product button for: ", item_id, " x", quantity)
 
 func _get_baking_info(item_id: String) -> Dictionary:
 	"""Get baking progress for an item"""
@@ -190,24 +196,32 @@ func _on_oven_slot_clicked(slot_index: int) -> void:
 
 func _on_oven_item_clicked(item_id: String) -> void:
 	"""Remove finished item from oven (for items in 'Finished Products' section)"""
+	print("[OvenUI] _on_oven_item_clicked called for: ", item_id)
+
 	if not oven_script:
+		print("[OvenUI] ERROR: No oven script!")
 		return
 
 	# Get metadata (quality data, etc.)
 	var metadata = InventoryManager.get_item_metadata(equipment_inventory_id, item_id)
+	print("[OvenUI] Metadata: ", metadata)
+
+	# Check what's in oven inventory
+	var oven_inv = InventoryManager.get_inventory(equipment_inventory_id)
+	print("[OvenUI] Oven inventory: ", oven_inv)
 
 	# Remove from oven
 	if InventoryManager.remove_item(equipment_inventory_id, item_id, 1):
 		# Add to player
 		InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
 
-		print("Collected %s from oven" % item_id)
+		print("[OvenUI] ✓ Successfully collected %s from oven" % item_id)
 		item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
 
 		# Refresh display
 		_refresh_inventories()
 	else:
-		print("Failed to remove %s from oven - not in inventory" % item_id)
+		print("[OvenUI] ✗ FAILED to remove %s from oven - not in inventory!" % item_id)
 
 func _on_player_item_clicked(item_id: String) -> void:
 	"""Add item from player inventory to oven"""
