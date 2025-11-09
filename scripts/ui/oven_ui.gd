@@ -32,13 +32,16 @@ func _refresh_equipment_inventory() -> void:
 	if not oven_script:
 		return
 
-	# Show oven status
+	# Show oven status with slot count
 	var status_label = Label.new()
-	if oven_script.is_baking:
-		status_label.text = "Baking in progress..."
+	var slot_count = oven_script.get_slot_count() if oven_script.has_method("get_slot_count") else 0
+	var max_slots = oven_script.get_max_slots() if oven_script.has_method("get_max_slots") else 4
+
+	if slot_count > 0:
+		status_label.text = "Oven: %d/%d slots used" % [slot_count, max_slots]
 		status_label.modulate = Color(1.0, 0.8, 0.2)
 	else:
-		status_label.text = "Oven ready"
+		status_label.text = "Oven ready (%d slots available)" % max_slots
 		status_label.modulate = Color(0.8, 0.8, 0.8)
 	equipment_container.add_child(status_label)
 	equipment_buttons.append(status_label)
@@ -103,12 +106,12 @@ func _get_baking_info(item_id: String) -> Dictionary:
 	if not oven_script:
 		return {"progress": 0.0, "total": 0.0, "is_done": false}
 
-	# For now, use oven's global timer
-	# TODO: Multi-slot ovens with individual timers would need slot tracking
+	# Use oven's slot info for multi-slot support
+	var slot_info = oven_script.get_slot_info(item_id)
 	return {
-		"progress": oven_script.baking_timer,
-		"total": oven_script.baking_time,
-		"is_done": oven_script.has_finished_item
+		"progress": slot_info.get("timer", 0.0),
+		"total": slot_info.get("target_time", 1.0),
+		"is_done": slot_info.get("is_done", false)
 	}
 
 func _on_oven_item_clicked(item_id: String) -> void:
@@ -124,10 +127,14 @@ func _on_oven_item_clicked(item_id: String) -> void:
 		# Add to player
 		InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
 
-		# Update oven state
-		if oven_script.is_baking and oven_script.current_item == item_id:
-			oven_script.is_baking = false
-			oven_script.has_finished_item = false
+		# If this was a baking item (dough/batter), remove from baking slots
+		if item_id.ends_with("_dough") or item_id.ends_with("_batter"):
+			if "baking_slots" in oven_script:
+				for i in range(oven_script.baking_slots.size() - 1, -1, -1):
+					if oven_script.baking_slots[i].item_id == item_id:
+						oven_script.baking_slots.remove_at(i)
+						print("Cancelled baking of %s" % item_id)
+						break
 
 		print("Removed %s from oven" % item_id)
 		item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
@@ -140,10 +147,10 @@ func _on_player_item_clicked(item_id: String) -> void:
 	if not oven_script:
 		return
 
-	# Check if oven is full
-	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
-	if inventory.size() >= 1:  # Simple oven: 1 slot only for now
-		print("Oven is full!")
+	# Check if oven is full (use oven's built-in slot check)
+	if not oven_script.is_slot_available():
+		var max_slots = oven_script.get_max_slots()
+		print("Oven is full! (%d/%d slots)" % [max_slots, max_slots])
 		return
 
 	# Check if item is bakeable (has "_dough" or "_batter" suffix)
@@ -159,12 +166,16 @@ func _on_player_item_clicked(item_id: String) -> void:
 		# Add to oven
 		InventoryManager.add_item(equipment_inventory_id, item_id, 1, metadata)
 
-		# Start baking if not already
+		# Start baking in a new slot
 		if oven_script.has_method("start_baking"):
-			oven_script.start_baking(item_id, metadata.get("quality_data", {}))
-
-		print("Added %s to oven" % item_id)
-		item_transferred.emit(player_inventory_id, equipment_inventory_id, item_id)
+			if oven_script.start_baking(item_id, metadata.get("quality_data", {})):
+				print("Added %s to oven (slot %d/%d)" % [item_id, oven_script.get_slot_count(), oven_script.get_max_slots()])
+				item_transferred.emit(player_inventory_id, equipment_inventory_id, item_id)
+			else:
+				# Failed to start baking, return item to player
+				InventoryManager.remove_item(equipment_inventory_id, item_id, 1)
+				InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
+				print("Failed to add %s to oven" % item_id)
 
 		# Refresh display
 		_refresh_inventories()
