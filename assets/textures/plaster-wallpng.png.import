@@ -2,20 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://df5bkvikmix2e"
-path="res://.godot/imported/3c2d6142-cc12-4f00-9e89-67c4da224528.png-663402067cf00ca456a238bf8e542058.ctex"
+uid="uid://cjmd22am1ssgg"
+path.s3tc="res://.godot/imported/plaster-wallpng.png-781f5ea14daf14c1d2a410347a0ed39c.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://assets/textures/3c2d6142-cc12-4f00-9e89-67c4da224528.png"
-dest_files=["res://.godot/imported/3c2d6142-cc12-4f00-9e89-67c4da224528.png-663402067cf00ca456a238bf8e542058.ctex"]
+source_file="res://assets/textures/plaster-wallpng.png"
+dest_files=["res://.godot/imported/plaster-wallpng.png-781f5ea14daf14c1d2a410347a0ed39c.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -23,7 +24,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -37,4 +38,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
