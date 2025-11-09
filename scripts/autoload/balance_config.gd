@@ -89,8 +89,8 @@ const ECONOMY = {
 ## =============================================================================
 const RECIPES = {
 	# Recipe Timing Adjustments
-	"mixing_time_multiplier": 1.0,       # Global multiplier for all mixing times
-	"baking_time_multiplier": 1.0,       # Global multiplier for all baking times
+	"mixing_time_multiplier": 0.1,       # Global multiplier for all mixing times
+	"baking_time_multiplier": 0.1,       # Global multiplier for all baking times
 
 	# Recipe Price Adjustments (multiplied with base prices)
 	"price_multiplier_global": 1.0,      # Global price multiplier for ALL recipes
