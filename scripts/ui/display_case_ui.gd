@@ -44,9 +44,10 @@ func _on_equipment_item_clicked(item_id: String) -> void:
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show display case with quality indicators"""
-	# Clear existing buttons
-	for button in equipment_buttons:
-		button.queue_free()
+	# Clear ALL children from equipment_container
+	for child in equipment_container.get_children():
+		equipment_container.remove_child(child)
+		child.queue_free()
 	equipment_buttons.clear()
 
 	# Get inventory
@@ -57,11 +58,11 @@ func _refresh_equipment_inventory() -> void:
 	capacity_label.text = "Items: %d" % inventory.size()
 	capacity_label.modulate = Color(0.8, 0.8, 0.8)
 	equipment_container.add_child(capacity_label)
-	equipment_buttons.append(capacity_label)
+	# Don't append labels to equipment_buttons (typed as Array[Button])
 
 	var separator = HSeparator.new()
 	equipment_container.add_child(separator)
-	equipment_buttons.append(separator)
+	# Don't append separators to equipment_buttons
 
 	if inventory.is_empty():
 		var empty_label = Label.new()
@@ -69,7 +70,7 @@ func _refresh_equipment_inventory() -> void:
 		empty_label.modulate = Color(0.6, 0.6, 0.6)
 		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		equipment_container.add_child(empty_label)
-		equipment_buttons.append(empty_label)
+		# Don't append labels to equipment_buttons
 	else:
 		# Show each item with quality and price
 		for item_id in inventory:
@@ -93,6 +94,7 @@ func _refresh_equipment_inventory() -> void:
 				item_button.custom_minimum_size = Vector2(200, 40)
 				item_button.pressed.connect(_on_equipment_item_clicked.bind(item_id))
 				item_container.add_child(item_button)
+				equipment_buttons.append(item_button)  # Track only the button, not the container
 
 				# Quality and price label
 				var info_label = Label.new()
@@ -102,9 +104,9 @@ func _refresh_equipment_inventory() -> void:
 				info_label.add_theme_font_size_override("font_size", 10)
 				info_label.modulate = Color(0.8, 0.8, 0.8)
 				item_container.add_child(info_label)
+				# Don't append labels to equipment_buttons
 
 				equipment_container.add_child(item_container)
-				equipment_buttons.append(item_container)
 
 func _get_quality_color(quality: float) -> Color:
 	"""Get color based on quality tier"""

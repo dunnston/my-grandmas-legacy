@@ -14,10 +14,40 @@ var finished_product_button: Button
 var status_container: VBoxContainer
 var status_display_created: bool = false
 
+# Tooltip for showing ingredients on hover
+var ingredient_tooltip: PanelContainer
+var tooltip_label: RichTextLabel
+
 func _ready() -> void:
 	super._ready()
 	if equipment_label:
 		equipment_label.text = "Mixing Bowl"
+	_create_ingredient_tooltip()
+
+func _create_ingredient_tooltip() -> void:
+	"""Create the tooltip that shows ingredients on hover"""
+	ingredient_tooltip = PanelContainer.new()
+	ingredient_tooltip.visible = false
+	ingredient_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE  # Don't block mouse events
+
+	# Style the tooltip
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.1, 0.1, 0.95)
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.3, 0.3, 0.3)
+	ingredient_tooltip.add_theme_stylebox_override("panel", style)
+
+	tooltip_label = RichTextLabel.new()
+	tooltip_label.bbcode_enabled = true
+	tooltip_label.fit_content = true
+	tooltip_label.custom_minimum_size = Vector2(250, 0)
+	ingredient_tooltip.add_child(tooltip_label)
+
+	# Add to main UI
+	add_child(ingredient_tooltip)
 
 func _create_status_display() -> void:
 	"""Create timer and status labels (called lazily on first open)"""
@@ -48,6 +78,11 @@ func open_ui_with_equipment(equipment_inv_id: String, player_inv_id: String, equ
 	"""Open UI with reference to mixing bowl equipment"""
 	mixing_bowl_script = equipment_node
 	_create_status_display()  # Create status display on first open
+
+	# Update right side label to "Your Recipes"
+	if player_label:
+		player_label.text = "Your Recipes"
+
 	open_ui(equipment_inv_id, player_inv_id)
 
 func _process(delta: float) -> void:
@@ -74,58 +109,81 @@ func _process(delta: float) -> void:
 		timer_label.text = "Add ingredients to start"
 
 func _refresh_equipment_inventory() -> void:
-	"""Override to show ingredient slots and finished product"""
+	"""Override to show mixing state on left side"""
 	# Clear existing buttons
-	for button in equipment_buttons:
-		button.queue_free()
+	for child in equipment_container.get_children():
+		equipment_container.remove_child(child)
+		child.queue_free()
 	equipment_buttons.clear()
 
-	# Get inventory
-	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
-
-	# Show current ingredients
-	var ingredient_label = Label.new()
-	ingredient_label.text = "Current Ingredients:"
-	ingredient_label.modulate = Color(0.8, 0.8, 0.8)
-	equipment_container.add_child(ingredient_label)
-	equipment_buttons.append(ingredient_label)  # Track for cleanup
-
-	if inventory.is_empty():
-		var empty_label = Label.new()
-		empty_label.text = "(Empty - add from your inventory)"
-		empty_label.modulate = Color(0.6, 0.6, 0.6)
-		equipment_container.add_child(empty_label)
-		equipment_buttons.append(empty_label)
+	# Show mixing state or idle message
+	if mixing_bowl_script and (mixing_bowl_script.is_mixing or mixing_bowl_script.has_finished_item):
+		_show_mixing_state()
 	else:
-		for item_id in inventory:
-			var quantity = inventory[item_id]
-			if quantity > 0:
-				# Skip the finished product (it's shown separately)
-				if mixing_bowl_script and mixing_bowl_script.has_finished_item and item_id == mixing_bowl_script.current_item:
-					continue
+		# Show idle message
+		var idle_label = Label.new()
+		idle_label.text = "Select a recipe to begin"
+		idle_label.modulate = Color(0.7, 0.7, 0.7)
+		idle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		equipment_container.add_child(idle_label)
+		# Don't append labels to equipment_buttons (typed as Array[Button])
 
-				var button = _create_item_button(item_id, quantity)
-				button.disabled = mixing_bowl_script.is_mixing  # Can't remove while mixing
-				button.pressed.connect(_on_equipment_item_clicked.bind(item_id))
-				equipment_container.add_child(button)
-				equipment_buttons.append(button)
+func _refresh_player_inventory() -> void:
+	"""Override to show available recipes instead of player inventory"""
+	# Clear existing buttons
+	for child in player_container.get_children():
+		player_container.remove_child(child)
+		child.queue_free()
+	player_buttons.clear()
 
-	# Add "Start Mixing" button if we have ingredients and not currently mixing
-	if not inventory.is_empty() and mixing_bowl_script and not mixing_bowl_script.is_mixing and not mixing_bowl_script.has_finished_item:
-		var start_button = Button.new()
-		start_button.text = "▶ Start Mixing"
-		start_button.custom_minimum_size = Vector2(200, 50)
-		start_button.modulate = Color(0.2, 0.8, 0.2)
-		start_button.pressed.connect(_on_start_mixing_pressed)
-		equipment_container.add_child(start_button)
-		equipment_buttons.append(start_button)
+	# Don't show recipes while mixing or when finished product is ready
+	if mixing_bowl_script and (mixing_bowl_script.is_mixing or mixing_bowl_script.has_finished_item):
+		var waiting_label = Label.new()
+		if mixing_bowl_script.has_finished_item:
+			waiting_label.text = "Collect finished product\nfrom left side →"
+		else:
+			waiting_label.text = "Mixing in progress...\nPlease wait"
+		waiting_label.modulate = Color(0.7, 0.7, 0.7)
+		waiting_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		player_container.add_child(waiting_label)
+		# Don't append labels to player_buttons (typed as Array[Button])
+		return
 
-	# Show finished product if available
-	if mixing_bowl_script and mixing_bowl_script.has_finished_item:
-		var separator = HSeparator.new()
-		equipment_container.add_child(separator)
-		equipment_buttons.append(separator)
+	# Show hint text
+	var hint_label = Label.new()
+	hint_label.text = "Hover for ingredients"
+	hint_label.modulate = Color(0.6, 0.6, 0.6)
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	player_container.add_child(hint_label)
+	# Don't append labels to player_buttons
 
+	var separator = HSeparator.new()
+	player_container.add_child(separator)
+	# Don't append separators to player_buttons
+
+	# Get player inventory
+	var player_inv = InventoryManager.get_inventory(player_inventory_id)
+
+	# Get all unlocked recipes
+	var unlocked_recipes = RecipeManager.get_all_unlocked_recipes()
+
+	if unlocked_recipes.is_empty():
+		var no_recipes_label = Label.new()
+		no_recipes_label.text = "No recipes unlocked yet!"
+		no_recipes_label.modulate = Color(0.6, 0.6, 0.6)
+		player_container.add_child(no_recipes_label)
+		player_buttons.append(no_recipes_label)
+		return
+
+	# Show each recipe as a button
+	for recipe in unlocked_recipes:
+		var recipe_button = _create_recipe_button(recipe, player_inv)
+		player_container.add_child(recipe_button)
+		player_buttons.append(recipe_button)
+
+func _show_mixing_state() -> void:
+	"""Show mixing progress or finished product"""
+	if mixing_bowl_script.has_finished_item:
 		var finished_label = Label.new()
 		finished_label.text = "Finished Product:"
 		finished_label.modulate = Color(0.2, 0.8, 0.2)
@@ -135,52 +193,113 @@ func _refresh_equipment_inventory() -> void:
 		finished_product_button = Button.new()
 		finished_product_button.text = "✓ %s (Click to collect)" % _get_item_display_name(mixing_bowl_script.current_item)
 		finished_product_button.custom_minimum_size = Vector2(200, 50)
+		finished_product_button.modulate = Color(0.2, 1.0, 0.2)
 		finished_product_button.pressed.connect(_on_collect_finished_product)
 		equipment_container.add_child(finished_product_button)
 		equipment_buttons.append(finished_product_button)
+	else:
+		var mixing_label = Label.new()
+		mixing_label.text = "Mixing in progress..."
+		mixing_label.modulate = Color(1.0, 0.8, 0.2)
+		equipment_container.add_child(mixing_label)
+		equipment_buttons.append(mixing_label)
 
-func _on_player_item_clicked(item_id: String) -> void:
-	"""Add ingredient from player inventory to mixing bowl"""
+func _create_recipe_button(recipe: Dictionary, player_inv: Dictionary) -> Button:
+	"""Create a recipe button with color coding based on availability"""
+	var button = Button.new()
+	button.text = recipe.get("name", "Unknown Recipe")
+	button.custom_minimum_size = Vector2(200, 40)
+
+	# Check if player has all ingredients
+	var has_all_ingredients = _check_has_ingredients(recipe, player_inv)
+
+	# Set background color based on availability
+	var style = StyleBoxFlat.new()
+	if has_all_ingredients:
+		style.bg_color = Color(0.2, 0.5, 0.2, 0.8)  # Green
+		button.modulate = Color(1.0, 1.0, 1.0)
+	else:
+		style.bg_color = Color(0.5, 0.2, 0.2, 0.8)  # Red
+		button.modulate = Color(0.8, 0.8, 0.8)
+
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", style)
+	button.add_theme_stylebox_override("pressed", style)
+
+	# Connect signals
+	button.pressed.connect(_on_recipe_selected.bind(recipe))
+	button.mouse_entered.connect(_on_recipe_hover.bind(recipe, player_inv))
+	button.mouse_exited.connect(_on_recipe_hover_exit)
+
+	return button
+
+func _check_has_ingredients(recipe: Dictionary, player_inv: Dictionary) -> bool:
+	"""Check if player has all required ingredients"""
+	var ingredients = recipe.get("ingredients", {})
+	for ingredient_id in ingredients.keys():
+		var required = ingredients[ingredient_id]
+		var have = player_inv.get(ingredient_id, 0)
+		if have < required:
+			return false
+	return true
+
+func _on_recipe_selected(recipe: Dictionary) -> void:
+	"""Player clicked a recipe - start crafting it"""
 	if not mixing_bowl_script:
 		return
 
-	# Can't add while mixing
-	if mixing_bowl_script.is_mixing:
-		print("Can't add ingredients while mixing!")
+	# Check if player has ingredients
+	var player_inv = InventoryManager.get_inventory(player_inventory_id)
+	if not _check_has_ingredients(recipe, player_inv):
+		print("You don't have all the ingredients for %s!" % recipe.get("name", "this recipe"))
 		return
 
-	# Remove from player
-	if InventoryManager.remove_item(player_inventory_id, item_id, 1):
-		# Add to mixing bowl
-		InventoryManager.add_item(equipment_inventory_id, item_id, 1)
+	# Transfer ingredients from player to mixing bowl
+	var ingredients = recipe.get("ingredients", {})
+	for ingredient_id in ingredients.keys():
+		var amount = ingredients[ingredient_id]
+		if not InventoryManager.transfer_item(player_inventory_id, equipment_inventory_id, ingredient_id, amount):
+			print("Error transferring ingredient: %s" % ingredient_id)
+			# TODO: Rollback previous transfers
+			return
 
-		print("Added %s to mixing bowl" % item_id)
-		item_transferred.emit(player_inventory_id, equipment_inventory_id, item_id)
+	# Start mixing
+	print("Starting to mix: %s" % recipe.get("name", ""))
+	mixing_bowl_script.start_crafting(recipe, recipe["id"])
+	_refresh_inventories()
 
-		# Check if we can start mixing (mixing bowl script will handle this)
-		# Refresh display
-		_refresh_inventories()
-
-func _on_equipment_item_clicked(item_id: String) -> void:
-	"""Remove ingredient from mixing bowl (if not mixing)"""
-	if not mixing_bowl_script:
+func _on_recipe_hover(recipe: Dictionary, player_inv: Dictionary) -> void:
+	"""Show ingredient tooltip when hovering over recipe"""
+	if not ingredient_tooltip or not tooltip_label:
 		return
 
-	# Can't remove while mixing
-	if mixing_bowl_script.is_mixing:
-		print("Can't remove ingredients while mixing!")
-		return
+	# Build ingredient list with color coding
+	var tooltip_text = "[b]%s[/b]\n\n[u]Ingredients:[/u]\n" % recipe.get("name", "Recipe")
 
-	# Remove from mixing bowl
-	if InventoryManager.remove_item(equipment_inventory_id, item_id, 1):
-		# Add back to player
-		InventoryManager.add_item(player_inventory_id, item_id, 1)
+	var ingredients = recipe.get("ingredients", {})
+	for ingredient_id in ingredients.keys():
+		var required = ingredients[ingredient_id]
+		var have = player_inv.get(ingredient_id, 0)
+		var ingredient_name = _get_item_display_name(ingredient_id)
 
-		print("Removed %s from mixing bowl" % item_id)
-		item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
+		if have >= required:
+			# Has enough - show in green with checkmark
+			tooltip_text += "[color=#00FF00]✓ %s: %d/%d[/color]\n" % [ingredient_name, have, required]
+		else:
+			# Missing some - show in red with X and amount needed
+			var missing = required - have
+			tooltip_text += "[color=#FF0000]✗ %s: %d/%d (need %d more)[/color]\n" % [ingredient_name, have, required, missing]
 
-		# Refresh display
-		_refresh_inventories()
+	tooltip_label.text = tooltip_text
+
+	# Position tooltip near mouse
+	ingredient_tooltip.visible = true
+	ingredient_tooltip.position = get_local_mouse_position() + Vector2(10, 10)
+
+func _on_recipe_hover_exit() -> void:
+	"""Hide tooltip when mouse leaves recipe button"""
+	if ingredient_tooltip:
+		ingredient_tooltip.visible = false
 
 func _on_collect_finished_product() -> void:
 	"""Collect finished product from mixing bowl"""
@@ -203,24 +322,3 @@ func _on_collect_finished_product() -> void:
 
 	# Refresh display
 	_refresh_inventories()
-
-func _on_start_mixing_pressed() -> void:
-	"""Check for valid recipe and start mixing"""
-	if not mixing_bowl_script:
-		return
-
-	# Get current ingredients in the bowl
-	var bowl_inventory = InventoryManager.get_inventory(equipment_inventory_id)
-
-	# Check each unlocked recipe to see if we can make it
-	var unlocked_recipes = RecipeManager.get_all_unlocked_recipes()
-	for recipe in unlocked_recipes:
-		if RecipeManager.can_craft_recipe(recipe["id"], bowl_inventory):
-			print("Starting to mix: %s" % recipe["name"])
-			mixing_bowl_script.start_crafting(recipe, recipe["id"])
-			_refresh_inventories()
-			return
-
-	# No valid recipe found
-	print("These ingredients don't match any known recipe!")
-	# TODO: Show error message in UI
