@@ -8,8 +8,15 @@ albedo_color = Color(0.3, 0.3, 0.3, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
 size = Vector3(2, 2, 2)
 
-[node name="Register" type="Node3D"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(1.5, 1, 1)
+
+[node name="Register" type="StaticBody3D"]
 script = ExtResource("1_register")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_collision")
 
 [node name="Counter" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
