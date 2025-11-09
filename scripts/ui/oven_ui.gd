@@ -38,10 +38,10 @@ func _process(delta: float) -> void:
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show baking slots with individual timers"""
-	# Clear ALL children from equipment_container immediately
+	# Clear ALL children from equipment_container
 	for child in equipment_container.get_children():
 		equipment_container.remove_child(child)
-		child.free()  # Use free() instead of queue_free() to remove immediately
+		child.queue_free()  # Use queue_free() - safe now that we don't refresh every frame
 	equipment_buttons.clear()
 
 	if not oven_script:
