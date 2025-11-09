@@ -1,13 +1,17 @@
-[gd_scene load_steps=25 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=31 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" uid="uid://cyo76ljp20m3q" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
+[ext_resource type="Texture2D" uid="uid://dflxrxqaofl3k" path="res://assets/textures/floor.png" id="2_floor_texture"]
+[ext_resource type="Texture2D" uid="uid://cjmd22am1ssgg" path="res://assets/textures/plaster-wallpng.png" id="2_plaster_texture"]
 [ext_resource type="PackedScene" uid="uid://cqp6vn8wrgx1f" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Texture2D" uid="uid://tn3hj4nknl2l" path="res://assets/textures/brickwall.png" id="2_wall_texture"]
 [ext_resource type="PackedScene" uid="uid://befxl6ys3xk5f" path="res://scenes/bakery/equipment/ingredient_storage.tscn" id="3_storage"]
 [ext_resource type="PackedScene" uid="uid://dy7k5vqh1qk3j" path="res://scenes/bakery/equipment/mixing_bowl.tscn" id="4_mixing"]
 [ext_resource type="PackedScene" uid="uid://c2h8tpnwm1r7e" path="res://scenes/bakery/equipment/oven.tscn" id="5_oven"]
 [ext_resource type="PackedScene" uid="uid://csfh3qvkw5vbd" path="res://scenes/bakery/equipment/display_case.tscn" id="6_display"]
 [ext_resource type="PackedScene" uid="uid://register001" path="res://scenes/bakery/equipment/register.tscn" id="7_register"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="8_hud"]
+[ext_resource type="PackedScene" uid="uid://cukekfhw0e20k" path="res://assets/enviroment/Green_Pendant_Light_1107210023_texture.glb" id="9_aug17"]
 [ext_resource type="PackedScene" path="res://scenes/ui/planning_menu.tscn" id="9_planning"]
 [ext_resource type="PackedScene" uid="uid://cf3c4wqwx6lhm" path="res://scenes/ui/dev_menu.tscn" id="10_devmenu"]
 [ext_resource type="PackedScene" uid="uid://c3v8r1p2mxn4s" path="res://scenes/ui/quick_inventory.tscn" id="11_quickinv"]
@@ -33,10 +37,26 @@ ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_energy = 0.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.6, 0.5, 0.4, 1)
+albedo_texture = ExtResource("2_floor_texture")
+uv1_scale = Vector3(10, 10, 10)
+texture_filter = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.9, 0.85, 0.75, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_backwall"]
+albedo_texture = ExtResource("2_wall_texture")
+uv1_scale = Vector3(5, 2, 1)
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sidewalls"]
+albedo_texture = ExtResource("2_plaster_texture")
+uv1_scale = Vector3(3, 2, 3)
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rightwall"]
+albedo_texture = ExtResource("2_wall_texture")
+uv1_scale = Vector3(5, 2, 1)
+uv1_triplanar = true
+uv1_world_triplanar = true
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ceiling"]
 albedo_color = Color(0.95, 0.95, 0.95, 1)
@@ -65,25 +85,25 @@ material = SubResource("StandardMaterial3D_floor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -10)
 use_collision = true
 size = Vector3(20, 4, 0.2)
-material = SubResource("StandardMaterial3D_wall")
+material = SubResource("StandardMaterial3D_backwall")
 
 [node name="LeftWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 2, 0)
 use_collision = true
 size = Vector3(0.2, 4, 20)
-material = SubResource("StandardMaterial3D_wall")
+material = SubResource("StandardMaterial3D_sidewalls")
 
 [node name="RightWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 0)
 use_collision = true
 size = Vector3(0.2, 4, 20)
-material = SubResource("StandardMaterial3D_wall")
+material = SubResource("StandardMaterial3D_rightwall")
 
 [node name="FrontWall" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 10)
 use_collision = true
 size = Vector3(20, 4, 0.2)
-material = SubResource("StandardMaterial3D_wall")
+material = SubResource("StandardMaterial3D_sidewalls")
 
 [node name="Ceiling" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.1, 0)
@@ -113,6 +133,39 @@ transform = Transform3D(1.3329903, 0.0039855186, 0.028860595, -0.004188944, 1.46
 
 [node name="Register" parent="Equipment" instance=ExtResource("7_register")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.504613, 0.7331177, 0.08858752)
+
+[node name="Green_Pendant_Light_1107210023_texture" parent="Equipment" instance=ExtResource("9_aug17")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.723861, 3.3550885, -0.025181651)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Equipment/Green_Pendant_Light_1107210023_texture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.9359851, 0)
+light_color = Color(0.9764706, 0.9490196, 0.59607846, 1)
+light_energy = 1.5
+shadow_enabled = true
+omni_range = 6.0
+omni_attenuation = 2.0
+
+[node name="Green_Pendant_Light_1107210023_texture2" parent="Equipment" instance=ExtResource("9_aug17")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6432137, 3.3550885, -0.025181651)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Equipment/Green_Pendant_Light_1107210023_texture2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.95552707, 0)
+light_color = Color(0.9764706, 0.9490196, 0.59607846, 1)
+light_energy = 1.5
+shadow_enabled = true
+omni_range = 6.0
+omni_attenuation = 2.0
+
+[node name="Green_Pendant_Light_1107210023_texture3" parent="Equipment" instance=ExtResource("9_aug17")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.78707, 3.3550885, -0.025181651)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="Equipment/Green_Pendant_Light_1107210023_texture3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.95631313, 0)
+light_color = Color(0.9781874, 0.94706744, 0.5962764, 1)
+light_energy = 1.5
+shadow_enabled = true
+omni_range = 6.0
+omni_attenuation = 2.0
 
 [node name="NavigationMarkers" type="Node3D" parent="."]
 
