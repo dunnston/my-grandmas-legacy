@@ -45,11 +45,11 @@ func _refresh_equipment_inventory() -> void:
 		status_label.text = "Oven ready (%d slots available)" % max_slots
 		status_label.modulate = Color(0.8, 0.8, 0.8)
 	equipment_container.add_child(status_label)
-	equipment_buttons.append(status_label)
+	# Don't append labels to equipment_buttons (it's typed as Array[Button])
 
 	var separator1 = HSeparator.new()
 	equipment_container.add_child(separator1)
-	equipment_buttons.append(separator1)
+	# Don't append separators to equipment_buttons
 
 	# Show baking slots (not inventory, since inventory groups items)
 	if "baking_slots" not in oven_script or oven_script.baking_slots.is_empty():
@@ -57,7 +57,7 @@ func _refresh_equipment_inventory() -> void:
 		empty_label.text = "Oven is empty"
 		empty_label.modulate = Color(0.6, 0.6, 0.6)
 		equipment_container.add_child(empty_label)
-		equipment_buttons.append(empty_label)
+		# Don't append labels to equipment_buttons
 	else:
 		# Show each baking slot individually with its own timer
 		var slot_index = 0
@@ -92,6 +92,7 @@ func _refresh_equipment_inventory() -> void:
 			item_button.custom_minimum_size = Vector2(200, 40)
 			item_button.pressed.connect(_on_oven_slot_clicked.bind(slot_index))
 			item_container.add_child(item_button)
+			equipment_buttons.append(item_button)  # Track the button, not the container
 
 			# Timer label
 			var timer_label = Label.new()
@@ -103,9 +104,9 @@ func _refresh_equipment_inventory() -> void:
 				timer_label.modulate = Color(0.8, 0.8, 0.8)
 			timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			item_container.add_child(timer_label)
+			# Don't append labels to equipment_buttons
 
 			equipment_container.add_child(item_container)
-			equipment_buttons.append(item_container)
 
 	# Also show finished items in the oven inventory (these are done baking)
 	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
@@ -116,13 +117,13 @@ func _refresh_equipment_inventory() -> void:
 			if quantity > 0:
 				var separator2 = HSeparator.new()
 				equipment_container.add_child(separator2)
-				equipment_buttons.append(separator2)
+				# Don't append separators to equipment_buttons
 
 				var finished_label = Label.new()
 				finished_label.text = "Finished Products:"
 				finished_label.modulate = Color(0.2, 1.0, 0.2)
 				equipment_container.add_child(finished_label)
-				equipment_buttons.append(finished_label)
+				# Don't append labels to equipment_buttons
 
 				var item_button = Button.new()
 				var display_name = _get_item_display_name(item_id)
@@ -131,7 +132,7 @@ func _refresh_equipment_inventory() -> void:
 				item_button.modulate = Color(0.2, 1.0, 0.2)
 				item_button.pressed.connect(_on_oven_item_clicked.bind(item_id))
 				equipment_container.add_child(item_button)
-				equipment_buttons.append(item_button)
+				equipment_buttons.append(item_button)  # Only append actual buttons
 				break  # Only show this section once
 
 func _get_baking_info(item_id: String) -> Dictionary:
