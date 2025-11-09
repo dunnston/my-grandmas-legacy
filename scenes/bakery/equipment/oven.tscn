@@ -1,19 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://c2h8tpnwm1r7e"]
+[gd_scene load_steps=3 format=3 uid="uid://c2h8tpnwm1r7e"]
 
 [ext_resource type="Script" path="res://scripts/equipment/oven.gd" id="1_oven"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_oven"]
-albedo_color = Color(0.3, 0.3, 0.35, 1)
-metallic = 0.8
-roughness = 0.3
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
-albedo_color = Color(0.2, 0.2, 0.25, 1)
-metallic = 0.7
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_window"]
-albedo_color = Color(0.1, 0.1, 0.1, 0.5)
-transparency = 1
+[ext_resource type="PackedScene" path="res://assets/enviroment/Sunny_Kitchen_Oven_1109143221_texture.glb" id="2_model"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
 size = Vector3(2, 2, 2)
@@ -21,20 +9,8 @@ size = Vector3(2, 2, 2)
 [node name="Oven" type="Node3D"]
 script = ExtResource("1_oven")
 
-[node name="OvenMesh" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-size = Vector3(1.2, 1.5, 0.8)
-material = SubResource("StandardMaterial3D_oven")
-
-[node name="OvenDoor" type="CSGBox3D" parent="OvenMesh"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0.41)
-size = Vector3(0.8, 0.6, 0.05)
-material = SubResource("StandardMaterial3D_door")
-
-[node name="OvenWindow" type="CSGBox3D" parent="OvenMesh/OvenDoor"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
-size = Vector3(0.5, 0.3, 0.02)
-material = SubResource("StandardMaterial3D_window")
+[node name="OvenModel" parent="." instance=ExtResource("2_model")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="OvenLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0.3)
