@@ -78,6 +78,10 @@ func _refresh_equipment_inventory() -> void:
 			var remaining = slot.target_time - slot.timer
 			var is_done = slot.timer >= slot.target_time
 
+			# For binding: use the item_id that's currently in the baking slot
+			# (this is always the dough/batter, even when done)
+			var button_item_id = item_id
+
 			if is_done:
 				item_button.text = "✓ Slot %d: %s (DONE)" % [slot_index, display_name]
 				item_button.modulate = Color(0.2, 1.0, 0.2)
@@ -86,7 +90,7 @@ func _refresh_equipment_inventory() -> void:
 				item_button.modulate = Color(1.0, 1.0, 1.0)
 
 			item_button.custom_minimum_size = Vector2(200, 40)
-			item_button.pressed.connect(_on_oven_item_clicked.bind(item_id))
+			item_button.pressed.connect(_on_oven_slot_clicked.bind(slot_index))
 			item_container.add_child(item_button)
 
 			# Timer label
@@ -143,8 +147,48 @@ func _get_baking_info(item_id: String) -> Dictionary:
 		"is_done": slot_info.get("is_done", false)
 	}
 
+func _on_oven_slot_clicked(slot_index: int) -> void:
+	"""Handle clicking on a baking slot - either cancel baking or collect finished product"""
+	if not oven_script:
+		return
+
+	# Adjust for 1-based display index (we show "Slot 1" but array is 0-indexed)
+	var array_index = slot_index - 1
+
+	if array_index < 0 or array_index >= oven_script.baking_slots.size():
+		print("Invalid slot index!")
+		return
+
+	var slot = oven_script.baking_slots[array_index]
+	var is_done = slot.timer >= slot.target_time
+
+	if is_done:
+		# Item is done - it should have been converted to finished product already
+		# Force completion if it hasn't happened yet
+		print("Completing baking for slot %d" % slot_index)
+		oven_script.complete_baking_slot(array_index)
+		_refresh_inventories()
+	else:
+		# Item is still baking - cancel it and return dough/batter to player
+		var item_id = slot.item_id
+		var metadata = InventoryManager.get_item_metadata(equipment_inventory_id, item_id)
+
+		# Remove from oven inventory
+		if InventoryManager.remove_item(equipment_inventory_id, item_id, 1):
+			# Add back to player
+			InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
+
+			# Remove from baking slots
+			oven_script.baking_slots.remove_at(array_index)
+
+			print("Cancelled baking of %s from slot %d" % [item_id, slot_index])
+			item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
+
+			# Refresh display
+			_refresh_inventories()
+
 func _on_oven_item_clicked(item_id: String) -> void:
-	"""Remove item from oven"""
+	"""Remove finished item from oven (for items in 'Finished Products' section)"""
 	if not oven_script:
 		return
 
@@ -156,20 +200,13 @@ func _on_oven_item_clicked(item_id: String) -> void:
 		# Add to player
 		InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
 
-		# If this was a baking item (dough/batter), remove from baking slots
-		if item_id.ends_with("_dough") or item_id.ends_with("_batter"):
-			if "baking_slots" in oven_script:
-				for i in range(oven_script.baking_slots.size() - 1, -1, -1):
-					if oven_script.baking_slots[i].item_id == item_id:
-						oven_script.baking_slots.remove_at(i)
-						print("Cancelled baking of %s" % item_id)
-						break
-
-		print("Removed %s from oven" % item_id)
+		print("Collected %s from oven" % item_id)
 		item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
 
 		# Refresh display
 		_refresh_inventories()
+	else:
+		print("Failed to remove %s from oven - not in inventory" % item_id)
 
 func _on_player_item_clicked(item_id: String) -> void:
 	"""Add item from player inventory to oven"""
