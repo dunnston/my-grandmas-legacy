@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=25 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" uid="uid://cyo76ljp20m3q" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
 [ext_resource type="PackedScene" uid="uid://cqp6vn8wrgx1f" path="res://scenes/player/player.tscn" id="2_player"]
@@ -14,6 +14,9 @@
 [ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
 [ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
 [ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
+[ext_resource type="PackedScene" uid="uid://cbpcjwwajl5xu" path="res://assets/enviroment/Shelf_Display_Stand_1109143342_texture.glb" id="15_ccpe0"]
+[ext_resource type="PackedScene" uid="uid://b0baqt88cf6qa" path="res://assets/enviroment/Vintage_Register_1109150240_texture.glb" id="16_xng6r"]
+[ext_resource type="PackedScene" uid="uid://db4gqiwyxprk4" path="res://assets/enviroment/Empty_Shelf_1107211745_texture.glb" id="17_aug17"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_horizon_color = Color(0.646, 0.656, 0.671, 1)
@@ -97,19 +100,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 5)
 [node name="Equipment" type="Node3D" parent="."]
 
 [node name="IngredientStorage" parent="Equipment" instance=ExtResource("3_storage")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0, -7)
+transform = Transform3D(1, 0, 0, 0, 0.9999574, -0.009232661, 0, 0.009232661, 0.9999574, -7, 0.9817569, -9.016167)
 
 [node name="MixingBowl" parent="Equipment" instance=ExtResource("4_mixing")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -7)
+transform = Transform3D(0.012408137, 0, 0.39903426, 0, 0.38033545, 0, -0.3459735, 0, 0.014311131, -2.9899192, 1.172137, -9.129863)
 
 [node name="Oven" parent="Equipment" instance=ExtResource("5_oven")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -7)
+transform = Transform3D(0.58341473, 0, 0, 0, 0.56954324, 0, 0, 0, 0.47729072, 0.72772014, 0.53112185, -8.737569)
 
 [node name="DisplayCase" parent="Equipment" instance=ExtResource("6_display")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -7)
+transform = Transform3D(1.3329903, 0.0039855186, 0.028860595, -0.004188944, 1.4623233, 0.013425878, -0.039766014, -0.020442761, 0.966014, 5.2580814, 0.73389953, 0.18312323)
 
 [node name="Register" parent="Equipment" instance=ExtResource("7_register")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.504613, 0.7331177, 0.08858752)
 
 [node name="NavigationMarkers" type="Node3D" parent="."]
 
@@ -146,3 +149,12 @@ gizmo_extents = 0.5
 [node name="StoryLetter" parent="UILayer" instance=ExtResource("13_storyletter")]
 
 [node name="EventNotification" parent="UILayer" instance=ExtResource("14_eventnotif")]
+
+[node name="Shelf_Display_Stand_1109143342_texture" parent="." instance=ExtResource("15_ccpe0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.929052, 0.9718367, 0.05895245)
+
+[node name="Vintage_Register_1109150240_texture" parent="." instance=ExtResource("16_xng6r")]
+transform = Transform3D(-0.25153622, 0, -0.0015886344, 0, 0.25118166, 0, 0.0017560747, 0, -0.22755247, 6.951083, 1.095661, -0.075252086)
+
+[node name="Empty_Shelf_1107211745_texture" parent="." instance=ExtResource("17_aug17")]
+transform = Transform3D(-0.99999356, 0, -0.003595257, 0, 0.51430047, 0, 0.003595257, 0, -0.99999356, -2.9574025, 0.43832237, -9.12709)
