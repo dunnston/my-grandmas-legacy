@@ -1,17 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://dy7k5vqh1qk3j"]
+[gd_scene load_steps=3 format=3 uid="uid://dy7k5vqh1qk3j"]
 
 [ext_resource type="Script" path="res://scripts/equipment/mixing_bowl.gd" id="1_mixing"]
-
-[sub_resource type="SphereMesh" id="SphereMesh_bowl"]
-radius = 0.4
-height = 0.6
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bowl"]
-albedo_color = Color(0.9, 0.9, 0.9, 1)
-metallic = 0.3
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_counter"]
-albedo_color = Color(0.7, 0.5, 0.3, 1)
+[ext_resource type="PackedScene" path="res://assets/enviroment/Mixer_Mania_1109143241_texture.glb" id="2_model"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_interaction"]
 radius = 1.5
@@ -19,15 +9,8 @@ radius = 1.5
 [node name="MixingBowl" type="Node3D"]
 script = ExtResource("1_mixing")
 
-[node name="BowlMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-mesh = SubResource("SphereMesh_bowl")
-surface_material_override/0 = SubResource("StandardMaterial3D_bowl")
-
-[node name="CounterTop" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
-size = Vector3(1.5, 0.5, 1)
-material = SubResource("StandardMaterial3D_counter")
+[node name="MixerModel" parent="." instance=ExtResource("2_model")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="InteractionArea" type="Area3D" parent="."]
 collision_layer = 2
