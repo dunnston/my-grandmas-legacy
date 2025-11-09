@@ -1,4 +1,4 @@
-extends Node3D
+extends StaticBody3D
 
 # Register - Checkout station where customers pay for their purchases
 # Player interacts to process customer transactions
