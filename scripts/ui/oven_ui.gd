@@ -5,6 +5,8 @@ extends EquipmentUIBase
 # Click items to remove from oven
 
 var oven_script: Node = null
+var last_slot_count: int = 0
+var last_finished_count: int = 0
 
 func _ready() -> void:
 	super._ready()
@@ -14,13 +16,25 @@ func open_ui_with_equipment(equipment_inv_id: String, player_inv_id: String, equ
 	"""Open UI with reference to oven equipment"""
 	oven_script = equipment_node
 	open_ui(equipment_inv_id, player_inv_id)
+	last_slot_count = -1  # Force initial refresh
+	last_finished_count = -1
 
 func _process(delta: float) -> void:
 	if not visible or not oven_script:
 		return
 
-	# Update timer displays for baking items
-	_refresh_equipment_inventory()
+	# Only refresh if slot count or finished items changed
+	var current_slot_count = oven_script.baking_slots.size() if "baking_slots" in oven_script else 0
+	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
+	var current_finished_count = 0
+	for item_id in inventory:
+		if not (item_id.ends_with("_dough") or item_id.ends_with("_batter")):
+			current_finished_count += inventory[item_id]
+
+	if current_slot_count != last_slot_count or current_finished_count != last_finished_count:
+		last_slot_count = current_slot_count
+		last_finished_count = current_finished_count
+		_refresh_equipment_inventory()
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show baking slots with individual timers"""
