@@ -24,9 +24,11 @@ func _process(delta: float) -> void:
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show baking slots with individual timers"""
-	# Clear existing buttons
+	# Clear existing buttons - remove from parent immediately
 	for button in equipment_buttons:
-		button.queue_free()
+		if button and is_instance_valid(button):
+			button.get_parent().remove_child(button)
+			button.queue_free()
 	equipment_buttons.clear()
 
 	if not oven_script:
