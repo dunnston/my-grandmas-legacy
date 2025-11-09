@@ -51,56 +51,84 @@ func _refresh_equipment_inventory() -> void:
 	equipment_container.add_child(separator1)
 	equipment_buttons.append(separator1)
 
-	# Get inventory
-	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
-
-	if inventory.is_empty():
+	# Show baking slots (not inventory, since inventory groups items)
+	if "baking_slots" not in oven_script or oven_script.baking_slots.is_empty():
 		var empty_label = Label.new()
 		empty_label.text = "Oven is empty"
 		empty_label.modulate = Color(0.6, 0.6, 0.6)
 		equipment_container.add_child(empty_label)
 		equipment_buttons.append(empty_label)
 	else:
-		# Show each item with its baking progress
-		for item_id in inventory:
+		# Show each baking slot individually with its own timer
+		var slot_index = 0
+		for slot in oven_script.baking_slots:
+			slot_index += 1
+			var item_id = slot.item_id
+			var display_name = _get_item_display_name(item_id)
+
+			# Create item display with timer
+			var item_container = VBoxContainer.new()
+			item_container.custom_minimum_size = Vector2(200, 80)
+
+			# Item button
+			var item_button = Button.new()
+
+			# Calculate baking progress from slot data
+			var progress_percent = (slot.timer / slot.target_time) * 100 if slot.target_time > 0 else 0
+			var remaining = slot.target_time - slot.timer
+			var is_done = slot.timer >= slot.target_time
+
+			if is_done:
+				item_button.text = "✓ Slot %d: %s (DONE)" % [slot_index, display_name]
+				item_button.modulate = Color(0.2, 1.0, 0.2)
+			else:
+				item_button.text = "Slot %d: %s (%.0f%%)" % [slot_index, display_name, progress_percent]
+				item_button.modulate = Color(1.0, 1.0, 1.0)
+
+			item_button.custom_minimum_size = Vector2(200, 40)
+			item_button.pressed.connect(_on_oven_item_clicked.bind(item_id))
+			item_container.add_child(item_button)
+
+			# Timer label
+			var timer_label = Label.new()
+			if is_done:
+				timer_label.text = "Ready to remove!"
+				timer_label.modulate = Color(0.2, 1.0, 0.2)
+			else:
+				timer_label.text = "%.1fs / %.1fs remaining" % [remaining, slot.target_time]
+				timer_label.modulate = Color(0.8, 0.8, 0.8)
+			timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			item_container.add_child(timer_label)
+
+			equipment_container.add_child(item_container)
+			equipment_buttons.append(item_container)
+
+	# Also show finished items in the oven inventory (these are done baking)
+	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
+	for item_id in inventory:
+		# Only show finished products (not dough/batter)
+		if not (item_id.ends_with("_dough") or item_id.ends_with("_batter")):
 			var quantity = inventory[item_id]
 			if quantity > 0:
-				# Create item display with timer
-				var item_container = VBoxContainer.new()
-				item_container.custom_minimum_size = Vector2(200, 80)
+				var separator2 = HSeparator.new()
+				equipment_container.add_child(separator2)
+				equipment_buttons.append(separator2)
 
-				# Item button
+				var finished_label = Label.new()
+				finished_label.text = "Finished Products:"
+				finished_label.modulate = Color(0.2, 1.0, 0.2)
+				equipment_container.add_child(finished_label)
+				equipment_buttons.append(finished_label)
+
 				var item_button = Button.new()
 				var display_name = _get_item_display_name(item_id)
-
-				# Calculate baking progress
-				var bake_info = _get_baking_info(item_id)
-				var progress_percent = (bake_info.progress / bake_info.total) * 100 if bake_info.total > 0 else 0
-				var remaining = bake_info.total - bake_info.progress
-
-				if bake_info.is_done:
-					item_button.text = "✓ %s (DONE)" % display_name
-					item_button.modulate = Color(0.2, 1.0, 0.2)
-				else:
-					item_button.text = "%s (%.0f%%)" % [display_name, progress_percent]
-
+				item_button.text = "✓ %s x%d (Click to collect)" % [display_name, quantity]
 				item_button.custom_minimum_size = Vector2(200, 40)
+				item_button.modulate = Color(0.2, 1.0, 0.2)
 				item_button.pressed.connect(_on_oven_item_clicked.bind(item_id))
-				item_container.add_child(item_button)
-
-				# Timer label
-				var timer_label = Label.new()
-				if bake_info.is_done:
-					timer_label.text = "Ready to remove!"
-					timer_label.modulate = Color(0.2, 1.0, 0.2)
-				else:
-					timer_label.text = "%.1fs / %.1fs remaining" % [remaining, bake_info.total]
-					timer_label.modulate = Color(0.8, 0.8, 0.8)
-				timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				item_container.add_child(timer_label)
-
-				equipment_container.add_child(item_container)
-				equipment_buttons.append(item_container)
+				equipment_container.add_child(item_button)
+				equipment_buttons.append(item_button)
+				break  # Only show this section once
 
 func _get_baking_info(item_id: String) -> Dictionary:
 	"""Get baking progress for an item"""
