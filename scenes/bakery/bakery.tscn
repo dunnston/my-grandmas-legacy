@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=39 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" uid="uid://cyo76ljp20m3q" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
 [ext_resource type="Texture2D" uid="uid://dflxrxqaofl3k" path="res://assets/textures/floor.png" id="2_floor_texture"]
@@ -16,8 +16,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/planning_menu.tscn" id="9_planning"]
 [ext_resource type="PackedScene" uid="uid://cf3c4wqwx6lhm" path="res://scenes/ui/dev_menu.tscn" id="10_devmenu"]
 [ext_resource type="PackedScene" uid="uid://c3v8r1p2mxn4s" path="res://scenes/ui/quick_inventory.tscn" id="11_quickinv"]
+[ext_resource type="PackedScene" path="res://scenes/ui/catalog_menu.tscn" id="12_catalogmenu"]
 [ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
-[ext_resource type="PackedScene" uid="uid://catalog_menu001" path="res://scenes/ui/catalog_menu.tscn" id="12_catalogmenu"]
 [ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
 [ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
 [ext_resource type="PackedScene" uid="uid://cbpcjwwajl5xu" path="res://assets/enviroment/Shelf_Display_Stand_1109143342_texture.glb" id="15_ccpe0"]
@@ -26,6 +26,8 @@
 [ext_resource type="PackedScene" uid="uid://1lqrimgtfcv7" path="res://assets/enviroment/Yellow_Wooden_Chair__1107210114_texture.glb" id="22_sbep2"]
 [ext_resource type="PackedScene" uid="uid://b736ongjpxnt1" path="res://assets/enviroment/Golden_Round_Table_1107210107_texture.glb" id="23_dsae0"]
 [ext_resource type="PackedScene" uid="uid://vhfw445bc1ju" path="res://assets/enviroment/Bakery_Bag_1109214213_texture.glb" id="24_dsae0"]
+[ext_resource type="PackedScene" uid="uid://dx5myx8ulfe14" path="res://assets/enviroment/Spiral_Stairs.glb" id="27_ul7db"]
+[ext_resource type="PackedScene" uid="uid://u7xntxy5ba36" path="res://assets/enviroment/Trashcan_empty.glb" id="28_v6mj2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_horizon_color = Color(0.646, 0.656, 0.671, 1)
@@ -102,7 +104,7 @@ size = Vector3(0.2, 4, 20)
 material = SubResource("StandardMaterial3D_sidewalls")
 
 [node name="RightWall" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.999223, 1.9883919, 0.00019979477)
 use_collision = true
 size = Vector3(0.2, 4, 20)
 material = SubResource("StandardMaterial3D_rightwall")
@@ -208,6 +210,10 @@ gizmo_extents = 0.5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 gizmo_extents = 0.5
 
+[node name="PackageSpawn" type="Marker3D" parent="NavigationMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 6)
+gizmo_extents = 0.5
+
 [node name="Customers" type="Node3D" parent="."]
 
 [node name="UILayer" type="CanvasLayer" parent="."]
@@ -240,7 +246,13 @@ transform = Transform3D(-0.25153622, 0, -0.0015886344, 0, 0.25118166, 0, 0.00175
 transform = Transform3D(-0.99999356, 0, -0.003595257, 0, 0.51430047, 0, 0.003595257, 0, -0.99999356, -2.9574025, 0.43832237, -9.12709)
 
 [node name="Yellow_Wooden_Chair__1107210114_texture" parent="Enviroment" instance=ExtResource("22_sbep2")]
-transform = Transform3D(0.00152797, 0, 0.6067501, 0, 0.56507844, 0, -0.5836321, 0, 0.001588494, -2.5652661, 0.76263666, 7.7639146)
+transform = Transform3D(0.00152797, 0, 0.6067501, 0, 0.56507844, 0, -0.5836321, 0, 0.001588494, -2.5652661, 0.52257085, 7.7698646)
 
 [node name="Golden_Round_Table_1107210107_texture" parent="Enviroment" instance=ExtResource("23_dsae0")]
 transform = Transform3D(0.80635196, 0, 0, 0, 0.6501343, 0, 0, 0, 0.8778583, -1.157328, 0.63295996, 7.819732)
+
+[node name="Spiral_Stairs" parent="Enviroment" instance=ExtResource("27_ul7db")]
+transform = Transform3D(2.21123, 0, 0.07862306, 0, 1.9315403, 0, -0.08316916, 0, 2.0903697, 7.8447475, 1.6390104, -7.460956)
+
+[node name="Trashcan_empty" parent="Enviroment" instance=ExtResource("28_v6mj2")]
+transform = Transform3D(0.50317687, 0, 0, 0, 0.5165427, 0, 0, 0, 0.47984987, 2.8246658, 0.497823, 0.13220263)

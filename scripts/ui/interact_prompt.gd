@@ -11,6 +11,12 @@ var parent_equipment: Node3D = null
 var check_timer: float = 0.0
 
 func _ready() -> void:
+	# Hide completely in editor to avoid cluttering scene view
+	if Engine.is_editor_hint():
+		visible = false
+		set_process(false)
+		return
+
 	# Find parent equipment node (should be the root of the equipment scene)
 	parent_equipment = get_parent()
 
@@ -42,6 +48,10 @@ func _ready() -> void:
 	print("[InteractPrompt] Ready for: ", parent_equipment.name if parent_equipment else "Unknown")
 
 func _process(delta: float) -> void:
+	# Don't run in editor
+	if Engine.is_editor_hint():
+		return
+
 	# Only check periodically for performance
 	check_timer += delta
 	if check_timer >= check_interval:

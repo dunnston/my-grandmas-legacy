@@ -167,6 +167,10 @@ func _collect_save_data() -> Dictionary:
 	if BuildingManager:
 		data["building_manager"] = BuildingManager.get_save_data()
 
+	# Delivery (queued deliveries, packages)
+	if DeliveryManager:
+		data["delivery_manager"] = DeliveryManager.save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -226,6 +230,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Building
 	if data.has("building_manager") and BuildingManager:
 		BuildingManager.load_save_data(data["building_manager"])
+
+	# Delivery
+	if data.has("delivery_manager") and DeliveryManager:
+		DeliveryManager.load_data(data["delivery_manager"])
 
 	print("Applied save data to all managers")
 

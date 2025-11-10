@@ -14,6 +14,11 @@ extends Node3D
 @onready var display_marker: Marker3D = $NavigationMarkers/DisplayCase
 @onready var register_marker: Marker3D = $NavigationMarkers/Register
 @onready var exit_marker: Marker3D = $NavigationMarkers/Exit
+@onready var package_spawn_marker: Marker3D = $NavigationMarkers/PackageSpawn
+
+# Package scene
+const PACKAGE_SCENE = preload("res://scenes/equipment/package.tscn")
+var current_package: Node3D = null
 
 func _ready() -> void:
 	print("Bakery scene ready")
@@ -53,6 +58,18 @@ func _ready() -> void:
 	# Connect Planning Menu
 	if planning_menu:
 		planning_menu.next_day_started.connect(_on_next_day_started)
+
+	# Connect DeliveryManager signals
+	DeliveryManager.delivery_available.connect(_on_delivery_available)
+	DeliveryManager.package_emptied.connect(_on_package_emptied)
+
+	# Set package spawn position
+	if package_spawn_marker:
+		DeliveryManager.set_package_spawn_position(package_spawn_marker.global_position)
+
+	# Check if there's a package to spawn on load
+	if DeliveryManager.is_package_available():
+		_spawn_package()
 
 	# Start in Baking phase
 	_on_phase_changed(GameManager.Phase.BAKING)
@@ -123,3 +140,46 @@ func start_business_phase() -> void:
 func end_business_phase() -> void:
 	"""Manually end business phase (called by UI button)"""
 	GameManager.start_cleanup_phase()
+
+# ============================================================================
+# PACKAGE DELIVERY SYSTEM
+# ============================================================================
+
+func _on_delivery_available() -> void:
+	"""Called when a delivery is available"""
+	print("Bakery: Delivery available!")
+	_spawn_package()
+
+func _spawn_package() -> void:
+	"""Spawn a package in the bakery"""
+	# Don't spawn if package already exists
+	if current_package and is_instance_valid(current_package):
+		print("Bakery: Package already spawned")
+		return
+
+	if not PACKAGE_SCENE:
+		push_error("Package scene not found!")
+		return
+
+	# Instance package
+	current_package = PACKAGE_SCENE.instantiate()
+
+	# Position it at spawn marker (or default position near entrance)
+	if package_spawn_marker:
+		current_package.global_position = package_spawn_marker.global_position
+	else:
+		# Default to near entrance if no marker exists
+		if entrance_marker:
+			current_package.global_position = entrance_marker.global_position + Vector3(1, 0, 1)
+		else:
+			current_package.global_position = Vector3(0, 0, 0)
+
+	# Add to scene
+	add_child(current_package)
+
+	print("Bakery: Package spawned at position: ", current_package.global_position)
+
+func _on_package_emptied() -> void:
+	"""Called when package is emptied"""
+	print("Bakery: Package emptied")
+	current_package = null
