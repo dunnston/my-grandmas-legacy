@@ -248,20 +248,32 @@ func _state_waiting_checkout(delta: float) -> void:
 	_navigate_to_target(delta)
 
 	if _is_at_target():
-		print(customer_id, ": At register, waiting for checkout")
-		current_state = State.CHECKING_OUT
-		_update_animation_state(false)  # Pause animation at register
-		reached_register.emit()
+		# Face the register while waiting
+		_face_target(register_position, delta)
 
-		# Show speech bubble to indicate ready for checkout
-		if feedback_system and feedback_system.has_method("show_speech_bubble"):
-			feedback_system.show_speech_bubble()
+		# First time reaching register area - join queue
+		if not is_in_queue:
+			print(customer_id, ": Reached register area, joining queue")
+			reached_register.emit()
+
+		# If at front of queue (position 0), transition to CHECKING_OUT
+		if is_in_queue and queue_position_index == 0:
+			print(customer_id, ": At front of queue, ready for checkout")
+			current_state = State.CHECKING_OUT
+			_update_animation_state(false)  # Pause animation at register
+
+			# Show speech bubble to indicate ready for checkout
+			if feedback_system and feedback_system.has_method("show_speech_bubble"):
+				feedback_system.show_speech_bubble()
 
 	# Drain patience while waiting
 	patience -= patience_drain_rate * delta
 
 func _state_checking_out(delta: float) -> void:
 	"""Customer is at register, being served"""
+	# Face the register while being served
+	_face_target(register_position, delta)
+
 	# Wait for external checkout completion
 	# This will be called by Register when transaction completes
 	patience -= patience_drain_rate * delta * 0.5  # Slower drain during checkout
@@ -308,6 +320,13 @@ func _is_at_target() -> bool:
 	if not navigation_agent:
 		return false
 	return navigation_agent.is_navigation_finished()
+
+func _face_target(target_pos: Vector3, delta: float) -> void:
+	"""Rotate to face a specific position"""
+	var direction: Vector3 = (target_pos - global_position).normalized()
+	if direction.length() > 0.01:
+		var target_rotation: float = atan2(direction.x, direction.z)
+		rotation.y = lerp_angle(rotation.y, target_rotation, rotation_speed * delta)
 
 func _update_animation_state(is_moving: bool) -> void:
 	"""Pause or resume walking animation based on movement state"""
