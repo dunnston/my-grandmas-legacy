@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://dpg5q3qm8qc0y" path="res://scenes/ui/interact_prompt.tscn" id="3_prompt"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
-size = Vector3(3, 2, 2)
+size = Vector3(5, 3, 3)
 
 [node name="DisplayCase" type="Node3D" groups=["equipment"]]
 script = ExtResource("1_display")

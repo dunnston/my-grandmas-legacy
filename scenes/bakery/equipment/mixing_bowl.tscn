@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://dpg5q3qm8qc0y" path="res://scenes/ui/interact_prompt.tscn" id="3_prompt"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_interaction"]
-radius = 1.5
+radius = 2.5
 
 [node name="MixingBowl" type="Node3D" groups=["equipment"]]
 script = ExtResource("1_mixing")
