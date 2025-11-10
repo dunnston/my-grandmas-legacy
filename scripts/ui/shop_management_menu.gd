@@ -380,8 +380,8 @@ func _add_pricing_row(container: VBoxContainer, recipe: Dictionary) -> void:
 	var price_spin = SpinBox.new()
 	price_spin.name = "PriceSpinBox_" + recipe.id
 	price_spin.custom_minimum_size = Vector2(120, 30)
-	price_spin.min_value = cost * 0.5  # Can't go below 50% of cost
-	price_spin.max_value = base_price * 3.0  # Can't go above 3x base price
+	price_spin.min_value = 0.50  # Minimum $0.50 (player can set any price, even losses)
+	price_spin.max_value = 999.99  # Maximum $999.99 (no artificial limit)
 	price_spin.step = 0.50
 	price_spin.prefix = "$"
 	price_spin.value = RecipeManager.get_effective_price(recipe.id)
@@ -447,9 +447,7 @@ func _on_decrease_price(recipe_id: String, container: VBoxContainer) -> void:
 func _on_increase_price(recipe_id: String, container: VBoxContainer) -> void:
 	"""Increase price by $0.50"""
 	var current = RecipeManager.get_effective_price(recipe_id)
-	var recipe = RecipeManager.get_recipe(recipe_id)
-	var base_price = recipe.get("base_price", 10.0)
-	var new_price = min(current + 0.50, base_price * 3.0)
+	var new_price = min(current + 0.50, 999.99)  # Cap at $999.99
 	RecipeManager.set_player_price(recipe_id, new_price)
 	_update_pricing_display(recipe_id, container)
 
