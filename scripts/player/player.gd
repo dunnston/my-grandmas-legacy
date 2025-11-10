@@ -58,6 +58,11 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and current_interactable:
 		interact_with(current_interactable)
 
+	# Quick bag access (press B to open bag during checkout)
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_B:
+			_try_open_bag()
+
 func _physics_process(delta: float) -> void:
 	# Don't move if game is paused
 	if GameManager.is_game_paused():
@@ -127,17 +132,65 @@ func check_for_interactable() -> void:
 
 		if interactable:
 			if current_interactable != interactable:
+				# Hide previous indicator
+				if current_interactable and current_interactable.has_method("hide_interaction_indicator"):
+					current_interactable.hide_interaction_indicator()
+
+				# Set new interactable
 				current_interactable = interactable
 				print("Can interact with: ", interactable.name)
+
+				# Show new indicator
+				if current_interactable.has_method("show_interaction_indicator"):
+					current_interactable.show_interaction_indicator()
 		else:
+			# Hide indicator when looking away
+			if current_interactable and current_interactable.has_method("hide_interaction_indicator"):
+				current_interactable.hide_interaction_indicator()
 			current_interactable = null
 	else:
+		# Hide indicator when not looking at anything
+		if current_interactable and current_interactable.has_method("hide_interaction_indicator"):
+			current_interactable.hide_interaction_indicator()
 		current_interactable = null
 
 func interact_with(interactable: Node3D) -> void:
 	if interactable.has_method("interact"):
 		print("Interacting with: ", interactable.name)
 		interactable.interact(self)
+
+func _try_open_bag() -> void:
+	"""Try to open the bag UI (called when player presses B)"""
+	print("Player: B key pressed - trying to open bag")
+
+	# Find the bag station in the scene
+	var bag_station = get_tree().get_first_node_in_group("bag_station")
+	print("Player: Found bag station in group: ", bag_station != null)
+
+	if not bag_station:
+		# Try finding it as a child of Equipment
+		var equipment = get_tree().get_first_node_in_group("equipment")
+		if equipment:
+			print("Player: Trying to find BagStation under Equipment")
+			bag_station = equipment.get_node_or_null("BagStation")
+			print("Player: Found BagStation: ", bag_station != null)
+
+	if bag_station and bag_station.has_method("open_bag_ui"):
+		# Check if player has items in carry inventory
+		var carry_inventory = InventoryManager.get_inventory("player_carry")
+		print("Player: Carry inventory has %d items" % carry_inventory.size())
+
+		if carry_inventory.is_empty():
+			print("No items to bag - collect items from the display case first")
+			return
+
+		print("Player: Calling bag_station.open_bag_ui()")
+		bag_station.open_bag_ui()
+	else:
+		print("ERROR: Bag station not found or missing open_bag_ui method!")
+		print("  bag_station exists: ", bag_station != null)
+		if bag_station:
+			print("  has open_bag_ui method: ", bag_station.has_method("open_bag_ui"))
 
 func get_inventory_id() -> String:
 	return "player"
