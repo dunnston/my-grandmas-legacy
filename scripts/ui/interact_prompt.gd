@@ -40,7 +40,7 @@ func update_visibility() -> void:
 		return
 
 	# Check if parent equipment has player_nearby variable
-	if parent_equipment.has("player_nearby"):
+	if "player_nearby" in parent_equipment:
 		# Show prompt if player is nearby
 		visible = parent_equipment.player_nearby != null
 	else:
