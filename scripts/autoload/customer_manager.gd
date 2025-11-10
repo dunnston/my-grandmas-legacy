@@ -30,6 +30,10 @@ var register_position: Vector3 = Vector3.ZERO
 var exit_position: Vector3 = Vector3.ZERO
 var spawn_parent: Node3D = null  # Where to add customer nodes
 
+# Register Queue System
+var register_queue: Array[Node3D] = []  # Ordered queue of customers waiting at register
+var queue_spacing: float = 1.5  # Distance between customers in queue (meters)
+
 # Traffic calculation
 var base_customers_per_hour: float = 2.0  # Loaded from BalanceConfig in _ready()
 var current_traffic_modifier: float = 1.0  # Can be adjusted by marketing, events, etc.
@@ -112,6 +116,7 @@ func spawn_customer() -> Node3D:
 	# Connect signals
 	customer.purchase_complete.connect(_on_customer_purchase_complete.bind(customer))
 	customer.left_bakery.connect(_on_customer_left.bind(customer))
+	customer.reached_register.connect(_on_customer_reached_register.bind(customer))
 
 	# Track customer
 	active_customers.append(customer)
@@ -147,11 +152,67 @@ func _on_customer_left(customer: Node3D) -> void:
 	# Emit signal
 	customer_left.emit(customer, satisfaction)
 
+	# Remove from queue if they were in it
+	if register_queue.has(customer):
+		remove_from_queue(customer)
+
 	# Remove from active customers
 	active_customers.erase(customer)
 
 	# Clean up customer node
 	customer.queue_free()
+
+func _on_customer_reached_register(customer: Node3D) -> void:
+	"""Called when a customer reaches the register and joins the queue"""
+	if not is_instance_valid(customer):
+		return
+
+	# Add customer to queue if not already in it
+	if not register_queue.has(customer):
+		register_queue.append(customer)
+		print("CustomerManager: Customer joined queue (Position: %d/%d)" % [register_queue.find(customer) + 1, register_queue.size()])
+
+		# Update queue positions for all customers
+		_update_queue_positions()
+
+func remove_from_queue(customer: Node3D) -> void:
+	"""Remove a customer from the register queue"""
+	if register_queue.has(customer):
+		register_queue.erase(customer)
+		print("CustomerManager: Customer left queue (Remaining: %d)" % register_queue.size())
+
+		# Update positions for remaining customers
+		_update_queue_positions()
+
+func get_queue_position_for_customer(customer: Node3D) -> Vector3:
+	"""Calculate the target position for a customer based on their queue position"""
+	var queue_index = register_queue.find(customer)
+	if queue_index == -1:
+		return register_position  # Not in queue, use default
+
+	# Queue position 0 (front) goes to register position
+	# Position 1 stands behind them, position 2 behind position 1, etc.
+	# Offset backwards from register along -Z axis (towards entrance)
+	var offset = Vector3(0, 0, queue_spacing * queue_index)
+	return register_position + offset
+
+func _update_queue_positions() -> void:
+	"""Update target positions for all customers in queue"""
+	for i in range(register_queue.size()):
+		var customer = register_queue[i]
+		if is_instance_valid(customer) and customer.has_method("update_queue_position"):
+			var new_position = get_queue_position_for_customer(customer)
+			customer.update_queue_position(i, new_position)
+
+func get_queue_length() -> int:
+	"""Get the current number of customers in the register queue"""
+	return register_queue.size()
+
+func get_front_customer() -> Node3D:
+	"""Get the customer at the front of the queue (position 0)"""
+	if register_queue.size() > 0:
+		return register_queue[0]
+	return null
 
 func get_customers_waiting_at_register() -> Array[Node3D]:
 	"""Get all customers currently waiting at the register"""
@@ -162,11 +223,8 @@ func get_customers_waiting_at_register() -> Array[Node3D]:
 	return waiting
 
 func get_next_customer_at_register() -> Node3D:
-	"""Get the first customer waiting at register"""
-	var waiting: Array[Node3D] = get_customers_waiting_at_register()
-	if waiting.size() > 0:
-		return waiting[0]
-	return null
+	"""Get the first customer in the queue (front of line)"""
+	return get_front_customer()
 
 # Daily reporting
 func generate_daily_customer_report() -> Dictionary:

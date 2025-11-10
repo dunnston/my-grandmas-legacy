@@ -61,6 +61,11 @@ var display_position: Vector3 = Vector3.ZERO
 var register_position: Vector3 = Vector3.ZERO
 var exit_position: Vector3 = Vector3.ZERO
 
+# Queue system
+var queue_position_index: int = -1  # -1 means not in queue
+var queue_target_position: Vector3 = Vector3.ZERO
+var is_in_queue: bool = false
+
 # Satisfaction factors
 var satisfaction_score: float = 50.0  # 0-100
 
@@ -389,6 +394,26 @@ func get_total_cost() -> float:
 
 	return total
 
+func update_queue_position(queue_index: int, target_pos: Vector3) -> void:
+	"""Called by CustomerManager when queue position changes
+	Args:
+		queue_index: Position in queue (0 = front, 1 = second, etc.)
+		target_pos: Where customer should stand in queue
+	"""
+	queue_position_index = queue_index
+	queue_target_position = target_pos
+	is_in_queue = true
+
+	print(customer_id, ": Updated queue position to %d at %v" % [queue_index, target_pos])
+
+	# If in WAITING_CHECKOUT or CHECKING_OUT state, update target
+	if current_state == State.WAITING_CHECKOUT or (current_state == State.CHECKING_OUT and queue_index > 0):
+		set_target_position(queue_target_position)
+		# If not at front, need to keep navigating
+		if queue_index > 0:
+			current_state = State.WAITING_CHECKOUT
+			_update_animation_state(true)  # Resume walking animation
+
 func complete_purchase(transaction_time: float = 0.0, had_errors: bool = false) -> void:
 	"""Called when checkout is complete
 	Args:
@@ -404,6 +429,12 @@ func complete_purchase(transaction_time: float = 0.0, had_errors: bool = false) 
 	# Show satisfaction emoji
 	if feedback_system and feedback_system.has_method("show_satisfaction_emoji"):
 		feedback_system.show_satisfaction_emoji(satisfaction_score, had_errors, transaction_time)
+
+	# Remove from queue (allows next customer to advance)
+	if is_in_queue and CustomerManager:
+		CustomerManager.remove_from_queue(self)
+		is_in_queue = false
+		queue_position_index = -1
 
 	# Head to exit
 	set_target_position(exit_position)

@@ -210,6 +210,12 @@ func _start_checkout() -> void:
 		print("No customers waiting")
 		return
 
+	# Verify this customer is at the front of the queue
+	if current_customer.has("queue_position_index") and current_customer.queue_position_index > 0:
+		print("Customer is not at front of queue - please wait for their turn")
+		current_customer = null
+		return
+
 	print("Starting checkout for ", current_customer.customer_id)
 
 	# Activate bag station for checkout
