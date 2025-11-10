@@ -7,7 +7,7 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
 size = Vector3(3, 2, 2)
 
-[node name="IngredientStorage" type="Node3D"]
+[node name="IngredientStorage" type="Node3D" groups=["equipment"]]
 script = ExtResource("1_storage")
 
 [node name="CabinetModel" parent="." instance=ExtResource("2_model")]

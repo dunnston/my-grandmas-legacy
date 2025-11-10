@@ -10,7 +10,7 @@ size = Vector3(2, 2, 2)
 [sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
 size = Vector3(1.5, 1, 1)
 
-[node name="Register" type="StaticBody3D"]
+[node name="Register" type="StaticBody3D" groups=["equipment", "register"]]
 script = ExtResource("1_register")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
