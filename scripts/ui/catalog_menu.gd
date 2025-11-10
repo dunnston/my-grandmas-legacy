@@ -185,15 +185,22 @@ func _add_equipment_card(item: Dictionary) -> void:
 
 func _on_purchase_equipment(item: Dictionary) -> void:
 	"""Purchase an equipment upgrade"""
-	# Purchase the upgrade (UpgradeManager handles cost internally)
-	if UpgradeManager.purchase_upgrade(item.id):
-		print("Purchased: %s" % item.name)
+	# Check if can afford
+	if not EconomyManager.can_afford(item.cost):
+		print("Cannot afford %s" % item.name)
+		return
 
-		# Refresh displays
-		_update_cash_display()
-		_setup_equipment_tab()
-	else:
-		print("Failed to purchase %s" % item.name)
+	# Charge the cost
+	EconomyManager.remove_money(item.cost, "Equipment purchase: %s" % item.name)
+
+	# Queue the equipment for delivery
+	DeliveryManager.order_equipment(item.id, item.cost)
+
+	print("Ordered: %s (will arrive tomorrow at 3 AM)" % item.name)
+
+	# Refresh displays
+	_update_cash_display()
+	_setup_equipment_tab()
 
 # ============================================================================
 # INGREDIENTS TAB
@@ -366,16 +373,19 @@ func _on_purchase_ingredients() -> void:
 		return
 
 	# Process payment
-	EconomyManager.remove_money(total_cost, "Ingredient purchase")
+	EconomyManager.remove_money(total_cost, "Ingredient order")
 
-	# Add ingredients to storage
-	print("\n=== INGREDIENT PURCHASE ===")
+	# Queue ingredients for delivery
+	print("\n=== INGREDIENT ORDER PLACED ===")
 	for ingredient_id in ingredient_cart:
 		var quantity: int = ingredient_cart[ingredient_id]
-		InventoryManager.add_item(INGREDIENT_STORAGE_ID, ingredient_id, quantity)
-		print("Purchased: %dx %s" % [quantity, ingredient_id])
+		var price: float = EconomyManager.get_ingredient_price(ingredient_id)
+		var item_cost: float = quantity * price
+		DeliveryManager.order_ingredient(ingredient_id, quantity, item_cost)
+		print("Ordered: %dx %s" % [quantity, ingredient_id])
 	print("Total: $%.2f" % total_cost)
-	print("===========================\n")
+	print("Items will arrive tomorrow at 3 AM")
+	print("================================\n")
 
 	# Clear cart
 	ingredient_cart.clear()
@@ -491,12 +501,19 @@ func _add_decoration_card(item: Dictionary) -> void:
 
 func _on_purchase_decoration(item: Dictionary) -> void:
 	"""Purchase a decoration"""
-	# Purchase the decoration (UpgradeManager handles cost internally)
-	if UpgradeManager.purchase_upgrade(item.id):
-		print("Purchased: %s (+%d ambiance)" % [item.name, item.get("ambiance", 0)])
+	# Check if can afford
+	if not EconomyManager.can_afford(item.cost):
+		print("Cannot afford %s" % item.name)
+		return
 
-		# Refresh displays
-		_update_cash_display()
-		_setup_decorations_tab()
-	else:
-		print("Failed to purchase %s" % item.name)
+	# Charge the cost
+	EconomyManager.remove_money(item.cost, "Decoration purchase: %s" % item.name)
+
+	# Queue the decoration for delivery
+	DeliveryManager.order_decoration(item.id, item.cost)
+
+	print("Ordered: %s (+%d ambiance) (will arrive tomorrow at 3 AM)" % [item.name, item.get("ambiance", 0)])
+
+	# Refresh displays
+	_update_cash_display()
+	_setup_decorations_tab()

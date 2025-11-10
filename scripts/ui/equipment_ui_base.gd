@@ -83,6 +83,10 @@ func _refresh_equipment_inventory() -> void:
 		push_error("EquipmentUIBase: equipment_container is null! Scene structure may be incorrect.")
 		return
 
+	# Clear ALL children from container (including separators and other UI elements)
+	for child in equipment_container.get_children():
+		child.queue_free()
+
 	# Get inventory
 	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
 
@@ -105,6 +109,10 @@ func _refresh_player_inventory() -> void:
 	if not player_container:
 		push_error("EquipmentUIBase: player_container is null! Scene structure may be incorrect.")
 		return
+
+	# Clear ALL children from container (including any extra UI elements)
+	for child in player_container.get_children():
+		child.queue_free()
 
 	# Get inventory
 	var inventory = InventoryManager.get_inventory(player_inventory_id)
