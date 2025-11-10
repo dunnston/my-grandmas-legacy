@@ -5,7 +5,7 @@ extends Sprite3D
 
 @export var vertical_offset: float = 2.0  # How high above the object to display
 @export var check_interval: float = 0.1  # How often to check player_nearby state (performance)
-@export var icon_pixel_size: float = 0.003  # Size of each pixel in world units (smaller = smaller icon)
+@export var icon_pixel_size: float = 0.001  # Size of each pixel in world units (smaller = smaller icon)
 
 var parent_equipment: Node3D = null
 var check_timer: float = 0.0
