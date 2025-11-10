@@ -26,6 +26,16 @@ func _ready() -> void:
 	# Position above parent
 	position.y = vertical_offset
 
+	# IMPORTANT: Cancel out parent's scale to maintain consistent prompt size
+	# If parent is scaled 2x, we scale prompt 0.5x to cancel it out
+	if parent_equipment:
+		var parent_scale = parent_equipment.scale
+		scale = Vector3(
+			1.0 / parent_scale.x if parent_scale.x != 0 else 1.0,
+			1.0 / parent_scale.y if parent_scale.y != 0 else 1.0,
+			1.0 / parent_scale.z if parent_scale.z != 0 else 1.0
+		)
+
 	print("[InteractPrompt] Ready for: ", parent_equipment.name if parent_equipment else "Unknown")
 
 func _process(delta: float) -> void:
