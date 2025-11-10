@@ -583,8 +583,10 @@ func _check_price_acceptable(item_id: String) -> bool:
 	if metadata.has("quality_data") and QualityManager:
 		current_price = QualityManager.get_price_for_quality(base_price, metadata.quality_data)
 
-	# Check for player-set price (will be implemented next)
-	if RecipeManager.has_method("get_player_price"):
+	# Check for player-set price
+	if RecipeManager.has_method("get_effective_price"):
+		current_price = RecipeManager.get_effective_price(item_id)
+	elif RecipeManager.has_method("get_player_price"):
 		var player_price = RecipeManager.get_player_price(item_id)
 		if player_price > 0:
 			current_price = player_price
