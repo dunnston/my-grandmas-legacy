@@ -289,10 +289,11 @@ const PROGRESSION = {
 ## =============================================================================
 const CUSTOMERS = {
 	# Traffic & Spawning
-	"base_customers_per_hour": 6.0,      # At 50 reputation
+	"base_customers_per_hour": 2.0,      # At 50 reputation (30 seconds average)
 	"spawn_interval_base": 10.0,         # Base spawn interval in seconds
 	"spawn_interval_min": 3.0,           # Minimum spawn interval (busy times)
 	"spawn_interval_max": 120.0,         # Maximum spawn interval (slow times)
+	"spawn_interval_variance": 0.3,      # ±30% randomization for realistic timing
 
 	# Reputation Traffic Multipliers
 	"traffic_at_rep_0": 0.1,             # -90% customers at 0 rep

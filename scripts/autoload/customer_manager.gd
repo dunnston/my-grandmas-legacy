@@ -19,7 +19,8 @@ var total_satisfaction_today: float = 0.0
 
 # Spawn settings
 var is_spawning_enabled: bool = false
-var spawn_interval: float = 10.0  # Seconds between customer spawns
+var spawn_interval: float = 10.0  # Base seconds between customer spawns
+var current_spawn_interval: float = 10.0  # Current interval with random variance applied
 var time_since_last_spawn: float = 0.0
 
 # Navigation targets (set by bakery scene)
@@ -45,9 +46,11 @@ func _process(delta: float) -> void:
 
 	# Spawn customers at intervals
 	time_since_last_spawn += delta
-	if time_since_last_spawn >= spawn_interval:
+	if time_since_last_spawn >= current_spawn_interval:
 		spawn_customer()
 		time_since_last_spawn = 0.0
+		# Calculate next spawn interval with random variance for realistic timing
+		_randomize_spawn_interval()
 
 func setup_navigation_targets(entrance: Vector3, display: Vector3, register: Vector3, exit: Vector3) -> void:
 	"""Set up navigation targets for customers (called by bakery scene)"""
@@ -69,8 +72,10 @@ func start_spawning() -> void:
 
 	# Recalculate spawn interval based on current reputation and modifiers
 	calculate_spawn_interval()
+	# Apply initial random variance
+	_randomize_spawn_interval()
 
-	print("CustomerManager: Spawning enabled")
+	print("CustomerManager: Spawning enabled with interval: %.1fs" % current_spawn_interval)
 
 func stop_spawning() -> void:
 	"""Stop spawning customers (called when Business phase ends)"""
@@ -243,7 +248,15 @@ func calculate_spawn_interval() -> void:
 	spawn_interval = 60.0 / max(customers_per_hour, 0.1)
 	spawn_interval = clamp(spawn_interval, 3.0, 120.0)  # Min 3s, max 120s between customers
 
-	print("Traffic calculation: %.1f customers/hour (interval: %.1fs)" % [customers_per_hour, spawn_interval])
+	print("Traffic calculation: %.1f customers/hour (base interval: %.1fs)" % [customers_per_hour, spawn_interval])
+
+func _randomize_spawn_interval() -> void:
+	"""Apply random variance to spawn interval for realistic, non-uniform customer arrival"""
+	var variance: float = BalanceConfig.CUSTOMERS.spawn_interval_variance
+	var random_factor: float = randf_range(1.0 - variance, 1.0 + variance)
+	current_spawn_interval = spawn_interval * random_factor
+	# Ensure it stays within min/max bounds
+	current_spawn_interval = clamp(current_spawn_interval, BalanceConfig.CUSTOMERS.spawn_interval_min, BalanceConfig.CUSTOMERS.spawn_interval_max)
 
 func calculate_reputation_traffic_modifier() -> float:
 	"""Calculate traffic modifier based on reputation (50 = 1.0x, 100 = 2.5x, 0 = 0.1x)"""
