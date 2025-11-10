@@ -54,8 +54,13 @@ func update_visibility() -> void:
 		return
 
 	# Check if parent equipment has player_nearby variable
-	if "player_nearby" in parent_equipment:
-		# Show prompt if player is nearby
-		visible = parent_equipment.player_nearby != null
+	if "player_nearby" in parent_equipment and parent_equipment.player_nearby != null:
+		var player = parent_equipment.player_nearby
+		# Show prompt ONLY if this equipment is the player's current interactable
+		# This ensures only the closest equipment shows its prompt when multiple overlap
+		if "current_interactable" in player and player.current_interactable == parent_equipment:
+			visible = true
+		else:
+			visible = false
 	else:
 		visible = false
