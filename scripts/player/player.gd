@@ -117,8 +117,9 @@ func _physics_process(delta: float) -> void:
 
 func check_for_interactable() -> void:
 	# Find all equipment in scene that has player_nearby set to this player
-	# This matches the Area3D detection that shows the interact prompt
+	# If multiple are in range, choose the closest one
 	var found_interactable: Node3D = null
+	var closest_distance: float = INF
 
 	# Get all nodes in equipment group
 	var equipment_nodes = get_tree().get_nodes_in_group("equipment")
@@ -126,8 +127,11 @@ func check_for_interactable() -> void:
 		# Check if this equipment has player_nearby property and it's set to us
 		if "player_nearby" in equipment and equipment.player_nearby == self:
 			if equipment.has_method("interact"):
-				found_interactable = equipment
-				break  # Found one, use it
+				# Calculate distance to this equipment
+				var distance = global_position.distance_to(equipment.global_position)
+				if distance < closest_distance:
+					closest_distance = distance
+					found_interactable = equipment
 
 	# If no equipment found via group, check individual equipment types
 	if not found_interactable:
@@ -136,8 +140,10 @@ func check_for_interactable() -> void:
 		for node in all_nodes:
 			if "player_nearby" in node and node.player_nearby == self:
 				if node.has_method("interact"):
-					found_interactable = node
-					break
+					var distance = global_position.distance_to(node.global_position)
+					if distance < closest_distance:
+						closest_distance = distance
+						found_interactable = node
 
 	# Update current_interactable
 	if found_interactable:
