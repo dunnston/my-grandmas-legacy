@@ -23,10 +23,7 @@ func _ready() -> void:
 	# Start hidden
 	visible = false
 
-	# Position above parent
-	position.y = vertical_offset
-
-	# IMPORTANT: Cancel out parent's scale to maintain consistent prompt size
+	# IMPORTANT: Cancel out parent's scale to maintain consistent prompt size and position
 	# If parent is scaled 2x, we scale prompt 0.5x to cancel it out
 	if parent_equipment:
 		var parent_scale = parent_equipment.scale
@@ -35,6 +32,12 @@ func _ready() -> void:
 			1.0 / parent_scale.y if parent_scale.y != 0 else 1.0,
 			1.0 / parent_scale.z if parent_scale.z != 0 else 1.0
 		)
+
+		# Also adjust vertical position to account for parent's Y scale
+		# This ensures consistent height above all equipment regardless of their scale
+		position.y = vertical_offset / parent_scale.y if parent_scale.y != 0 else vertical_offset
+	else:
+		position.y = vertical_offset
 
 	print("[InteractPrompt] Ready for: ", parent_equipment.name if parent_equipment else "Unknown")
 
