@@ -41,6 +41,11 @@ func _ready() -> void:
 
 func _create_ui() -> void:
 	"""Create the main UI structure"""
+	# Don't create UI if it already exists from .tscn file
+	if panel and tab_container:
+		print("UI already exists from scene file, skipping creation")
+		return
+
 	# Create Panel if it doesn't exist
 	if not panel:
 		panel = Panel.new()
@@ -612,6 +617,9 @@ func open_menu() -> void:
 	show()
 	GameManager.pause_game()
 
+	# Capture mouse for UI interaction
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
 	# Refresh all tabs
 	_refresh_all_tabs()
 
@@ -630,6 +638,9 @@ func close_menu() -> void:
 	is_open = false
 	hide()
 	GameManager.resume_game()
+
+	# Restore mouse capture for camera control
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 	menu_closed.emit()
 	print("Shop Management Menu closed")
