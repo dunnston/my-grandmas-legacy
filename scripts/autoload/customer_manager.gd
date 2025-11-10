@@ -31,11 +31,13 @@ var exit_position: Vector3 = Vector3.ZERO
 var spawn_parent: Node3D = null  # Where to add customer nodes
 
 # Traffic calculation
-var base_customers_per_hour: float = 6.0  # At 50 reputation
+var base_customers_per_hour: float = 2.0  # Loaded from BalanceConfig in _ready()
 var current_traffic_modifier: float = 1.0  # Can be adjusted by marketing, events, etc.
 
 func _ready() -> void:
-	print("CustomerManager initialized")
+	# Load traffic settings from BalanceConfig
+	base_customers_per_hour = BalanceConfig.CUSTOMERS.base_customers_per_hour
+	print("CustomerManager initialized - base traffic: %.1f customers/hour" % base_customers_per_hour)
 
 func _process(delta: float) -> void:
 	if not is_spawning_enabled:
