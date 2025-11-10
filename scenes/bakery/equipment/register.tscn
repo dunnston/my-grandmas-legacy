@@ -1,14 +1,14 @@
-[gd_scene load_steps=5 format=3 uid="uid://register001"]
+[gd_scene load_steps=6 format=3 uid="uid://register001"]
 
-[ext_resource type="Script" path="res://scripts/equipment/register.gd" id="1_register"]
-[ext_resource type="PackedScene" path="res://assets/enviroment/Market_Counter_Displa_1109143311_texture.glb" id="2_model"]
-[ext_resource type="PackedScene" uid="uid://dpg5q3qm8qc0y" path="res://scenes/ui/interact_prompt.tscn" id="3_prompt"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
-size = Vector3(4, 3, 3)
+[ext_resource type="Script" uid="uid://2lbqqed2yrum" path="res://scripts/equipment/register.gd" id="1_register"]
+[ext_resource type="PackedScene" uid="uid://ccwsyrwmn88bs" path="res://assets/enviroment/Market_Counter_Displa_1109143311_texture.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://scenes/ui/interact_prompt.tscn" id="3_prompt"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
 size = Vector3(1.5, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
+size = Vector3(4, 3, 3)
 
 [node name="Register" type="StaticBody3D" groups=["equipment", "register"]]
 script = ExtResource("1_register")
@@ -18,7 +18,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("BoxShape3D_collision")
 
 [node name="CounterModel" parent="." instance=ExtResource("2_model")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="InteractionArea" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -27,3 +26,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("BoxShape3D_interaction")
 
 [node name="InteractPrompt" parent="." instance=ExtResource("3_prompt")]
+visible = false
