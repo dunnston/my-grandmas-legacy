@@ -15,11 +15,17 @@ extends CanvasLayer
 # Equipment UI Manager
 var equipment_ui_manager: Node
 
+# Bag prompt
+var bag_prompt_label: Label = null
+
 func _ready() -> void:
 	print("HUD ready")
 
 	# Add to hud group for easy access
 	add_to_group("hud")
+
+	# Create bag prompt
+	_create_bag_prompt()
 
 	# Create and setup equipment UI manager
 	equipment_ui_manager = preload("res://scripts/ui/equipment_ui_manager.gd").new()
@@ -102,3 +108,57 @@ func _on_end_business_pressed() -> void:
 func get_equipment_ui_manager() -> Node:
 	"""Get the equipment UI manager instance"""
 	return equipment_ui_manager
+
+# Bag prompt functions
+func _create_bag_prompt() -> void:
+	"""Create the bag prompt label"""
+	bag_prompt_label = Label.new()
+	bag_prompt_label.name = "BagPrompt"
+	bag_prompt_label.text = "[B] Put Items in Bag"
+	bag_prompt_label.add_theme_font_size_override("font_size", 24)
+
+	# Position at bottom-center of screen
+	bag_prompt_label.anchor_left = 0.5
+	bag_prompt_label.anchor_top = 1.0
+	bag_prompt_label.anchor_right = 0.5
+	bag_prompt_label.anchor_bottom = 1.0
+	bag_prompt_label.offset_left = -150
+	bag_prompt_label.offset_top = -100
+	bag_prompt_label.offset_right = 150
+	bag_prompt_label.offset_bottom = -50
+	bag_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bag_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	# Style it
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.2, 0.2, 0.2, 0.8)
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(1, 1, 0, 1)  # Yellow border
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	bag_prompt_label.add_theme_stylebox_override("normal", style)
+
+	# Set text color to yellow
+	bag_prompt_label.add_theme_color_override("font_color", Color(1, 1, 0.5, 1))
+
+	add_child(bag_prompt_label)
+	bag_prompt_label.hide()
+
+func show_bag_prompt() -> void:
+	"""Show the bag prompt"""
+	print("HUD: show_bag_prompt() called, label exists: ", bag_prompt_label != null)
+	if bag_prompt_label:
+		bag_prompt_label.show()
+		print("HUD: Bag prompt is now visible: ", bag_prompt_label.visible)
+	else:
+		print("HUD: ERROR - bag_prompt_label is null!")
+
+func hide_bag_prompt() -> void:
+	"""Hide the bag prompt"""
+	if bag_prompt_label:
+		bag_prompt_label.hide()

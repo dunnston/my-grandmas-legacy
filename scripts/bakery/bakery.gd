@@ -22,11 +22,24 @@ func _ready() -> void:
 	add_to_group("bakery")
 
 	# Set up CustomerManager with navigation targets
-	if customers_container and entrance_marker and display_marker and register_marker and exit_marker:
+	if customers_container and entrance_marker and register_marker and exit_marker:
 		CustomerManager.set_spawn_parent(customers_container)
+
+		# Find display case position dynamically (in case it was moved)
+		var display_case = equipment.get_node_or_null("DisplayCase")
+		var display_position = display_marker.global_position if display_marker else Vector3.ZERO
+
+		if display_case:
+			display_position = display_case.global_position
+			print("Using actual DisplayCase position: ", display_position)
+		elif display_marker:
+			print("DisplayCase not found, using marker position: ", display_position)
+		else:
+			push_warning("No DisplayCase or marker found!")
+
 		CustomerManager.setup_navigation_targets(
 			entrance_marker.global_position,
-			display_marker.global_position,
+			display_position,
 			register_marker.global_position,
 			exit_marker.global_position
 		)
