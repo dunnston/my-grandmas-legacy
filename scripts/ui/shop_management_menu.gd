@@ -41,9 +41,10 @@ func _ready() -> void:
 
 func _create_ui() -> void:
 	"""Create the main UI structure"""
-	# Don't create UI if it already exists from .tscn file
+	# If UI already exists from .tscn file, just create tabs
 	if panel and tab_container:
-		print("UI already exists from scene file, skipping creation")
+		print("UI already exists from scene file, creating tabs")
+		_create_all_tabs()
 		return
 
 	# Create Panel if it doesn't exist
