@@ -11,6 +11,8 @@ signal crafting_complete(result_item: String)
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
 @onready var mesh: MeshInstance3D = $BowlMesh
+@onready var progress_bar_container: Node3D = $ProgressBarContainer
+@onready var progress_bar: ProgressBar = $ProgressBarContainer/SubViewport/ProgressBar
 
 # State
 var is_crafting: bool = false
@@ -79,11 +81,20 @@ func _ready() -> void:
 		interaction_area.body_entered.connect(_on_body_entered)
 		interaction_area.body_exited.connect(_on_body_exited)
 
+	# Hide progress bar initially
+	if progress_bar_container:
+		progress_bar_container.visible = false
+
 	print("MixingBowl ready: ", name)
 
 func _process(delta: float) -> void:
 	if is_crafting and not GameManager.is_game_paused():
 		crafting_timer += delta * GameManager.get_time_scale()
+
+		# Update progress bar
+		if progress_bar:
+			var progress_percent = (crafting_timer / mixing_time) * 100.0
+			progress_bar.value = progress_percent
 
 		if crafting_timer >= mixing_time:
 			complete_crafting()
@@ -183,6 +194,12 @@ func start_crafting(recipe: Dictionary, recipe_id: String = "") -> void:
 	print("Started mixing ", recipe.get("name", "Unknown"), "! Wait ", mixing_time, " seconds...")
 	crafting_started.emit(recipe.get("name", "Unknown"))
 
+	# Show progress bar
+	if progress_bar_container:
+		progress_bar_container.visible = true
+	if progress_bar:
+		progress_bar.value = 0.0
+
 	# Visual feedback (change color while mixing)
 	if mesh and mesh.get_surface_override_material_count() > 0:
 		var mat = mesh.get_surface_override_material(0)
@@ -213,6 +230,10 @@ func complete_crafting() -> void:
 	crafting_timer = 0.0
 	# Keep current_recipe and current_recipe_id for reference
 
+	# Hide progress bar
+	if progress_bar_container:
+		progress_bar_container.visible = false
+
 	# Visual feedback (reset color)
 	if mesh and mesh.get_surface_override_material_count() > 0:
 		var mat = mesh.get_surface_override_material(0)
@@ -240,10 +261,17 @@ func auto_start_recipe(recipe_id: String, recipe_data: Dictionary, quality_mult:
 	current_recipe = recipe_data
 	is_crafting = true
 	crafting_timer = 0.0
+	mixing_time = recipe_data.get("mixing_time", 60.0)
 
 	# Apply quality multiplier to the result (stored for when crafting completes)
 	if not current_recipe.has("quality_multiplier"):
 		current_recipe["quality_multiplier"] = quality_mult
+
+	# Show progress bar
+	if progress_bar_container:
+		progress_bar_container.visible = true
+	if progress_bar:
+		progress_bar.value = 0.0
 
 	print("[MixingBowl] Auto-started recipe: ", recipe_data.name, " (quality: ", int(quality_mult * 100), "%)")
 	crafting_started.emit(recipe_data.name)
