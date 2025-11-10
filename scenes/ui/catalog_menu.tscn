@@ -1,0 +1,116 @@
+[gd_scene load_steps=2 format=3 uid="uid://catalog_menu001"]
+
+[ext_resource type="Script" path="res://scripts/ui/catalog_menu.gd" id="1_catalog"]
+
+[node name="CatalogMenu" type="CanvasLayer"]
+script = ExtResource("1_catalog")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -350.0
+offset_right = 500.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderSection" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer/HeaderSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bakery Catalog"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CashLabel" type="Label" parent="Panel/VBoxContainer/HeaderSection"]
+layout_mode = 2
+text = "Cash: $200.00"
+horizontal_alignment = 2
+
+[node name="HSeparator1" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="TabContainer" type="TabContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Equipment" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="InfoLabel" type="Label" parent="Panel/VBoxContainer/TabContainer/Equipment"]
+layout_mode = 2
+text = "Purchase equipment upgrades to improve your bakery"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/TabContainer/Equipment"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EquipmentContainer" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer/Equipment/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Ingredients" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="InfoLabel" type="Label" parent="Panel/VBoxContainer/TabContainer/Ingredients"]
+layout_mode = 2
+text = "Order ingredients for baking (delivered immediately)"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/TabContainer/Ingredients"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="IngredientContainer" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer/Ingredients/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="Decorations" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="InfoLabel" type="Label" parent="Panel/VBoxContainer/TabContainer/Decorations"]
+layout_mode = 2
+text = "Purchase decorations to improve bakery ambiance"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer/TabContainer/Decorations"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DecorationContainer" type="VBoxContainer" parent="Panel/VBoxContainer/TabContainer/Decorations/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="HSeparator2" type="HSeparator" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Close (C)"
