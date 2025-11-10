@@ -35,6 +35,7 @@ enum CustomerType {
 # Node references
 @onready var navigation_agent: NavigationAgent3D = $NavigationAgent3D
 @onready var feedback_system: Node3D = null  # Created dynamically in _ready
+var animation_player: AnimationPlayer = null  # Reference to active customer's AnimationPlayer
 
 # Customer properties
 var customer_id: String = ""
@@ -78,6 +79,12 @@ func _ready() -> void:
 		navigation_agent.radius = 0.5
 		navigation_agent.height = 1.8
 
+	# Randomly select and show one customer model
+	_select_random_customer_model()
+
+	# Add random initial rotation
+	rotation.y = randf_range(0.0, TAU)
+
 	# Create feedback system (speech bubbles, emojis)
 	_create_feedback_system()
 
@@ -92,6 +99,68 @@ func _create_feedback_system() -> void:
 		feedback_system.set_script(feedback_script)
 		add_child(feedback_system)
 		print(customer_id, ": Feedback system created")
+
+func _select_random_customer_model() -> void:
+	"""Randomly select one of the 5 customer models and make it visible"""
+	# Pick random customer model (1-5)
+	var model_num: int = randi_range(1, 5)
+	var model_name: String = "CustomerModel%d" % model_num
+
+	# Find and show the selected model
+	var selected_model = get_node_or_null(model_name)
+	if selected_model:
+		selected_model.visible = true
+		print(customer_id, ": Using customer model ", model_num)
+
+		# Find and configure AnimationPlayer
+		animation_player = _find_animation_player(selected_model)
+		if animation_player and animation_player is AnimationPlayer:
+			# Make sure AnimationPlayer is active
+			animation_player.active = true
+			animation_player.process_mode = Node.PROCESS_MODE_INHERIT
+
+			# Get the first animation
+			var anims = animation_player.get_animation_list()
+			if anims.size() > 0:
+				var anim_name = anims[0]
+
+				# Get the animation library and set loop mode
+				var anim_lib = animation_player.get_animation_library("")
+				if anim_lib and anim_lib.has_animation(anim_name):
+					var animation = anim_lib.get_animation(anim_name)
+					if animation:
+						animation.loop_mode = Animation.LOOP_LINEAR
+
+				# Play the animation immediately
+				animation_player.play(anim_name)
+
+				# Force update to ensure animation starts
+				animation_player.advance(0.0)
+
+				print(customer_id, ": Walking animation started (", anim_name, ")")
+		else:
+			print(customer_id, ": Warning - Could not find AnimationPlayer")
+	else:
+		print(customer_id, ": Warning - Could not find customer model: ", model_name)
+
+func _find_animation_player(node: Node) -> AnimationPlayer:
+	"""Recursively search for AnimationPlayer"""
+	# Check if current node is AnimationPlayer
+	if node is AnimationPlayer:
+		return node
+
+	# Check direct children
+	for child in node.get_children():
+		if child is AnimationPlayer:
+			return child
+
+	# Search recursively
+	for child in node.get_children():
+		var result = _find_animation_player(child)
+		if result:
+			return result
+
+	return null
 
 func _process(delta: float) -> void:
 	# Update state machine (AI logic in _process, not _physics_process)
@@ -146,6 +215,7 @@ func _state_entering(delta: float) -> void:
 		print(customer_id, ": Reached display case, browsing...")
 		current_state = State.BROWSING
 		browse_time = 0.0
+		_update_animation_state(false)  # Pause animation while browsing
 		reached_display_case.emit()
 
 func _state_browsing(delta: float) -> void:
@@ -175,6 +245,7 @@ func _state_waiting_checkout(delta: float) -> void:
 	if _is_at_target():
 		print(customer_id, ": At register, waiting for checkout")
 		current_state = State.CHECKING_OUT
+		_update_animation_state(false)  # Pause animation at register
 		reached_register.emit()
 
 		# Show speech bubble to indicate ready for checkout
@@ -196,6 +267,7 @@ func _state_leaving(delta: float) -> void:
 
 	if _is_at_target():
 		current_state = State.EXITED
+		_update_animation_state(false)  # Pause animation when exited
 		print(customer_id, ": Exited bakery")
 		left_bakery.emit()
 		# Customer will be removed by CustomerManager
@@ -207,6 +279,8 @@ func _navigate_to_target(delta: float) -> void:
 		return
 
 	if navigation_agent.is_navigation_finished():
+		# Stopped at destination - pause animation
+		_update_animation_state(false)
 		return
 
 	var next_position: Vector3 = navigation_agent.get_next_path_position()
@@ -215,6 +289,9 @@ func _navigate_to_target(delta: float) -> void:
 	# Move
 	velocity = direction * move_speed
 	move_and_slide()
+
+	# Resume animation while moving
+	_update_animation_state(true)
 
 	# Rotate toward direction
 	if direction.length() > 0.01:
@@ -226,6 +303,20 @@ func _is_at_target() -> bool:
 	if not navigation_agent:
 		return false
 	return navigation_agent.is_navigation_finished()
+
+func _update_animation_state(is_moving: bool) -> void:
+	"""Pause or resume walking animation based on movement state"""
+	if not animation_player:
+		return
+
+	if is_moving:
+		# Resume animation if paused
+		if not animation_player.is_playing():
+			animation_player.play()
+	else:
+		# Pause animation (freezes at current frame - no T-pose!)
+		if animation_player.is_playing():
+			animation_player.pause()
 
 # Shopping logic
 func _select_items_to_purchase() -> void:
