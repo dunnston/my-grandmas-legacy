@@ -465,28 +465,33 @@ func _on_reset_price(recipe_id: String, container: VBoxContainer) -> void:
 
 func _update_pricing_display(recipe_id: String, container: VBoxContainer) -> void:
 	"""Update the display after price change"""
+	# Get updated price
+	var current_price = RecipeManager.get_effective_price(recipe_id)
+	var recipe = RecipeManager.get_recipe(recipe_id)
+	var cost = RecipeManager.get_recipe_cost(recipe_id)
+	var base_price = recipe.get("base_price", 10.0)
+
 	# Find the spinbox and labels
 	var spinbox = container.find_child("PriceSpinBox_" + recipe_id, true, false)
 	var profit_label = container.find_child("ProfitLabel_" + recipe_id, true, false)
 	var zone_label = container.find_child("ZoneLabel_" + recipe_id, true, false)
 
+	# Update spinbox value (block signals to prevent recursion)
 	if spinbox:
-		spinbox.value = RecipeManager.get_effective_price(recipe_id)
+		spinbox.set_block_signals(true)
+		spinbox.value = current_price
+		spinbox.set_block_signals(false)
+		print("Updated spinbox for %s to $%.2f" % [recipe_id, current_price])
 
+	# Update profit label
 	if profit_label:
-		var recipe = RecipeManager.get_recipe(recipe_id)
-		var cost = RecipeManager.get_recipe_cost(recipe_id)
-		var current_price = RecipeManager.get_effective_price(recipe_id)
 		var profit = current_price - cost
 		var profit_pct = (profit / cost * 100.0) if cost > 0 else 0.0
 		profit_label.text = "Profit: $%.2f (%.0f%%)" % [profit, profit_pct]
 		profit_label.modulate = Color.GREEN if profit > 0 else Color.RED
 
+	# Update zone label
 	if zone_label:
-		var recipe = RecipeManager.get_recipe(recipe_id)
-		var cost = RecipeManager.get_recipe_cost(recipe_id)
-		var current_price = RecipeManager.get_effective_price(recipe_id)
-		var base_price = recipe.get("base_price", 10.0)
 		zone_label.text = _get_price_zone(current_price, base_price, cost)
 
 # ============================================================================
