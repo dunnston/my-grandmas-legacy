@@ -1,12 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://c2h8tpnwm1r7e"]
+[gd_scene load_steps=4 format=3 uid="uid://c2h8tpnwm1r7e"]
 
 [ext_resource type="Script" path="res://scripts/equipment/oven.gd" id="1_oven"]
 [ext_resource type="PackedScene" path="res://assets/enviroment/Sunny_Kitchen_Oven_1109143221_texture.glb" id="2_model"]
+[ext_resource type="PackedScene" uid="uid://dpg5q3qm8qc0y" path="res://scenes/ui/interact_prompt.tscn" id="3_prompt"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
-size = Vector3(2, 2, 2)
+size = Vector3(4, 3, 3)
 
-[node name="Oven" type="Node3D"]
+[node name="Oven" type="Node3D" groups=["equipment"]]
 script = ExtResource("1_oven")
 
 [node name="OvenModel" parent="." instance=ExtResource("2_model")]
@@ -24,5 +25,7 @@ collision_layer = 2
 collision_mask = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0.5)
 shape = SubResource("BoxShape3D_interaction")
+
+[node name="InteractPrompt" parent="." instance=ExtResource("3_prompt")]
