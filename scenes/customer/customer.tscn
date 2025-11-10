@@ -1,6 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://customer001"]
+[gd_scene load_steps=8 format=3 uid="uid://customer001"]
 
 [ext_resource type="Script" path="res://scripts/customer/customer.gd" id="1_customer"]
+[ext_resource type="PackedScene" uid="uid://bnce60asmf4da" path="res://assets/customers/customer1/Animation_Walking_withSkin.glb" id="2_customer1"]
+[ext_resource type="PackedScene" uid="uid://dmpgfrlcj4xyh" path="res://assets/customers/customer2/Animation_Walking_withSkin.glb" id="3_customer2"]
+[ext_resource type="PackedScene" uid="uid://bqrvl7v0yb6yl" path="res://assets/customers/customer3/Animation_Walking_withSkin.glb" id="4_customer3"]
+[ext_resource type="PackedScene" uid="uid://bd6tyvecwrhqk" path="res://assets/customers/customer4/Animation_Walking_withSkin.glb" id="5_customer4"]
+[ext_resource type="PackedScene" uid="uid://d4b7wgj5wnytv" path="res://assets/customers/customer5/Animation_Walking_withSkin.glb" id="6_customer5"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_customer"]
 radius = 0.4
@@ -13,14 +18,20 @@ script = ExtResource("1_customer")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_customer")
 
-[node name="Body" type="CSGCylinder3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-radius = 0.3
-height = 1.2
+[node name="CustomerModel1" parent="." instance=ExtResource("2_customer1")]
+visible = false
 
-[node name="Head" type="CSGSphere3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
-radius = 0.25
+[node name="CustomerModel2" parent="." instance=ExtResource("3_customer2")]
+visible = false
+
+[node name="CustomerModel3" parent="." instance=ExtResource("4_customer3")]
+visible = false
+
+[node name="CustomerModel4" parent="." instance=ExtResource("5_customer4")]
+visible = false
+
+[node name="CustomerModel5" parent="." instance=ExtResource("6_customer5")]
+visible = false
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 path_desired_distance = 0.5
