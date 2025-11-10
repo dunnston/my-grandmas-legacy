@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=36 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" uid="uid://cyo76ljp20m3q" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
 [ext_resource type="Texture2D" uid="uid://dflxrxqaofl3k" path="res://assets/textures/floor.png" id="2_floor_texture"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://dy7k5vqh1qk3j" path="res://scenes/bakery/equipment/mixing_bowl.tscn" id="4_mixing"]
 [ext_resource type="PackedScene" uid="uid://c2h8tpnwm1r7e" path="res://scenes/bakery/equipment/oven.tscn" id="5_oven"]
 [ext_resource type="PackedScene" uid="uid://csfh3qvkw5vbd" path="res://scenes/bakery/equipment/display_case.tscn" id="6_display"]
+[ext_resource type="Script" uid="uid://dtpnqnbekyoy2" path="res://scripts/equipment/bag_station.gd" id="7_bag_script"]
 [ext_resource type="PackedScene" uid="uid://register001" path="res://scenes/bakery/equipment/register.tscn" id="7_register"]
 [ext_resource type="PackedScene" uid="uid://hud001" path="res://scenes/ui/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" uid="uid://cukekfhw0e20k" path="res://assets/enviroment/Green_Pendant_Light_1107210023_texture.glb" id="9_aug17"]
@@ -21,6 +22,9 @@
 [ext_resource type="PackedScene" uid="uid://cbpcjwwajl5xu" path="res://assets/enviroment/Shelf_Display_Stand_1109143342_texture.glb" id="15_ccpe0"]
 [ext_resource type="PackedScene" uid="uid://b0baqt88cf6qa" path="res://assets/enviroment/Vintage_Register_1109150240_texture.glb" id="16_xng6r"]
 [ext_resource type="PackedScene" uid="uid://db4gqiwyxprk4" path="res://assets/enviroment/Empty_Shelf_1107211745_texture.glb" id="17_aug17"]
+[ext_resource type="PackedScene" uid="uid://1lqrimgtfcv7" path="res://assets/enviroment/Yellow_Wooden_Chair__1107210114_texture.glb" id="22_sbep2"]
+[ext_resource type="PackedScene" uid="uid://b736ongjpxnt1" path="res://assets/enviroment/Golden_Round_Table_1107210107_texture.glb" id="23_dsae0"]
+[ext_resource type="PackedScene" uid="uid://vhfw445bc1ju" path="res://assets/enviroment/Bakery_Bag_1109214213_texture.glb" id="24_dsae0"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_horizon_color = Color(0.646, 0.656, 0.671, 1)
@@ -64,6 +68,9 @@ albedo_color = Color(0.95, 0.95, 0.95, 1)
 [sub_resource type="NavigationMesh" id="NavigationMesh_1"]
 vertices = PackedVector3Array(-9.75, 0.25, -9.75, -9.75, 0.25, 9.75, 9.75, 0.25, 9.75, 9.75, 0.25, -9.75)
 polygons = [PackedInt32Array(3, 2, 0), PackedInt32Array(0, 2, 1)]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_bag"]
+radius = 1.5
 
 [node name="Bakery" type="Node3D"]
 script = ExtResource("1_bakery")
@@ -112,6 +119,7 @@ size = Vector3(20, 0.2, 20)
 material = SubResource("StandardMaterial3D_ceiling")
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2498811, 0)
 navigation_mesh = SubResource("NavigationMesh_1")
 
 [node name="Player" parent="." instance=ExtResource("2_player")]
@@ -123,7 +131,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 5)
 transform = Transform3D(1, 0, 0, 0, 0.9999574, -0.009232661, 0, 0.009232661, 0.9999574, -7, 0.9817569, -9.016167)
 
 [node name="MixingBowl" parent="Equipment" instance=ExtResource("4_mixing")]
-transform = Transform3D(0.012408137, 0, 0.39903426, 0, 0.38033545, 0, -0.3459735, 0, 0.014311131, -2.9899192, 1.172137, -9.129863)
+transform = Transform3D(0.012408137, 0, 0.39903426, 0, 0.38033545, 0, -0.3459735, 0, 0.014311131, -2.9888554, 1.1651077, -9.129457)
 
 [node name="Oven" parent="Equipment" instance=ExtResource("5_oven")]
 transform = Transform3D(0.58341473, 0, 0, 0, 0.56954324, 0, 0, 0, 0.47729072, 0.72772014, 0.53112185, -8.737569)
@@ -133,6 +141,20 @@ transform = Transform3D(1.3329903, 0.0039855186, 0.028860595, -0.004188944, 1.46
 
 [node name="Register" parent="Equipment" instance=ExtResource("7_register")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.504613, 0.7331177, 0.08858752)
+
+[node name="BagStation" type="Node3D" parent="Equipment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.410219, 0.997391, -0.1318534)
+script = ExtResource("7_bag_script")
+
+[node name="Bakery_Bag_1109214213_texture" parent="Equipment/BagStation" instance=ExtResource("24_dsae0")]
+transform = Transform3D(0.18609425, 0, 0, 0, 0.14770354, 0, 0, 0, 0.12664981, 0, 0, 0)
+
+[node name="InteractionArea" type="Area3D" parent="Equipment/BagStation"]
+transform = Transform3D(0.5879478, 0, 0, 0, 0.59732795, 0, 0, 0, 0.5928386, 0.08041191, 0, -0.27013212)
+collision_layer = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Equipment/BagStation/InteractionArea"]
+shape = SubResource("SphereShape3D_bag")
 
 [node name="Green_Pendant_Light_1107210023_texture" parent="Equipment" instance=ExtResource("9_aug17")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.723861, 3.3550885, -0.025181651)
@@ -174,7 +196,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 gizmo_extents = 0.5
 
 [node name="DisplayCase" type="Marker3D" parent="NavigationMarkers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 0.2665558)
 gizmo_extents = 0.5
 
 [node name="Register" type="Marker3D" parent="NavigationMarkers"]
@@ -203,11 +225,19 @@ gizmo_extents = 0.5
 
 [node name="EventNotification" parent="UILayer" instance=ExtResource("14_eventnotif")]
 
-[node name="Shelf_Display_Stand_1109143342_texture" parent="." instance=ExtResource("15_ccpe0")]
+[node name="Enviroment" type="Node3D" parent="."]
+
+[node name="Shelf_Display_Stand_1109143342_texture" parent="Enviroment" instance=ExtResource("15_ccpe0")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.929052, 0.9718367, 0.05895245)
 
-[node name="Vintage_Register_1109150240_texture" parent="." instance=ExtResource("16_xng6r")]
-transform = Transform3D(-0.25153622, 0, -0.0015886344, 0, 0.25118166, 0, 0.0017560747, 0, -0.22755247, 6.951083, 1.095661, -0.075252086)
+[node name="Vintage_Register_1109150240_texture" parent="Enviroment" instance=ExtResource("16_xng6r")]
+transform = Transform3D(-0.25153622, 0, -0.0015886344, 0, 0.25118166, 0, 0.0017560747, 0, -0.22755247, 6.881787, 1.095661, -0.075252086)
 
-[node name="Empty_Shelf_1107211745_texture" parent="." instance=ExtResource("17_aug17")]
+[node name="Empty_Shelf_1107211745_texture" parent="Enviroment" instance=ExtResource("17_aug17")]
 transform = Transform3D(-0.99999356, 0, -0.003595257, 0, 0.51430047, 0, 0.003595257, 0, -0.99999356, -2.9574025, 0.43832237, -9.12709)
+
+[node name="Yellow_Wooden_Chair__1107210114_texture" parent="Enviroment" instance=ExtResource("22_sbep2")]
+transform = Transform3D(0.00152797, 0, 0.6067501, 0, 0.56507844, 0, -0.5836321, 0, 0.001588494, -2.5652661, 0.76263666, 7.7639146)
+
+[node name="Golden_Round_Table_1107210107_texture" parent="Enviroment" instance=ExtResource("23_dsae0")]
+transform = Transform3D(0.80635196, 0, 0, 0, 0.6501343, 0, 0, 0, 0.8778583, -1.157328, 0.63295996, 7.819732)

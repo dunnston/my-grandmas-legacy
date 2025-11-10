@@ -49,7 +49,23 @@ func open_visual_display_ui(player: Node3D) -> void:
 	if not ui_manager:
 		print("ERROR: Could not find Equipment UI Manager!")
 		return
-	ui_manager.show_display_case_ui(get_inventory_id(), player.get_inventory_id())
+
+	# Check if checkout is active - if so, use carry inventory
+	var target_inventory = "player"
+	if _is_checkout_active():
+		target_inventory = "player_carry"
+		print("Checkout active - items will go to carry inventory")
+
+	ui_manager.show_display_case_ui(get_inventory_id(), target_inventory)
+
+func _is_checkout_active() -> bool:
+	"""Check if player is currently in a checkout session"""
+	# Find the register and check if checkout is in progress
+	var register = get_tree().get_first_node_in_group("register")
+	if register and register.has_method("is_checkout_in_progress"):
+		return register.is_checkout_in_progress()
+
+	return false
 
 func open_display_ui(player: Node3D) -> void:
 	print("\n=== DISPLAY CASE ===")
