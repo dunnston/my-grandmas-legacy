@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://cf3c4wqwx6lhm" path="res://scenes/ui/dev_menu.tscn" id="10_devmenu"]
 [ext_resource type="PackedScene" uid="uid://c3v8r1p2mxn4s" path="res://scenes/ui/quick_inventory.tscn" id="11_quickinv"]
 [ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
+[ext_resource type="PackedScene" uid="uid://catalog_menu001" path="res://scenes/ui/catalog_menu.tscn" id="12_catalogmenu"]
 [ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
 [ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
 [ext_resource type="PackedScene" uid="uid://cbpcjwwajl5xu" path="res://assets/enviroment/Shelf_Display_Stand_1109143342_texture.glb" id="15_ccpe0"]
@@ -220,6 +221,8 @@ gizmo_extents = 0.5
 [node name="QuickInventory" parent="UILayer" instance=ExtResource("11_quickinv")]
 
 [node name="RecipeBook" parent="UILayer" instance=ExtResource("12_recipebook")]
+
+[node name="CatalogMenu" parent="UILayer" instance=ExtResource("12_catalogmenu")]
 
 [node name="StoryLetter" parent="UILayer" instance=ExtResource("13_storyletter")]
 
