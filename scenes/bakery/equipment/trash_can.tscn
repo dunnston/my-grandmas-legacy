@@ -1,33 +1,52 @@
-[gd_scene load_steps=4 format=3 uid="uid://c7trash4can0001"]
+[gd_scene load_steps=6 format=3 uid="uid://c7trash4can0001"]
 
 [ext_resource type="Script" path="res://scripts/chores/trash_can.gd" id="1_trash"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_trash"]
-albedo_color = Color(0.3, 0.3, 0.3, 1)
-metallic = 0.2
+[ext_resource type="PackedScene" uid="uid://u7xntxy5ba36" path="res://assets/enviroment/Trashcan_empty.glb" id="2_empty"]
+[ext_resource type="PackedScene" uid="uid://dfm4vhgaebmva" path="res://assets/enviroment/Trash_Can_Still_Life_1110133045_texture.glb" id="3_full"]
+[ext_resource type="PackedScene" path="res://scenes/ui/interact_prompt.tscn" id="4_prompt"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_interaction"]
 radius = 1.5
 
-[node name="TrashCan" type="Node3D"]
+[sub_resource type="ViewportTexture" id="ViewportTexture_progress"]
+viewport_path = NodePath("ProgressBarContainer/SubViewport")
+
+[node name="TrashCan" type="Node3D" groups=["equipment", "interactable"]]
 script = ExtResource("1_trash")
 
-[node name="TrashMesh" type="CSGCylinder3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
-radius = 0.3
-height = 0.8
-material = SubResource("StandardMaterial3D_trash")
+[node name="EmptyModel" parent="." instance=ExtResource("2_empty")]
+transform = Transform3D(0.50317687, 0, 0, 0, 0.5165427, 0, 0, 0, 0.47984987, 0, 0, 0)
 
-[node name="Lid" type="CSGCylinder3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-radius = 0.35
-height = 0.1
-material = SubResource("StandardMaterial3D_trash")
+[node name="FullModel" parent="." instance=ExtResource("3_full")]
+transform = Transform3D(0.50317687, 0, 0, 0, 0.5165427, 0, 0, 0, 0.47984987, 0, 0, 0)
+visible = false
 
 [node name="InteractionArea" type="Area3D" parent="."]
 collision_layer = 2
 collision_mask = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("SphereShape3D_interaction")
+
+[node name="InteractPrompt" parent="." instance=ExtResource("4_prompt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+visible = false
+
+[node name="ProgressBarContainer" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="SubViewport" type="SubViewport" parent="ProgressBarContainer"]
+transparent_bg = true
+size = Vector2i(300, 40)
+
+[node name="ProgressBar" type="ProgressBar" parent="ProgressBarContainer/SubViewport"]
+offset_right = 300.0
+offset_bottom = 40.0
+value = 0.0
+show_percentage = false
+
+[node name="Sprite3D" type="Sprite3D" parent="ProgressBarContainer"]
+billboard = 1
+texture_filter = 0
+texture = SubResource("ViewportTexture_progress")
