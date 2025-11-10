@@ -37,10 +37,30 @@ func _on_player_item_clicked(item_id: String) -> void:
 		_refresh_inventories()
 
 func _on_equipment_item_clicked(item_id: String) -> void:
-	"""Items in display case cannot be removed - customers buy them!"""
-	print("Items in the display case are for sale. Customers will buy them during business hours.")
-	# Note: Customers will remove items via the customer.gd purchase system
-	# Players cannot manually remove items from display case
+	"""Transfer item from display case to player (only during checkout)"""
+
+	# Check if we're in checkout mode (player_inventory_id is "player_carry")
+	if player_inventory_id == "player_carry":
+		print("Collecting %s for customer order" % item_id)
+
+		# Get metadata (quality data)
+		var metadata = InventoryManager.get_item_metadata(equipment_inventory_id, item_id)
+
+		# Transfer from display case to carry inventory
+		if InventoryManager.remove_item(equipment_inventory_id, item_id, 1):
+			InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
+
+			print("Removed 1x %s from display case" % item_id)
+			print("Added 1x %s to %s" % [item_id, player_inventory_id])
+			item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
+
+			# Refresh display
+			_refresh_inventories()
+	else:
+		# Normal mode - items are for sale
+		print("Items in the display case are for sale. Customers will buy them during business hours.")
+		# Note: Customers will remove items via the customer.gd purchase system
+		# Players cannot manually remove items from display case in normal mode
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show display case with quality indicators"""

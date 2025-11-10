@@ -34,6 +34,7 @@ enum CustomerType {
 
 # Node references
 @onready var navigation_agent: NavigationAgent3D = $NavigationAgent3D
+@onready var feedback_system: Node3D = null  # Created dynamically in _ready
 
 # Customer properties
 var customer_id: String = ""
@@ -77,7 +78,20 @@ func _ready() -> void:
 		navigation_agent.radius = 0.5
 		navigation_agent.height = 1.8
 
+	# Create feedback system (speech bubbles, emojis)
+	_create_feedback_system()
+
 	print("Customer spawned: ", customer_id)
+
+func _create_feedback_system() -> void:
+	"""Create and attach visual feedback system"""
+	var feedback_script = load("res://scripts/customer/customer_feedback.gd")
+	if feedback_script:
+		feedback_system = Node3D.new()
+		feedback_system.name = "FeedbackSystem"
+		feedback_system.set_script(feedback_script)
+		add_child(feedback_system)
+		print(customer_id, ": Feedback system created")
 
 func _process(delta: float) -> void:
 	# Update state machine (AI logic in _process, not _physics_process)
@@ -162,6 +176,10 @@ func _state_waiting_checkout(delta: float) -> void:
 		print(customer_id, ": At register, waiting for checkout")
 		current_state = State.CHECKING_OUT
 		reached_register.emit()
+
+		# Show speech bubble to indicate ready for checkout
+		if feedback_system and feedback_system.has_method("show_speech_bubble"):
+			feedback_system.show_speech_bubble()
 
 	# Drain patience while waiting
 	patience -= patience_drain_rate * delta
@@ -280,21 +298,33 @@ func get_total_cost() -> float:
 
 	return total
 
-func complete_purchase() -> void:
-	"""Called when checkout is complete"""
+func complete_purchase(transaction_time: float = 0.0, had_errors: bool = false) -> void:
+	"""Called when checkout is complete
+	Args:
+		transaction_time: How long the checkout took in seconds
+		had_errors: Whether any errors occurred during checkout
+	"""
 	var total: float = get_total_cost()
 	print(customer_id, ": Purchase complete! Spent $%.2f" % total)
 
 	# Update satisfaction based on experience
-	_calculate_final_satisfaction()
+	_calculate_final_satisfaction(transaction_time, had_errors)
+
+	# Show satisfaction emoji
+	if feedback_system and feedback_system.has_method("show_satisfaction_emoji"):
+		feedback_system.show_satisfaction_emoji(satisfaction_score, had_errors, transaction_time)
 
 	# Head to exit
 	set_target_position(exit_position)
 	current_state = State.LEAVING
 	purchase_complete.emit(selected_items, total)
 
-func _calculate_final_satisfaction() -> void:
-	"""Calculate final satisfaction score"""
+func _calculate_final_satisfaction(transaction_time: float = 0.0, had_errors: bool = false) -> void:
+	"""Calculate final satisfaction score based on checkout experience
+	Args:
+		transaction_time: How long the checkout took in seconds
+		had_errors: Whether any errors occurred during checkout
+	"""
 	# Base satisfaction is 50
 	satisfaction_score = 50.0
 
@@ -304,9 +334,20 @@ func _calculate_final_satisfaction() -> void:
 	if selected_items.size() >= 2:
 		satisfaction_score += 10.0  # Got multiple items
 
+	# Checkout speed factors (GDD Section 4.2.3 - Speed affects satisfaction)
+	if transaction_time > 0:
+		if transaction_time < 30.0:
+			satisfaction_score += 15.0  # Fast service!
+		elif transaction_time > 60.0:
+			satisfaction_score -= 20.0  # Slow service
+
+	# Accuracy factors
+	if had_errors:
+		satisfaction_score -= 15.0  # Made mistakes during checkout
+
 	# Negative factors
 	if patience < 30:
-		satisfaction_score -= 20.0  # Waited too long
+		satisfaction_score -= 20.0  # Waited too long in line
 	if selected_items.is_empty():
 		satisfaction_score -= 30.0  # Couldn't buy anything
 
@@ -320,7 +361,12 @@ func _calculate_final_satisfaction() -> void:
 	else:
 		current_mood = Mood.UNHAPPY
 
-	print(customer_id, ": Final satisfaction: %.0f%% (%s)" % [satisfaction_score, Mood.keys()[current_mood]])
+	print(customer_id, ": Final satisfaction: %.0f%% (%s) [Time: %.1fs, Errors: %s]" % [
+		satisfaction_score,
+		Mood.keys()[current_mood],
+		transaction_time,
+		"Yes" if had_errors else "No"
+	])
 
 func _update_mood() -> void:
 	"""Update mood based on patience"""
