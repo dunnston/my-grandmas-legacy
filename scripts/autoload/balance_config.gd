@@ -413,6 +413,22 @@ const EQUIPMENT = {
 	"decorating_station_base_time": 90.0,
 	"decorating_station_value_multiplier": 1.3,  # 30% price increase
 
+	# Oven Cooking States (percentage of target baking time)
+	# These define when items transition between cooking states
+	"oven_undercooked_end": 0.85,        # Undercooked until 85% of baking time
+	"oven_cooked_start": 0.85,           # Cooked window starts at 85%
+	"oven_cooked_optimal_start": 0.95,   # Optimal cooking starts at 95% (best quality)
+	"oven_cooked_optimal_end": 1.05,     # Optimal cooking ends at 105%
+	"oven_cooked_end": 1.25,             # Cooked window ends at 125% (generous!)
+	"oven_burnt_start": 1.25,            # Burnt after 125% of baking time
+	"oven_warning_time": 1.15,           # Show warning at 115% (10% before burning)
+
+	# Cooking State Quality Modifiers
+	"oven_undercooked_quality_max": 65,  # Max 65% quality if undercooked
+	"oven_burnt_quality_max": 50,        # Max 50% quality if burnt
+	"oven_cooked_quality_bonus": 5,      # +5% quality bonus in optimal window
+	"oven_perfection_chance_bonus": 0.10, # +10% legendary chance in optimal window
+
 	# Equipment Upgrade Costs
 	"oven_tier_1_cost": 2000.0,
 	"oven_tier_1_unlock": 2000.0,
