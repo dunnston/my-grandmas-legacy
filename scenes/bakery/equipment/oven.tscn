@@ -25,7 +25,7 @@ collision_layer = 2
 collision_mask = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0.5)
 shape = SubResource("BoxShape3D_interaction")
 
 [node name="InteractPrompt" parent="." instance=ExtResource("3_prompt")]
