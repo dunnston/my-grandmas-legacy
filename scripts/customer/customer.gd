@@ -248,8 +248,10 @@ func _state_waiting_checkout(delta: float) -> void:
 	_navigate_to_target(delta)
 
 	if _is_at_target():
-		# Face the register while waiting
-		_face_target(register_position, delta)
+		# Face the register counter (in front of customer, towards entrance/display)
+		# Register is at lower Z value than customer position, so face that direction
+		var register_counter_pos = register_position + Vector3(0, 0, -2)  # 2m in front of queue position
+		_face_target(register_counter_pos, delta)
 
 		# First time reaching register area - join queue
 		if not is_in_queue:
@@ -271,8 +273,9 @@ func _state_waiting_checkout(delta: float) -> void:
 
 func _state_checking_out(delta: float) -> void:
 	"""Customer is at register, being served"""
-	# Face the register while being served
-	_face_target(register_position, delta)
+	# Face the register counter while being served
+	var register_counter_pos = register_position + Vector3(0, 0, -2)  # 2m in front of queue position
+	_face_target(register_counter_pos, delta)
 
 	# Wait for external checkout completion
 	# This will be called by Register when transaction completes
@@ -285,6 +288,10 @@ func _state_leaving(delta: float) -> void:
 	if _is_at_target():
 		current_state = State.EXITED
 		_update_animation_state(false)  # Pause animation when exited
+
+		# Unreserve any items if customer didn't complete purchase
+		InventoryManager.unreserve_all_for_customer(customer_id)
+
 		print(customer_id, ": Exited bakery")
 		left_bakery.emit()
 		# Customer will be removed by CustomerManager
@@ -357,8 +364,9 @@ func _select_items_to_purchase() -> void:
 	var rejected_count: int = 0
 
 	for item_id in display_inventory:
-		var quantity: int = display_inventory[item_id]
-		if quantity > 0:
+		# Use get_available_quantity to check unreserved items
+		var available_qty: int = InventoryManager.get_available_quantity("display_case", item_id)
+		if available_qty > 0:
 			# Check if customer accepts the price
 			if _check_price_acceptable(item_id):
 				available_items.append(item_id)
@@ -369,7 +377,7 @@ func _select_items_to_purchase() -> void:
 		if rejected_count > 0:
 			print(customer_id, ": All items too expensive! (rejected ", rejected_count, " items)")
 		else:
-			print(customer_id, ": No items in display case")
+			print(customer_id, ": No items available (sold out or reserved)")
 		return
 
 	if rejected_count > 0:
@@ -380,10 +388,18 @@ func _select_items_to_purchase() -> void:
 	available_items.shuffle()  # Randomize order
 	for i in range(num_items):
 		if i < available_items.size():
+			var item_id = available_items[i]
+			# Don't request more than available
+			var available_qty = InventoryManager.get_available_quantity("display_case", item_id)
+			var desired_qty = randi_range(1, min(2, available_qty))  # Want 1-2, but limited by availability
+
 			selected_items.append({
-				"item_id": available_items[i],
-				"quantity": randi_range(1, 2)  # Customer may want 1-2 of each item
+				"item_id": item_id,
+				"quantity": desired_qty
 			})
+
+			# Reserve the items immediately
+			InventoryManager.reserve_item("display_case", item_id, desired_qty, customer_id)
 
 	print(customer_id, ": Selected ", selected_items.size(), " items to purchase")
 
@@ -454,6 +470,9 @@ func complete_purchase(transaction_time: float = 0.0, had_errors: bool = false) 
 		CustomerManager.remove_from_queue(self)
 		is_in_queue = false
 		queue_position_index = -1
+
+	# Clear reservations since items were purchased and removed from inventory
+	InventoryManager.unreserve_all_for_customer(customer_id)
 
 	# Head to exit
 	set_target_position(exit_position)

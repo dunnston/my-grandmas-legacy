@@ -18,6 +18,10 @@ var inventories: Dictionary = {}
 # Structure: {inventory_id: {item_id: [{quantity: int, metadata: Dictionary}]}}
 var item_metadata: Dictionary = {}
 
+# Reservation storage - tracks items reserved by customers
+# Structure: {inventory_id: {item_id: {customer_id: quantity}}}
+var reservations: Dictionary = {}
+
 func _ready() -> void:
 	# Initialize player inventory
 	create_inventory("player")
@@ -319,3 +323,86 @@ func load_save_data(data: Dictionary) -> void:
 		item_metadata = {}
 		for inventory_id in inventories.keys():
 			item_metadata[inventory_id] = {}
+
+# ============================================================================
+# ITEM RESERVATION SYSTEM
+# ============================================================================
+
+func reserve_item(inventory_id: String, item_id: String, quantity: int, customer_id: String) -> bool:
+	"""Reserve items for a customer (prevents other customers from selecting them)"""
+	if not inventories.has(inventory_id):
+		print("Error: Inventory ", inventory_id, " does not exist")
+		return false
+
+	# Check if enough unreserved items available
+	var available = get_available_quantity(inventory_id, item_id)
+	if available < quantity:
+		print("Not enough %s to reserve: need %d, available %d" % [item_id, quantity, available])
+		return false
+
+	# Initialize reservation structures if needed
+	if not reservations.has(inventory_id):
+		reservations[inventory_id] = {}
+	if not reservations[inventory_id].has(item_id):
+		reservations[inventory_id][item_id] = {}
+
+	# Add or update reservation
+	if reservations[inventory_id][item_id].has(customer_id):
+		reservations[inventory_id][item_id][customer_id] += quantity
+	else:
+		reservations[inventory_id][item_id][customer_id] = quantity
+
+	print("Reserved %d x %s for %s" % [quantity, item_id, customer_id])
+	return true
+
+func unreserve_item(inventory_id: String, item_id: String, customer_id: String, quantity: int = -1) -> void:
+	"""Release item reservation (called if customer leaves without purchasing)"""
+	if not reservations.has(inventory_id):
+		return
+	if not reservations[inventory_id].has(item_id):
+		return
+	if not reservations[inventory_id][item_id].has(customer_id):
+		return
+
+	if quantity == -1:
+		# Release all reservations for this customer
+		var released = reservations[inventory_id][item_id][customer_id]
+		reservations[inventory_id][item_id].erase(customer_id)
+		print("Unreserved all %s for %s (%d items)" % [item_id, customer_id, released])
+	else:
+		# Release specific quantity
+		reservations[inventory_id][item_id][customer_id] -= quantity
+		if reservations[inventory_id][item_id][customer_id] <= 0:
+			reservations[inventory_id][item_id].erase(customer_id)
+		print("Unreserved %d x %s for %s" % [quantity, item_id, customer_id])
+
+	# Clean up empty structures
+	if reservations[inventory_id][item_id].is_empty():
+		reservations[inventory_id].erase(item_id)
+	if reservations[inventory_id].is_empty():
+		reservations.erase(inventory_id)
+
+func unreserve_all_for_customer(customer_id: String) -> void:
+	"""Release all reservations for a customer (called when customer leaves)"""
+	for inventory_id in reservations.keys():
+		for item_id in reservations[inventory_id].keys():
+			if reservations[inventory_id][item_id].has(customer_id):
+				unreserve_item(inventory_id, item_id, customer_id)
+
+func get_reserved_quantity(inventory_id: String, item_id: String) -> int:
+	"""Get total reserved quantity for an item across all customers"""
+	if not reservations.has(inventory_id):
+		return 0
+	if not reservations[inventory_id].has(item_id):
+		return 0
+
+	var total = 0
+	for customer_id in reservations[inventory_id][item_id].keys():
+		total += reservations[inventory_id][item_id][customer_id]
+	return total
+
+func get_available_quantity(inventory_id: String, item_id: String) -> int:
+	"""Get available quantity (total - reserved)"""
+	var total = get_item_quantity(inventory_id, item_id)
+	var reserved = get_reserved_quantity(inventory_id, item_id)
+	return max(0, total - reserved)
