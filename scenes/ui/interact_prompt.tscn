@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://dpg5q3qm8qc0y"]
+
+[ext_resource type="Script" path="res://scripts/ui/interact_prompt.gd" id="1_interact"]
+[ext_resource type="Texture2D" path="res://assets/icons/Interact2.png" id="2_texture"]
+
+[node name="InteractPrompt" type="Sprite3D"]
+billboard = 1
+texture_filter = 0
+texture = ExtResource("2_texture")
+script = ExtResource("1_interact")
+icon_pixel_size = 0.001
