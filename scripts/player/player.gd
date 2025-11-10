@@ -116,42 +116,35 @@ func _physics_process(delta: float) -> void:
 	check_for_interactable()
 
 func check_for_interactable() -> void:
-	if not interaction_ray:
-		return
+	# Find all equipment in scene that has player_nearby set to this player
+	# This matches the Area3D detection that shows the interact prompt
+	var found_interactable: Node3D = null
 
-	if interaction_ray.is_colliding():
-		var collider = interaction_ray.get_collider()
-		var interactable = null
+	# Get all nodes in equipment group
+	var equipment_nodes = get_tree().get_nodes_in_group("equipment")
+	for equipment in equipment_nodes:
+		# Check if this equipment has player_nearby property and it's set to us
+		if "player_nearby" in equipment and equipment.player_nearby == self:
+			if equipment.has_method("interact"):
+				found_interactable = equipment
+				break  # Found one, use it
 
-		# Check if collider has the method
-		if collider and collider.has_method("get_interaction_prompt"):
-			interactable = collider
-		# If not, check parent (for Area3D children of equipment)
-		elif collider and collider.get_parent() and collider.get_parent().has_method("get_interaction_prompt"):
-			interactable = collider.get_parent()
+	# If no equipment found via group, check individual equipment types
+	if not found_interactable:
+		# Check all possible equipment types (mixing bowl, oven, display case, etc.)
+		var all_nodes = get_tree().get_nodes_in_group("interactable")
+		for node in all_nodes:
+			if "player_nearby" in node and node.player_nearby == self:
+				if node.has_method("interact"):
+					found_interactable = node
+					break
 
-		if interactable:
-			if current_interactable != interactable:
-				# Hide previous indicator
-				if current_interactable and current_interactable.has_method("hide_interaction_indicator"):
-					current_interactable.hide_interaction_indicator()
-
-				# Set new interactable
-				current_interactable = interactable
-				print("Can interact with: ", interactable.name)
-
-				# Show new indicator
-				if current_interactable.has_method("show_interaction_indicator"):
-					current_interactable.show_interaction_indicator()
-		else:
-			# Hide indicator when looking away
-			if current_interactable and current_interactable.has_method("hide_interaction_indicator"):
-				current_interactable.hide_interaction_indicator()
-			current_interactable = null
+	# Update current_interactable
+	if found_interactable:
+		if current_interactable != found_interactable:
+			current_interactable = found_interactable
+			#print("Can interact with: ", current_interactable.name)
 	else:
-		# Hide indicator when not looking at anything
-		if current_interactable and current_interactable.has_method("hide_interaction_indicator"):
-			current_interactable.hide_interaction_indicator()
 		current_interactable = null
 
 func interact_with(interactable: Node3D) -> void:

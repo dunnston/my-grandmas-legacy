@@ -7,7 +7,7 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_interaction"]
 size = Vector3(2, 2, 2)
 
-[node name="Oven" type="Node3D"]
+[node name="Oven" type="Node3D" groups=["equipment"]]
 script = ExtResource("1_oven")
 
 [node name="OvenModel" parent="." instance=ExtResource("2_model")]
