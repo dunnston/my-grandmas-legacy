@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=45 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" uid="uid://cyo76ljp20m3q" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
 [ext_resource type="Texture2D" uid="uid://dflxrxqaofl3k" path="res://assets/textures/floor.png" id="2_floor_texture"]
@@ -20,6 +20,7 @@
 [ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
 [ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
 [ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
+[ext_resource type="PackedScene" uid="uid://shop_mgmt_001" path="res://scenes/ui/shop_management_menu.tscn" id="14_shopmgmt"]
 [ext_resource type="PackedScene" uid="uid://cbpcjwwajl5xu" path="res://assets/enviroment/Shelf_Display_Stand_1109143342_texture.glb" id="15_ccpe0"]
 [ext_resource type="PackedScene" uid="uid://b0baqt88cf6qa" path="res://assets/enviroment/Vintage_Register_1109150240_texture.glb" id="16_xng6r"]
 [ext_resource type="PackedScene" uid="uid://db4gqiwyxprk4" path="res://assets/enviroment/Empty_Shelf_1107211745_texture.glb" id="17_aug17"]
@@ -241,6 +242,8 @@ gizmo_extents = 0.5
 [node name="StoryLetter" parent="UILayer" instance=ExtResource("13_storyletter")]
 
 [node name="EventNotification" parent="UILayer" instance=ExtResource("14_eventnotif")]
+
+[node name="ShopManagementMenu" parent="UILayer" instance=ExtResource("14_shopmgmt")]
 
 [node name="Enviroment" type="Node3D" parent="."]
 
