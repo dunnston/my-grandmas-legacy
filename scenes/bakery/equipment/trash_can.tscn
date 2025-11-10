@@ -1,8 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://c7trash4can0001"]
+[gd_scene load_steps=7 format=3 uid="uid://c5ng07rlfab41"]
 
-[ext_resource type="Script" path="res://scripts/chores/trash_can.gd" id="1_trash"]
+[ext_resource type="Script" uid="uid://gotwh31ww8e4" path="res://scripts/chores/trash_can.gd" id="1_trash"]
 [ext_resource type="PackedScene" uid="uid://u7xntxy5ba36" path="res://assets/enviroment/Trashcan_empty.glb" id="2_empty"]
-[ext_resource type="PackedScene" uid="uid://dfm4vhgaebmva" path="res://assets/enviroment/Trash_Can_Still_Life_1110133045_texture.glb" id="3_full"]
+[ext_resource type="PackedScene" uid="uid://wj4t14ia285q" path="res://assets/enviroment/Trash_Can_Still_Life_1110133045_texture.glb" id="3_full"]
 [ext_resource type="PackedScene" path="res://scenes/ui/interact_prompt.tscn" id="4_prompt"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_interaction"]
@@ -23,7 +23,6 @@ visible = false
 
 [node name="InteractionArea" type="Area3D" parent="."]
 collision_layer = 2
-collision_mask = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
@@ -43,10 +42,10 @@ size = Vector2i(300, 40)
 [node name="ProgressBar" type="ProgressBar" parent="ProgressBarContainer/SubViewport"]
 offset_right = 300.0
 offset_bottom = 40.0
-value = 0.0
 show_percentage = false
 
 [node name="Sprite3D" type="Sprite3D" parent="ProgressBarContainer"]
+transform = Transform3D(0.4541482, 0, 0, 0, 0.640289, 0, 0, 0, 0.8501138, 0, -0.8438028, 0)
 billboard = 1
 texture_filter = 0
 texture = SubResource("ViewportTexture_progress")

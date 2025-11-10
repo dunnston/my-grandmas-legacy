@@ -256,4 +256,4 @@ transform = Transform3D(2.21123, 0, 0.07862306, 0, 1.9315403, 0, -0.08316916, 0,
 
 [node name="TrashCan" parent="Enviroment" instance=ExtResource("28_trashcan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8246658, 0.497823, 0.13220263)
-time_to_fill = 10.0
+time_to_fill = 60.0
