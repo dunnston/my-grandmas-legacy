@@ -591,10 +591,10 @@ func _input(event: InputEvent) -> void:
 	"""Handle input for opening/closing menu"""
 	if event.is_action_pressed("open_shop_menu"):  # M key
 		toggle_menu()
-		accept_event()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel") and is_open:  # ESC key
 		close_menu()
-		accept_event()
+		get_viewport().set_input_as_handled()
 
 func toggle_menu() -> void:
 	"""Toggle menu open/closed"""
