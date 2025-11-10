@@ -5,10 +5,20 @@ extends Node3D
 signal baking_started(item_name: String)
 signal baking_complete(result_item: String, quality_data: Dictionary)
 signal item_burned
+signal cooking_state_changed(slot_index: int, new_state: int)
 
 @export var baking_time: float = 300.0  # 5 minutes game time
 @export var equipment_tier: int = 0  # 0 = basic, upgradeable later
 @export var max_slots: int = 4  # Basic oven supports 4 simultaneous baking slots
+
+# Cooking states
+enum CookingState {
+	UNDERCOOKED,  # Too early to remove
+	COOKED,       # Safe to remove, good quality
+	OPTIMAL,      # Perfect timing window, best quality
+	WARNING,      # About to burn, still good quality
+	BURNT         # Overcooked, poor quality
+}
 
 # Node references
 @onready var interaction_area: Area3D = $InteractionArea
@@ -63,6 +73,65 @@ func _get_baked_result(dough_id: String) -> String:
 	var recipe_id = _get_recipe_from_dough(dough_id)
 	return recipe_id if recipe_id != "" else dough_id.replace("_dough", "").replace("_batter", "")
 
+# Helper: Get cooking state for a slot
+func get_cooking_state(slot: Dictionary) -> CookingState:
+	"""Determine the current cooking state based on timer progress"""
+	if slot.target_time <= 0:
+		return CookingState.COOKED
+
+	var progress = slot.timer / slot.target_time
+
+	# Load thresholds from BalanceConfig
+	var undercooked_end = BalanceConfig.EQUIPMENT.oven_undercooked_end
+	var cooked_start = BalanceConfig.EQUIPMENT.oven_cooked_start
+	var optimal_start = BalanceConfig.EQUIPMENT.oven_cooked_optimal_start
+	var optimal_end = BalanceConfig.EQUIPMENT.oven_cooked_optimal_end
+	var warning_time = BalanceConfig.EQUIPMENT.oven_warning_time
+	var burnt_start = BalanceConfig.EQUIPMENT.oven_burnt_start
+
+	if progress < undercooked_end:
+		return CookingState.UNDERCOOKED
+	elif progress >= burnt_start:
+		return CookingState.BURNT
+	elif progress >= warning_time:
+		return CookingState.WARNING
+	elif progress >= optimal_start and progress <= optimal_end:
+		return CookingState.OPTIMAL
+	else:
+		return CookingState.COOKED
+
+func get_cooking_state_name(state: CookingState) -> String:
+	"""Get display name for cooking state"""
+	match state:
+		CookingState.UNDERCOOKED:
+			return "Undercooked"
+		CookingState.COOKED:
+			return "Cooked"
+		CookingState.OPTIMAL:
+			return "PERFECT!"
+		CookingState.WARNING:
+			return "ALMOST BURNT!"
+		CookingState.BURNT:
+			return "Burnt"
+		_:
+			return "Unknown"
+
+func get_cooking_state_color(state: CookingState) -> Color:
+	"""Get color for cooking state display"""
+	match state:
+		CookingState.UNDERCOOKED:
+			return Color(0.5, 0.5, 0.8)  # Blue
+		CookingState.COOKED:
+			return Color(0.3, 1.0, 0.3)  # Green
+		CookingState.OPTIMAL:
+			return Color(1.0, 0.9, 0.2)  # Gold
+		CookingState.WARNING:
+			return Color(1.0, 0.5, 0.0)  # Orange
+		CookingState.BURNT:
+			return Color(0.8, 0.2, 0.2)  # Red
+		_:
+			return Color.WHITE
+
 func _ready() -> void:
 	# Create inventory for this station
 	InventoryManager.create_inventory(get_inventory_id())
@@ -85,26 +154,52 @@ func _process(delta: float) -> void:
 	var time_scale = GameManager.get_time_scale() if GameManager else 1.0
 
 	# Update all baking slots
-	for i in range(baking_slots.size() - 1, -1, -1):  # Iterate backwards for safe removal
+	for i in range(baking_slots.size()):
 		var slot = baking_slots[i]
 		slot.timer += delta * time_scale
 
-		# Check if this slot is done
-		if slot.timer >= slot.target_time:
-			complete_baking_slot(i)
+		# Track cooking state changes
+		var current_state = get_cooking_state(slot)
+		var previous_state = slot.get("last_cooking_state", CookingState.UNDERCOOKED)
 
-	# Update light intensity based on how many items are baking
-	if light:
-		if baking_slots.size() > 0:
-			light.visible = true
-			# Average progress of all slots
-			var total_progress = 0.0
-			for slot in baking_slots:
-				total_progress += slot.timer / slot.target_time
-			var avg_progress = total_progress / baking_slots.size()
-			light.light_energy = 0.5 + avg_progress * 1.5
-		else:
-			light.visible = false
+		if current_state != previous_state:
+			slot.last_cooking_state = current_state
+			cooking_state_changed.emit(i, current_state)
+
+			# Print state change for debugging
+			var state_name = get_cooking_state_name(current_state)
+			print("Slot %d: %s -> %s" % [i + 1, get_cooking_state_name(previous_state), state_name])
+
+	# Update light color based on cooking states
+	if light and baking_slots.size() > 0:
+		light.visible = true
+
+		# Find the "worst" cooking state (most urgent)
+		var worst_state = CookingState.UNDERCOOKED
+		for slot in baking_slots:
+			var state = get_cooking_state(slot)
+			# Priority: BURNT > WARNING > OPTIMAL > COOKED > UNDERCOOKED
+			if state == CookingState.BURNT:
+				worst_state = CookingState.BURNT
+				break
+			elif state == CookingState.WARNING and worst_state != CookingState.BURNT:
+				worst_state = CookingState.WARNING
+			elif state == CookingState.OPTIMAL and worst_state not in [CookingState.BURNT, CookingState.WARNING]:
+				worst_state = CookingState.OPTIMAL
+			elif state == CookingState.COOKED and worst_state not in [CookingState.BURNT, CookingState.WARNING, CookingState.OPTIMAL]:
+				worst_state = CookingState.COOKED
+
+		# Set light color based on worst state
+		light.light_color = get_cooking_state_color(worst_state)
+
+		# Set light intensity based on average progress
+		var total_progress = 0.0
+		for slot in baking_slots:
+			total_progress += slot.timer / slot.target_time
+		var avg_progress = total_progress / baking_slots.size()
+		light.light_energy = 0.5 + avg_progress * 1.5
+	elif light:
+		light.visible = false
 
 # Interaction system
 func _on_body_entered(body: Node3D) -> void:
@@ -208,7 +303,8 @@ func start_baking(item_id: String, quality_data: Dictionary = {}) -> bool:
 		"timer": 0.0,
 		"target_time": recipe.get("baking_time", 300.0),
 		"started_at": Time.get_unix_time_from_system(),
-		"input_quality": quality_data
+		"input_quality": quality_data,
+		"last_cooking_state": CookingState.UNDERCOOKED
 	}
 
 	baking_slots.append(slot)
@@ -243,8 +339,17 @@ func complete_baking_slot(slot_index: int) -> void:
 		return
 
 	var slot = baking_slots[slot_index]
+	var cooking_state = get_cooking_state(slot)
+	var state_name = get_cooking_state_name(cooking_state)
 	var result = _get_baked_result(slot.item_id)
-	print("\n=== DING! Slot %d/%d ====" % [slot_index + 1, max_slots])
+
+	print("\n=== Collecting from Slot %d/%d ====" % [slot_index + 1, max_slots])
+	print("Cooking state: %s" % state_name)
+
+	# Check if player is trying to collect undercooked item
+	if cooking_state == CookingState.UNDERCOOKED:
+		print("⚠ WARNING: This item is still undercooked!")
+		print("⚠ Quality will be significantly reduced!")
 
 	# Get combined equipment tier (mixer + oven)
 	var combined_tier: int = equipment_tier  # Start with oven tier
@@ -276,7 +381,47 @@ func complete_baking_slot(slot_index: int) -> void:
 			"price_multiplier": 1.0
 		}
 
-	print("Baking complete! ", result, " is ready!")
+	# Apply cooking state modifiers to quality
+	var base_quality = quality_data.get("quality", 70.0)
+	var modified_quality = base_quality
+
+	match cooking_state:
+		CookingState.UNDERCOOKED:
+			# Cap quality at undercooked max
+			var max_quality = BalanceConfig.EQUIPMENT.oven_undercooked_quality_max
+			modified_quality = min(base_quality, max_quality)
+			print("⚠ Undercooked penalty: Quality capped at %d%%" % max_quality)
+
+		CookingState.OPTIMAL:
+			# Bonus quality and legendary chance in optimal window
+			var bonus = BalanceConfig.EQUIPMENT.oven_cooked_quality_bonus
+			modified_quality = min(base_quality + bonus, 100.0)
+			print("✨ Optimal timing bonus: +%d%% quality!" % bonus)
+
+			# Increase legendary chance if perfect quality
+			if quality_data.get("tier") == QualityManager.QualityTier.PERFECT:
+				var extra_legendary_chance = BalanceConfig.EQUIPMENT.oven_perfection_chance_bonus
+				if randf() < extra_legendary_chance:
+					quality_data.is_legendary = true
+					print("✨✨ LEGENDARY ITEM CREATED! ✨✨")
+
+		CookingState.BURNT:
+			# Cap quality at burnt max
+			var max_quality = BalanceConfig.EQUIPMENT.oven_burnt_quality_max
+			modified_quality = min(base_quality, max_quality)
+			print("🔥 BURNT! Quality capped at %d%%" % max_quality)
+			item_burned.emit()
+
+		CookingState.WARNING:
+			print("⚠ Close call! Item was almost burnt.")
+
+	# Update quality data with modified values
+	quality_data.quality = modified_quality
+	quality_data.tier = QualityManager.get_quality_tier(modified_quality)
+	quality_data.tier_name = QualityManager.QualityTier.keys()[quality_data.tier]
+	quality_data.price_multiplier = QualityManager.QUALITY_PRICE_MULTIPLIERS[quality_data.tier]
+
+	print("Baking complete! ", result, " collected!")
 	print("Quality: %.1f%% (%s)%s" % [
 		quality_data.get("quality", 70.0),
 		quality_data.get("tier_name", "NORMAL"),
@@ -345,17 +490,51 @@ func get_slot_info(item_id: String) -> Dictionary:
 	"""Get baking info for a specific item by ID"""
 	for slot in baking_slots:
 		if slot.item_id == item_id:
+			var cooking_state = get_cooking_state(slot)
 			return {
 				"timer": slot.timer,
 				"target_time": slot.target_time,
 				"progress": slot.timer / slot.target_time,
-				"is_done": slot.timer >= slot.target_time
+				"is_done": slot.timer >= slot.target_time,
+				"cooking_state": cooking_state,
+				"cooking_state_name": get_cooking_state_name(cooking_state),
+				"cooking_state_color": get_cooking_state_color(cooking_state)
 			}
 	return {
 		"timer": 0.0,
 		"target_time": 0.0,
 		"progress": 0.0,
-		"is_done": false
+		"is_done": false,
+		"cooking_state": CookingState.UNDERCOOKED,
+		"cooking_state_name": "Unknown",
+		"cooking_state_color": Color.WHITE
+	}
+
+func get_slot_info_by_index(slot_index: int) -> Dictionary:
+	"""Get baking info for a specific slot by index"""
+	if slot_index < 0 or slot_index >= baking_slots.size():
+		return {
+			"timer": 0.0,
+			"target_time": 0.0,
+			"progress": 0.0,
+			"is_done": false,
+			"cooking_state": CookingState.UNDERCOOKED,
+			"cooking_state_name": "Unknown",
+			"cooking_state_color": Color.WHITE
+		}
+
+	var slot = baking_slots[slot_index]
+	var cooking_state = get_cooking_state(slot)
+	return {
+		"timer": slot.timer,
+		"target_time": slot.target_time,
+		"progress": slot.timer / slot.target_time,
+		"is_done": slot.timer >= slot.target_time,
+		"cooking_state": cooking_state,
+		"cooking_state_name": get_cooking_state_name(cooking_state),
+		"cooking_state_color": get_cooking_state_color(cooking_state),
+		"item_id": slot.item_id,
+		"recipe_id": slot.recipe_id
 	}
 
 # ============================================================================

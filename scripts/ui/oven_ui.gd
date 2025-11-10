@@ -55,26 +55,23 @@ func _update_timer_displays() -> void:
 		if not is_instance_valid(timer_label) or not is_instance_valid(slot_button):
 			continue
 
+		# Get cooking state info
+		var slot_info = oven_script.get_slot_info_by_index(i)
+		var cooking_state = slot_info.get("cooking_state", 0)
+		var state_name = slot_info.get("cooking_state_name", "Baking")
+		var state_color = slot_info.get("cooking_state_color", Color.WHITE)
+
 		var progress_percent = (slot.timer / slot.target_time) * 100 if slot.target_time > 0 else 0
 		var remaining = slot.target_time - slot.timer
-		var is_done = slot.timer >= slot.target_time
 		var display_name = _get_item_display_name(slot.item_id)
 
-		# Update button text
-		if is_done:
-			slot_button.text = "✓ Slot %d: %s (DONE)" % [i + 1, display_name]
-			slot_button.modulate = Color(0.2, 1.0, 0.2)
-		else:
-			slot_button.text = "Slot %d: %s (%.0f%%)" % [i + 1, display_name, progress_percent]
-			slot_button.modulate = Color(1.0, 1.0, 1.0)
+		# Update button text with cooking state
+		slot_button.text = "Slot %d: %s - %s" % [i + 1, display_name, state_name]
+		slot_button.modulate = state_color
 
-		# Update timer label
-		if is_done:
-			timer_label.text = "Ready to remove!"
-			timer_label.modulate = Color(0.2, 1.0, 0.2)
-		else:
-			timer_label.text = "%.1fs / %.1fs remaining" % [remaining, slot.target_time]
-			timer_label.modulate = Color(0.8, 0.8, 0.8)
+		# Update timer label with progress
+		timer_label.text = "%.0f%% (%.1fs remaining)" % [progress_percent, max(0, remaining)]
+		timer_label.modulate = state_color
 
 func _refresh_equipment_inventory() -> void:
 	"""Override to show baking slots with individual timers"""
@@ -118,9 +115,14 @@ func _refresh_equipment_inventory() -> void:
 		# Show each baking slot individually with its own timer
 		var slot_index = 0
 		for slot in oven_script.baking_slots:
-			slot_index += 1
 			var item_id = slot.item_id
 			var display_name = _get_item_display_name(item_id)
+
+			# Get cooking state info
+			var slot_info = oven_script.get_slot_info_by_index(slot_index)
+			var cooking_state = slot_info.get("cooking_state", 0)
+			var state_name = slot_info.get("cooking_state_name", "Baking")
+			var state_color = slot_info.get("cooking_state_color", Color.WHITE)
 
 			# Create item display with timer
 			var item_container = VBoxContainer.new()
@@ -132,38 +134,28 @@ func _refresh_equipment_inventory() -> void:
 			# Calculate baking progress from slot data
 			var progress_percent = (slot.timer / slot.target_time) * 100 if slot.target_time > 0 else 0
 			var remaining = slot.target_time - slot.timer
-			var is_done = slot.timer >= slot.target_time
 
-			# For binding: use the item_id that's currently in the baking slot
-			# (this is always the dough/batter, even when done)
-			var button_item_id = item_id
-
-			if is_done:
-				item_button.text = "✓ Slot %d: %s (DONE)" % [slot_index, display_name]
-				item_button.modulate = Color(0.2, 1.0, 0.2)
-			else:
-				item_button.text = "Slot %d: %s (%.0f%%)" % [slot_index, display_name, progress_percent]
-				item_button.modulate = Color(1.0, 1.0, 1.0)
+			# Update button text with cooking state
+			item_button.text = "Slot %d: %s - %s" % [slot_index + 1, display_name, state_name]
+			item_button.modulate = state_color
 
 			item_button.custom_minimum_size = Vector2(200, 40)
-			item_button.pressed.connect(_on_oven_slot_clicked.bind(slot_index))
+			item_button.pressed.connect(_on_oven_slot_clicked.bind(slot_index + 1))
 			item_container.add_child(item_button)
 			equipment_buttons.append(item_button)  # Track the button, not the container
 			slot_buttons.append(item_button)  # Also track for live updates
 
-			# Timer label
+			# Timer label with progress
 			var timer_label = Label.new()
-			if is_done:
-				timer_label.text = "Ready to remove!"
-				timer_label.modulate = Color(0.2, 1.0, 0.2)
-			else:
-				timer_label.text = "%.1fs / %.1fs remaining" % [remaining, slot.target_time]
-				timer_label.modulate = Color(0.8, 0.8, 0.8)
+			timer_label.text = "%.0f%% (%.1fs remaining)" % [progress_percent, max(0, remaining)]
+			timer_label.modulate = state_color
 			timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			item_container.add_child(timer_label)
 			slot_timer_labels.append(timer_label)  # Track for live updates
 
 			equipment_container.add_child(item_container)
+
+			slot_index += 1
 
 	# Also show finished items in the oven inventory (these are done baking)
 	var inventory = InventoryManager.get_inventory(equipment_inventory_id)
@@ -212,7 +204,7 @@ func _get_baking_info(item_id: String) -> Dictionary:
 	}
 
 func _on_oven_slot_clicked(slot_index: int) -> void:
-	"""Handle clicking on a baking slot - either cancel baking or collect finished product"""
+	"""Handle clicking on a baking slot - collect item or show warning"""
 	if not oven_script:
 		return
 
@@ -224,32 +216,22 @@ func _on_oven_slot_clicked(slot_index: int) -> void:
 		return
 
 	var slot = oven_script.baking_slots[array_index]
-	var is_done = slot.timer >= slot.target_time
 
-	if is_done:
-		# Item is done - it should have been converted to finished product already
-		# Force completion if it hasn't happened yet
-		print("Completing baking for slot %d" % slot_index)
-		oven_script.complete_baking_slot(array_index)
-		_refresh_inventories()
-	else:
-		# Item is still baking - cancel it and return dough/batter to player
-		var item_id = slot.item_id
-		var metadata = InventoryManager.get_item_metadata(equipment_inventory_id, item_id)
+	# Get cooking state info
+	var slot_info = oven_script.get_slot_info_by_index(array_index)
+	var cooking_state = slot_info.get("cooking_state", 0)
+	var state_name = slot_info.get("cooking_state_name", "Unknown")
 
-		# Remove from oven inventory
-		if InventoryManager.remove_item(equipment_inventory_id, item_id, 1):
-			# Add back to player
-			InventoryManager.add_item(player_inventory_id, item_id, 1, metadata)
+	# Always allow collection - just warn if undercooked
+	if cooking_state == oven_script.CookingState.UNDERCOOKED:
+		print("⚠ WARNING: Item is still undercooked!")
+		print("⚠ Quality will be significantly reduced if you collect it now.")
+		print("⚠ Collecting anyway...")
 
-			# Remove from baking slots
-			oven_script.baking_slots.remove_at(array_index)
-
-			print("Cancelled baking of %s from slot %d" % [item_id, slot_index])
-			item_transferred.emit(equipment_inventory_id, player_inventory_id, item_id)
-
-			# Refresh display
-			_refresh_inventories()
+	# Complete baking for this slot
+	print("Collecting item from slot %d (State: %s)" % [slot_index, state_name])
+	oven_script.complete_baking_slot(array_index)
+	_refresh_inventories()
 
 func _on_oven_item_clicked(item_id: String) -> void:
 	"""Remove finished item from oven (for items in 'Finished Products' section)"""
