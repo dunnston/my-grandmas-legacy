@@ -1,12 +1,22 @@
-[gd_scene load_steps=2 format=3 uid="uid://apartment_scene"]
+[gd_scene load_steps=6 format=3 uid="uid://apartment_scene"]
 
 [ext_resource type="Script" path="res://scripts/apartment/apartment.gd" id="1"]
+[ext_resource type="Script" uid="uid://0l1bf6i2fdsy" path="res://scripts/transitions/stairs.gd" id="2_stairs"]
+[ext_resource type="PackedScene" uid="uid://dpg5q3qm8qc0y" path="res://scenes/ui/interact_prompt.tscn" id="3_interact"]
+[ext_resource type="PackedScene" uid="uid://cqp6vn8wrgx1f" path="res://scenes/player/player.tscn" id="4_player"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(1.5, 2.5, 1)
 
 [node name="Apartment" type="Node3D"]
 script = ExtResource("1")
 
+[node name="Player" parent="." instance=ExtResource("4_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2)
+
 [node name="Floor" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+use_collision = true
 size = Vector3(10, 0.2, 8)
 material_override = null
 
@@ -14,22 +24,27 @@ material_override = null
 
 [node name="BackWall" type="CSGBox3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -4)
+use_collision = true
 size = Vector3(10, 3, 0.2)
 
 [node name="LeftWall" type="CSGBox3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.5, 0)
+use_collision = true
 size = Vector3(0.2, 3, 8)
 
 [node name="RightWall" type="CSGBox3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.5, 0)
+use_collision = true
 size = Vector3(0.2, 3, 8)
 
 [node name="FrontWall" type="CSGBox3D" parent="Walls"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 4)
+use_collision = true
 size = Vector3(10, 3, 0.2)
 
 [node name="Ceiling" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+use_collision = true
 size = Vector3(10, 0.2, 8)
 
 [node name="Furniture" type="Node3D" parent="."]
@@ -107,12 +122,19 @@ omni_range = 8.0
 
 [node name="StairsExit" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0.5, 3.5)
+script = ExtResource("2_stairs")
+destination_scene = "res://scenes/bakery/bakery.tscn"
+prompt_text = "Go downstairs"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StairsExit"]
+shape = SubResource("BoxShape3D_door")
 
 [node name="StairsMarker" type="CSGBox3D" parent="StairsExit"]
 size = Vector3(1, 1, 1)
 material_override = null
+
+[node name="InteractPrompt" parent="StairsExit" instance=ExtResource("3_interact")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 3, 6)
