@@ -552,10 +552,7 @@ func auto_process_customer(customer: Node3D) -> bool:
 	if customer.has_method("complete_purchase"):
 		customer.complete_purchase()
 
-	# Track the sale
-	if CustomerManager:
-		CustomerManager.record_sale(items, total_price)
-
+	# Sale tracking is handled via sale_completed signal connection to CustomerManager
 	print("[Register] Auto-processed sale: $%.2f" % total_price)
 	sale_completed.emit(items, total_price)
 
