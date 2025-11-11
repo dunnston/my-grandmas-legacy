@@ -44,6 +44,7 @@ var equipment_stations: Array = []
 # Visual character reference
 var character: Node3D = null
 var nav_agent: NavigationAgent3D = null
+var cached_animation_name: String = ""  # Cache the animation name for play/stop
 
 # Task priorities (higher = more important)
 const TASK_PRIORITIES = {
@@ -471,14 +472,24 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 	if not anim_player:
 		return
 
+	# Cache the animation name on first call
+	if cached_animation_name == "" and anim_player.current_animation != "":
+		cached_animation_name = anim_player.current_animation
+
 	if playing:
-		# Resume playing whatever animation is loaded (don't care about name)
+		# Play the cached animation (or first available if not cached)
 		if not anim_player.is_playing():
-			anim_player.play()
+			if cached_animation_name != "":
+				anim_player.play(cached_animation_name)
+			else:
+				# Try to get first animation
+				var anims = anim_player.get_animation_list()
+				if anims.size() > 0:
+					cached_animation_name = anims[0]
+					anim_player.play(cached_animation_name)
 	else:
-		# Stop animation completely (not pause - stop!)
-		if anim_player.is_playing() or anim_player.current_animation != "":
-			anim_player.stop()
+		# Stop animation completely
+		anim_player.stop()
 
 func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
 	"""Recursively search for AnimationPlayer in node hierarchy"""
