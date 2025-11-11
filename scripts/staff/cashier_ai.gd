@@ -66,6 +66,13 @@ func activate() -> void:
 	print("[CashierAI] ", staff_data.name, " is now working at register!")
 	_find_equipment()
 
+	# Initialize navigation to current position (already at target)
+	if character and nav_agent:
+		nav_agent.target_position = character.global_position
+
+	# Stop any walking animation
+	_set_animation("idle", false)
+
 func deactivate() -> void:
 	"""Deactivate the cashier AI"""
 	is_active = false
