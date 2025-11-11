@@ -109,7 +109,7 @@ func process(delta: float) -> void:
 			_state_walking_to_storage_drop(delta)
 
 func _find_equipment() -> void:
-	"""Find available equipment in the bakery"""
+	"""Find StaffTarget markers for baker"""
 	available_mixing_bowls.clear()
 	available_ovens.clear()
 
@@ -118,27 +118,35 @@ func _find_equipment() -> void:
 		print("[BakerAI] ERROR: No current scene found")
 		return
 
-	# Find equipment
+	# Find StaffTarget nodes
 	for child in _get_all_children(bakery):
-		var child_name = child.name.to_lower()
-		if "ingredient_storage" in child_name or "cabinet" in child_name:
-			ingredient_storage = child
-			print("[BakerAI] Found storage: ", ingredient_storage.name)
-		elif child.has_method("get_inventory_id"):
-			if "mixing_bowl" in child_name:
-				available_mixing_bowls.append(child)
-			elif "oven" in child_name:
-				available_ovens.append(child)
+		if child is Node3D and child.get_class() == "Node3D":
+			var target_name_prop = child.get("target_name")
+			var target_type_prop = child.get("target_type")
+
+			# Check if this is a staff target for bakers
+			if target_type_prop and (target_type_prop == "baker" or target_type_prop == "any"):
+				if target_name_prop:
+					var name_lower = str(target_name_prop).to_lower()
+					if "storage" in name_lower or "cabinet" in name_lower or "ingredient" in name_lower:
+						ingredient_storage = child
+						print("[BakerAI] Found storage target: ", child.name)
+					elif "mixing" in name_lower or "bowl" in name_lower:
+						available_mixing_bowls.append(child)
+						print("[BakerAI] Found mixing bowl target: ", child.name)
+					elif "oven" in name_lower:
+						available_ovens.append(child)
+						print("[BakerAI] Found oven target: ", child.name)
 
 	print("[BakerAI] Found ", available_mixing_bowls.size(), " mixing bowls and ", available_ovens.size(), " ovens")
 
 	# Warn if equipment not found
 	if not ingredient_storage:
-		print("[BakerAI] WARNING: No storage found! Looking for node with 'ingredient_storage' or 'cabinet' in name")
+		print("[BakerAI] WARNING: No storage target found! Add StaffTarget with target_name='storage' and target_type='baker'")
 	if available_mixing_bowls.is_empty():
-		print("[BakerAI] WARNING: No mixing bowls found! Looking for nodes with 'mixing_bowl' in name")
+		print("[BakerAI] WARNING: No mixing bowl targets found! Add StaffTarget with target_name='mixing_bowl' and target_type='baker'")
 	if available_ovens.is_empty():
-		print("[BakerAI] WARNING: No ovens found! Looking for nodes with 'oven' in name")
+		print("[BakerAI] WARNING: No oven targets found! Add StaffTarget with target_name='oven' and target_type='baker'")
 
 func _get_all_children(node: Node) -> Array:
 	"""Recursively get all children of a node"""
@@ -450,18 +458,11 @@ func _collect_from_oven() -> void:
 func _get_node_position(node: Node) -> Vector3:
 	"""Get position from any node type"""
 	if not node:
-		print("[BakerAI] WARNING: Trying to get position of null node!")
 		return Vector3.ZERO
 
 	if node is Node3D:
-		var pos = node.global_position
-		print("[BakerAI] Got position from Node3D '", node.name, "': ", pos)
-		return pos
-	elif node is Control:
-		print("[BakerAI] WARNING: Trying to navigate to Control node '", node.name, "' - returning ZERO")
-		return Vector3.ZERO
+		return node.global_position
 	else:
-		print("[BakerAI] WARNING: Unknown node type for '", node.name, "': ", node.get_class())
 		return Vector3.ZERO
 
 func _navigate_towards(target_pos: Vector3, delta: float) -> void:

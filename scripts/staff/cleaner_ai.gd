@@ -110,7 +110,7 @@ func process(delta: float) -> void:
 			_state_walking_to_equipment(delta)
 
 func _find_cleanup_stations() -> void:
-	"""Find all cleanup stations in the bakery"""
+	"""Find all StaffTarget markers for cleaner"""
 	sinks.clear()
 	trash_cans.clear()
 	counters.clear()
@@ -120,20 +120,31 @@ func _find_cleanup_stations() -> void:
 	if not bakery:
 		return
 
-	# Find cleanup stations
+	# Find StaffTarget nodes
 	for child in _get_all_children(bakery):
-		var child_name = child.name.to_lower()
-		if "sink" in child_name:
-			sinks.append(child)
-		elif "trash" in child_name or "bin" in child_name:
-			trash_cans.append(child)
-		elif "counter" in child_name or "table" in child_name:
-			counters.append(child)
-		elif "oven" in child_name or "mixer" in child_name or "display" in child_name:
-			equipment_stations.append(child)
+		if child is Node3D and child.get_class() == "Node3D":
+			var target_name_prop = child.get("target_name")
+			var target_type_prop = child.get("target_type")
 
-	print("[CleanerAI] Found ", sinks.size(), " sinks, ", trash_cans.size(), " trash cans")
-	print("[CleanerAI] Found ", counters.size(), " counters, ", equipment_stations.size(), " equipment")
+			# Check if this is a staff target for cleaners
+			if target_type_prop and (target_type_prop == "cleaner" or target_type_prop == "any"):
+				if target_name_prop:
+					var name_lower = str(target_name_prop).to_lower()
+					if "sink" in name_lower:
+						sinks.append(child)
+						print("[CleanerAI] Found sink target: ", child.name)
+					elif "trash" in name_lower:
+						trash_cans.append(child)
+						print("[CleanerAI] Found trash target: ", child.name)
+					elif "counter" in name_lower:
+						counters.append(child)
+						print("[CleanerAI] Found counter target: ", child.name)
+					else:
+						equipment_stations.append(child)
+						print("[CleanerAI] Found equipment target: ", child.name)
+
+	print("[CleanerAI] Total: ", sinks.size(), " sinks, ", trash_cans.size(), " trash cans")
+	print("[CleanerAI] Total: ", counters.size(), " counters, ", equipment_stations.size(), " equipment")
 
 func _get_all_children(node: Node) -> Array:
 	"""Recursively get all children of a node"""
@@ -401,18 +412,11 @@ func _complete_equipment_task() -> void:
 func _get_node_position(node: Node) -> Vector3:
 	"""Safely get position from any node type"""
 	if not node:
-		print("[CleanerAI] WARNING: Trying to get position of null node!")
 		return Vector3.ZERO
 
 	if node is Node3D:
-		var pos = node.global_position
-		print("[CleanerAI] Got position from Node3D '", node.name, "': ", pos)
-		return pos
-	elif node is Control:
-		print("[CleanerAI] WARNING: Trying to navigate to Control node '", node.name, "' - returning ZERO")
-		return Vector3.ZERO
+		return node.global_position
 	else:
-		print("[CleanerAI] WARNING: Unknown node type for '", node.name, "': ", node.get_class())
 		return Vector3.ZERO
 
 func _navigate_towards(target_pos: Vector3, delta: float) -> void:

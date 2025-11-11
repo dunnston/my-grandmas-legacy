@@ -92,29 +92,34 @@ func process(delta: float) -> void:
 			_state_checking_out(delta)
 
 func _find_equipment() -> void:
-	"""Find the register and display case in the bakery"""
+	"""Find StaffTarget markers for cashier"""
 	var bakery = get_tree().current_scene
 	if not bakery:
 		print("[CashierAI] ERROR: No current scene found")
 		return
 
-	# Find equipment (prioritize Node3D objects)
+	# Find StaffTarget nodes
 	for child in _get_all_children(bakery):
-		var child_name = child.name.to_lower()
-		if "register" in child_name and child is Node3D:
-			if not register:  # Only set if not already found
-				register = child
-				print("[CashierAI] Found register: ", register.name)
-		elif "display" in child_name and child is Node3D:
-			if not display_case:  # Only set if not already found
-				display_case = child
-				print("[CashierAI] Found display case: ", display_case.name)
+		if child is Node3D and child.get_class() == "Node3D":
+			var target_name_prop = child.get("target_name")
+			var target_type_prop = child.get("target_type")
+
+			# Check if this is a staff target for cashiers
+			if target_type_prop and (target_type_prop == "cashier" or target_type_prop == "any"):
+				if target_name_prop:
+					var name_lower = str(target_name_prop).to_lower()
+					if "register" in name_lower and not register:
+						register = child
+						print("[CashierAI] Found register target: ", child.name)
+					elif "display" in name_lower and not display_case:
+						display_case = child
+						print("[CashierAI] Found display target: ", child.name)
 
 	# Warn if equipment not found
 	if not register:
-		print("[CashierAI] WARNING: No register found in scene! Looking for node with 'register' in name")
+		print("[CashierAI] WARNING: No register target found! Add StaffTarget with target_name='register' and target_type='cashier'")
 	if not display_case:
-		print("[CashierAI] WARNING: No display case found in scene! Looking for node with 'display' in name")
+		print("[CashierAI] WARNING: No display target found! Add StaffTarget with target_name='display' and target_type='cashier'")
 
 func _get_all_children(node: Node) -> Array:
 	"""Recursively get all children of a node"""
