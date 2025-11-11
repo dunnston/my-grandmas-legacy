@@ -193,6 +193,7 @@ func _state_walking_to_sink(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached sink")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = CleanerState.WASHING_DISHES
 		state_timer = 0.0
 
@@ -219,6 +220,7 @@ func _state_walking_to_trash(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached trash can")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = CleanerState.EMPTYING_TRASH
 		state_timer = 0.0
 
@@ -245,6 +247,7 @@ func _state_walking_to_counter(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached counter")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = CleanerState.WIPING_COUNTER
 		state_timer = 0.0
 
@@ -271,6 +274,7 @@ func _state_walking_to_equipment(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " inspecting equipment")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		# Equipment check is instant
 		_complete_equipment_task()
 		current_state = CleanerState.IDLE

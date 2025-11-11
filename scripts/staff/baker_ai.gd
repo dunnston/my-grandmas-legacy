@@ -196,6 +196,7 @@ func _state_walking_to_storage(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached storage")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = BakerState.GATHERING_INGREDIENTS
 		state_timer = 0.0
 
@@ -221,6 +222,7 @@ func _state_walking_to_mixer(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached mixing bowl")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = BakerState.MIXING
 		state_timer = 0.0
 
@@ -249,6 +251,7 @@ func _state_walking_to_oven_load(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached oven")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = BakerState.LOADING_OVEN
 		state_timer = 0.0
 
@@ -275,6 +278,7 @@ func _state_walking_to_oven_collect(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached oven to collect")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = BakerState.COLLECTING_FROM_OVEN
 		state_timer = 0.0
 
@@ -302,6 +306,7 @@ func _state_walking_to_storage_drop(delta: float) -> void:
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " returned to storage")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = BakerState.IDLE
 
 # ============================================================================

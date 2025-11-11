@@ -170,6 +170,7 @@ func _state_walking_to_display(delta: float) -> void:
 	# Check if reached display
 	if _is_at_position(target_pos):
 		print("[CashierAI] ", staff_data.name, " reached display case")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = CashierState.GATHERING_ITEMS
 		checkout_timer = 0.0
 
@@ -196,6 +197,7 @@ func _state_walking_to_register(delta: float) -> void:
 	# Check if reached register
 	if _is_at_position(target_pos):
 		print("[CashierAI] ", staff_data.name, " returned to register")
+		_set_animation("walk", false)  # Explicitly stop before state change
 		current_state = CashierState.CHECKING_OUT
 		checkout_timer = 0.0
 
