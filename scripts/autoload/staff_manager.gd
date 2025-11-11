@@ -473,6 +473,9 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	# Get target station position
 	var target_position: Vector3 = _get_staff_target_position(ai_type, bakery)
 
+	# Wait one frame for employee's _ready() to complete before playing animation
+	await get_tree().process_frame
+
 	# Start walking animation
 	_play_character_animation(character, "walk")
 
@@ -658,8 +661,12 @@ func _find_node_by_name(root: Node, search_name: String) -> Node:
 
 func _play_character_animation(character: Node3D, anim_name: String) -> void:
 	"""Play an animation on the staff character"""
+	print("[StaffManager] Looking for AnimationPlayer in ", character.name)
+
 	# Find the AnimationPlayer node (it's in the CustomerModel child)
 	var anim_player: AnimationPlayer = _find_animation_player(character)
+
+	print("[StaffManager] Found AnimationPlayer: ", anim_player != null)
 
 	if anim_player and anim_player is AnimationPlayer:
 		# Make sure AnimationPlayer is active
@@ -694,7 +701,9 @@ func _play_character_animation(character: Node3D, anim_name: String) -> void:
 
 func _find_animation_player(character: Node3D) -> AnimationPlayer:
 	"""Recursively find AnimationPlayer in character"""
+	print("[StaffManager] Searching in character with ", character.get_child_count(), " children")
 	for child in character.get_children():
+		print("[StaffManager]   Child: ", child.name, " (", child.get_class(), ")")
 		if child is AnimationPlayer:
 			return child
 		# Check child's children (customer models are nested)
