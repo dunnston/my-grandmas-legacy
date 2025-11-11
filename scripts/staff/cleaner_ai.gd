@@ -198,8 +198,7 @@ func _state_walking_to_sink(delta: float) -> void:
 
 func _state_washing_dishes(delta: float) -> void:
 	"""Washing dishes at sink"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult
@@ -225,8 +224,7 @@ func _state_walking_to_trash(delta: float) -> void:
 
 func _state_emptying_trash(delta: float) -> void:
 	"""Emptying trash can"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult
@@ -252,8 +250,7 @@ func _state_walking_to_counter(delta: float) -> void:
 
 func _state_wiping_counter(delta: float) -> void:
 	"""Wiping down counter"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult

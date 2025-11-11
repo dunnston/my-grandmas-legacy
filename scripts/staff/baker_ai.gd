@@ -201,8 +201,7 @@ func _state_walking_to_storage(delta: float) -> void:
 
 func _state_gathering_ingredients(delta: float) -> void:
 	"""Gathering ingredients from storage"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult
@@ -227,8 +226,7 @@ func _state_walking_to_mixer(delta: float) -> void:
 
 func _state_mixing(delta: float) -> void:
 	"""Mixing ingredients"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult
@@ -256,8 +254,7 @@ func _state_walking_to_oven_load(delta: float) -> void:
 
 func _state_loading_oven(delta: float) -> void:
 	"""Loading dough into oven"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult
@@ -283,8 +280,7 @@ func _state_walking_to_oven_collect(delta: float) -> void:
 
 func _state_collecting_from_oven(delta: float) -> void:
 	"""Collecting baked goods from oven"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	state_timer += delta * time_mult * speed_mult

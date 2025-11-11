@@ -175,8 +175,7 @@ func _state_walking_to_display(delta: float) -> void:
 
 func _state_gathering_items(delta: float) -> void:
 	"""Standing at display case gathering items"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
 	checkout_timer += delta * time_mult * speed_mult
@@ -202,8 +201,7 @@ func _state_walking_to_register(delta: float) -> void:
 
 func _state_checking_out(delta: float) -> void:
 	"""Processing payment at register"""
-	_set_animation("walk", false)
-
+	# Animation already stopped when reached destination
 	if not current_customer or not GameManager:
 		_complete_checkout()
 		return
