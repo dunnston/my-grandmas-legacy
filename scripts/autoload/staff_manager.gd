@@ -549,8 +549,8 @@ func _process_staff_walking_to_station(delta: float) -> void:
 			else:
 				print("[StaffManager] WARNING: No AnimationPlayer found for ", character.name)
 
-			# Rotate to face forward (toward bakery interior)
-			character.rotation.y = 0
+			# Rotate to face their workstation (180 degrees from entrance)
+			character.rotation.y = PI
 
 			# Mark as arrived
 			arrived_staff.append(staff_id)
