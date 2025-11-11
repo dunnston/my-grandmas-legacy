@@ -31,8 +31,8 @@ var next_check_time: float = 0.0
 var gather_time: float = 2.0  # Time to gather items from display
 
 # Equipment references
-var register: Node3D = null
-var display_case: Node3D = null
+var register: Node = null  # Can be any Node type
+var display_case: Node = null  # Can be any Node type
 
 # Visual character reference
 var character: Node3D = null
@@ -136,11 +136,12 @@ func _state_walking_to_display(delta: float) -> void:
 		current_state = CashierState.GATHERING_ITEMS
 		return
 
-	_navigate_towards(display_case.global_position, delta)
+	var target_pos = _get_node_position(display_case)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
 	# Check if reached display
-	if _is_at_position(display_case.global_position):
+	if _is_at_position(target_pos):
 		print("[CashierAI] ", staff_data.name, " reached display case")
 		current_state = CashierState.GATHERING_ITEMS
 		checkout_timer = 0.0
@@ -163,11 +164,12 @@ func _state_walking_to_register(delta: float) -> void:
 		current_state = CashierState.CHECKING_OUT
 		return
 
-	_navigate_towards(register.global_position, delta)
+	var target_pos = _get_node_position(register)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
 	# Check if reached register
-	if _is_at_position(register.global_position):
+	if _is_at_position(target_pos):
 		print("[CashierAI] ", staff_data.name, " returned to register")
 		current_state = CashierState.CHECKING_OUT
 		checkout_timer = 0.0
@@ -222,6 +224,15 @@ func _complete_checkout() -> void:
 	current_customer = null
 	checkout_timer = 0.0
 	current_state = CashierState.IDLE
+
+func _get_node_position(node: Node) -> Vector3:
+	"""Safely get position from any node type"""
+	if node is Node3D:
+		return node.global_position
+	elif node is Control:
+		return Vector3.ZERO
+	else:
+		return Vector3.ZERO
 
 func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	"""Navigate character towards target position"""
