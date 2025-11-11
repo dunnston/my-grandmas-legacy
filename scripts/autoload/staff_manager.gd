@@ -340,15 +340,23 @@ func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
 			ai_instance = CleanerAI.new(staff_id, staff_data)
 
 	if ai_instance:
+		# Add AI to scene tree so it can access get_tree()
+		add_child(ai_instance)
 		active_ai_workers[staff_id] = ai_instance
 		ai_instance.activate()
+		print("[StaffManager] AI worker added to scene tree: ", staff_data.name)
 
 func _deactivate_all_ai() -> void:
 	"""Deactivate and cleanup all AI workers"""
 	for staff_id in active_ai_workers.keys():
 		var ai_worker = active_ai_workers[staff_id]
-		if ai_worker and ai_worker.has_method("deactivate"):
-			ai_worker.deactivate()
+		if ai_worker:
+			if ai_worker.has_method("deactivate"):
+				ai_worker.deactivate()
+			# Remove from scene tree and free
+			if ai_worker.get_parent():
+				ai_worker.get_parent().remove_child(ai_worker)
+			ai_worker.queue_free()
 
 	active_ai_workers.clear()
 
