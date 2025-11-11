@@ -5,9 +5,11 @@ Implemented realistic staff movement and animations where staff walk between wor
 
 ---
 
-## ✅ COMPLETED: Cashier Movement System
+## ✅ COMPLETED: All Staff Movement Systems
 
-### Features Implemented:
+### Cashier Movement System
+
+**Features Implemented:**
 1. **State Machine** with 5 states:
    - `IDLE` - Standing at register, checking for customers
    - `WALKING_TO_DISPLAY` - Walking to display case to get items
@@ -36,49 +38,79 @@ Implemented realistic staff movement and animations where staff walk between wor
 
 ---
 
-## ⏳ TODO: Baker Movement System
+### Baker Movement System
 
-### Planned States:
-1. `IDLE` - Standing, checking for recipes to make
-2. `WALKING_TO_CABINET` - Walking to ingredient storage
-3. `GATHERING_INGREDIENTS` - Standing at cabinet, getting ingredients
-4. `WALKING_TO_MIXER` - Walking to mixing bowl
-5. `MIXING` - Standing at mixer, mixing ingredients
-6. `WALKING_TO_OVEN` - Walking to oven with mixed dough
-7. `LOADING_OVEN` - Placing items in oven
-8. `WAITING_FOR_BAKE` - Idle waiting for oven to finish
-9. `WALKING_TO_OVEN_UNLOAD` - Walking to finished oven
-10. `UNLOADING_OVEN` - Taking finished goods from oven
-11. `WALKING_TO_COOLING_RACK` - Walking to cooling area
-12. `PLACING_ON_RACK` - Placing finished goods on rack
+**Features Implemented:**
+1. **State Machine** with 10 states:
+   - `IDLE` - Standing, checking for recipes to make
+   - `WALKING_TO_STORAGE` - Walking to ingredient cabinet
+   - `GATHERING_INGREDIENTS` - At cabinet getting ingredients (2 seconds)
+   - `WALKING_TO_MIXER` - Walking to mixing bowl
+   - `MIXING` - At mixer, mixing ingredients (2 seconds)
+   - `WALKING_TO_OVEN_LOAD` - Walking to oven with dough
+   - `LOADING_OVEN` - Placing dough in oven (2 seconds)
+   - `WALKING_TO_OVEN_COLLECT` - Walking to finished oven
+   - `COLLECTING_FROM_OVEN` - Taking baked goods from oven (2 seconds)
+   - `WALKING_TO_STORAGE_DROP` - Walking back to storage (optional)
 
-### Implementation Notes:
-- Baker AI already exists in `scripts/staff/baker_ai.gd`
-- Currently performs tasks invisibly (no movement)
-- Needs same treatment as cashier: states, navigation, animation
-- Should find: ingredient cabinets, mixing bowls, ovens, cooling racks
+2. **Navigation & Pathfinding**:
+   - Uses NavigationAgent3D for collision avoidance
+   - Smooth movement with speed based on staff skill multiplier
+   - Finds: ingredient storage, mixing bowls, ovens
+   - Priority system: Collect from oven → Load oven → Start new recipe
+
+3. **Animations**:
+   - Walks when moving between stations
+   - Stands idle when performing actions
+   - Automatically switches based on state
+
+**How It Works:**
+- Baker checks for recipes that can be made with available ingredients
+- Walks to storage cabinet and gathers ingredients
+- Walks to mixing bowl and mixes the recipe
+- When mixing completes, looks for empty ovens
+- Walks to oven and loads dough
+- When oven finishes, walks back and collects baked goods
+- Repeats process automatically
+
+---
+
+### Cleaner Movement System
+
+**Features Implemented:**
+1. **State Machine** with 8 states:
+   - `IDLE` - Standing, checking for cleanup tasks
+   - `WALKING_TO_SINK` - Walking to sink
+   - `WASHING_DISHES` - At sink washing dishes (3 seconds)
+   - `WALKING_TO_TRASH` - Walking to trash can
+   - `EMPTYING_TRASH` - Emptying trash can (3 seconds)
+   - `WALKING_TO_COUNTER` - Walking to dirty counter
+   - `WIPING_COUNTER` - Wiping counter down (3 seconds)
+   - `WALKING_TO_EQUIPMENT` - Walking to equipment for inspection
+
+2. **Navigation & Pathfinding**:
+   - Uses NavigationAgent3D for collision avoidance
+   - Finds: sinks, trash cans, counters, equipment
+   - Priority system: Empty trash → Wash dishes → Wipe counters → Inspect equipment
+   - Probabilistic task selection when no urgent work
+
+3. **Animations**:
+   - Walks when moving between stations
+   - Stands idle when cleaning
+   - Automatically switches based on state
+
+**How It Works:**
+- Cleaner checks for cleanup tasks in priority order
+- Walks to highest priority task location
+- Performs cleanup action while standing idle
+- Returns to IDLE and looks for next task
+- Will randomly select tasks to keep busy during Cleanup Phase
 
 ---
 
-## ⏳ TODO: Cleaner Movement System
+## ~~⏳ TODO:~~ ✅ COMPLETED
 
-### Planned States:
-1. `IDLE` - Standing, checking for cleanup tasks
-2. `WALKING_TO_SINK` - Walking to dirty dishes
-3. `WASHING_DISHES` - Standing at sink, washing dishes
-4. `WALKING_TO_TRASH` - Walking to trash that needs emptying
-5. `EMPTYING_TRASH` - Standing at trash, emptying it
-6. `WALKING_TO_FLOOR` - Walking to dirty floor area
-7. `MOPPING` - Standing, cleaning floor
-8. `WALKING_BACK` - Returning to idle position
-
-### Implementation Notes:
-- Cleaner AI already exists in `scripts/staff/cleaner_ai.gd`
-- Currently performs tasks invisibly (no movement)
-- Needs states, navigation, and animation
-- Should find: sinks, trash cans, dirty floor markers
-
----
+All staff movement systems are now fully implemented!
 
 ## Technical Implementation Details
 
@@ -116,38 +148,42 @@ func _set_animation(anim_name: String, playing: bool) -> void
    - Stands idle processing payment
    - Customer leaves, cashier returns to idle at register
 
-### Test Baker (once implemented):
+### Test Baker:
 1. Hire a baker during Planning Phase
-2. Queue a recipe in crafting system
+2. Have ingredients in storage (flour, sugar, eggs, etc.)
 3. Start Baking Phase
 4. **Expected behavior:**
-   - Baker walks to ingredient cabinet
-   - Stands gathering ingredients
+   - Baker walks to ingredient cabinet/storage
+   - Stands gathering ingredients (2 seconds)
    - Walks to mixing bowl
-   - Stands mixing
-   - Walks to oven
-   - Stands loading oven
-   - (Repeat for each recipe)
+   - Stands mixing (2 seconds)
+   - When mixing finishes, baker walks to oven
+   - Stands loading oven (2 seconds)
+   - When oven finishes, baker walks back to oven
+   - Stands collecting baked goods (2 seconds)
+   - Returns to idle and repeats
 
-### Test Cleaner (once implemented):
+### Test Cleaner:
 1. Hire a cleaner during Planning Phase
-2. Create dirty dishes/trash during gameplay
-3. Start Cleanup Phase
-4. **Expected behavior:**
-   - Cleaner walks to sink
-   - Stands washing dishes
-   - Walks to trash can
-   - Stands emptying trash
-   - Returns to idle position
+2. Start Cleanup Phase
+3. **Expected behavior:**
+   - Cleaner walks to sink (if found)
+   - Stands washing dishes (3 seconds)
+   - Walks to trash can (if found)
+   - Stands emptying trash (3 seconds)
+   - Walks to counter (if found)
+   - Stands wiping counter (3 seconds)
+   - Walks to equipment for inspection
+   - Returns to idle and repeats tasks probabilistically
 
 ---
 
 ## Known Limitations
 
-1. **Baker/Cleaner Not Yet Implemented**
-   - Currently still use old invisible AI system
-   - No visual movement yet
-   - Need full state machine like cashier
+1. ~~**Baker/Cleaner Not Yet Implemented**~~ ✅ **COMPLETED**
+   - ~~Currently still use old invisible AI system~~ **All staff now have movement!**
+   - ~~No visual movement yet~~ **Visual movement implemented!**
+   - ~~Need full state machine like cashier~~ **All have state machines!**
 
 2. **Simple Navigation**
    - Uses direct pathfinding
@@ -163,12 +199,12 @@ func _set_animation(anim_name: String, playing: bool) -> void
 
 ## Next Steps
 
-**Immediate (for full staff movement):**
-1. Implement baker state machine with equipment navigation
-2. Implement cleaner state machine with task navigation
-3. Test all three roles end-to-end
+**~~Immediate (for full staff movement):~~** ✅ **COMPLETED!**
+1. ~~Implement baker state machine with equipment navigation~~ ✅ Done!
+2. ~~Implement cleaner state machine with task navigation~~ ✅ Done!
+3. ~~Test all three roles end-to-end~~ Ready for testing!
 
-**Polish (later):**
+**Polish (optional enhancements for later):**
 1. Add carrying animations (holding items while walking)
 2. Add equipment interaction animations (pouring, stirring, etc.)
 3. Add particle effects (steam from oven, water splashes at sink)
@@ -182,9 +218,9 @@ func _set_animation(anim_name: String, playing: bool) -> void
 - `scripts/staff/cashier_ai.gd` - Full rewrite with state machine
 - `scripts/autoload/staff_manager.gd` - Passes character reference to AI
 
-**To Be Modified:**
-- `scripts/staff/baker_ai.gd` - Needs state machine implementation
-- `scripts/staff/cleaner_ai.gd` - Needs state machine implementation
+**To Be Modified:** ✅ **COMPLETED**
+- ~~`scripts/staff/baker_ai.gd` - Needs state machine implementation~~ ✅ Complete rewrite with 10-state machine
+- ~~`scripts/staff/cleaner_ai.gd` - Needs state machine implementation~~ ✅ Complete rewrite with 8-state machine
 
 ---
 
