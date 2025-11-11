@@ -313,18 +313,21 @@ func _on_phase_changed(new_phase: int) -> void:
 func _activate_bakers() -> void:
 	"""Activate all hired bakers"""
 	var bakers: Array = get_staff_by_role(StaffRole.BAKER)
+	print("[StaffManager] Found ", bakers.size(), " bakers to activate")
 	for baker_data in bakers:
 		_create_and_activate_ai(baker_data, "baker")
 
 func _activate_cashiers() -> void:
 	"""Activate all hired cashiers"""
 	var cashiers: Array = get_staff_by_role(StaffRole.CASHIER)
+	print("[StaffManager] Found ", cashiers.size(), " cashiers to activate")
 	for cashier_data in cashiers:
 		_create_and_activate_ai(cashier_data, "cashier")
 
 func _activate_cleaners() -> void:
 	"""Activate all hired cleaners"""
 	var cleaners: Array = get_staff_by_role(StaffRole.CLEANER)
+	print("[StaffManager] Found ", cleaners.size(), " cleaners to activate")
 	for cleaner_data in cleaners:
 		_create_and_activate_ai(cleaner_data, "cleaner")
 

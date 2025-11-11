@@ -43,6 +43,7 @@ var current_state: State = State.ENTERING
 var current_mood: Mood = Mood.NEUTRAL
 var _last_logged_mood: Mood = Mood.NEUTRAL  # Track mood changes for logging
 var customer_type: CustomerType = CustomerType.LOCAL  # Default type
+var ai_enabled: bool = true  # Can be disabled when using customer model for staff
 
 # Movement
 var move_speed: float = 3.0
@@ -168,6 +169,10 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 	return null
 
 func _process(delta: float) -> void:
+	# Skip AI logic if disabled (used for staff characters)
+	if not ai_enabled:
+		return
+
 	# Update state machine (AI logic in _process, not _physics_process)
 	match current_state:
 		State.BROWSING:
@@ -183,6 +188,10 @@ func _process(delta: float) -> void:
 	_update_mood()
 
 func _physics_process(delta: float) -> void:
+	# Skip AI movement if disabled (used for staff characters)
+	if not ai_enabled:
+		return
+
 	# Only handle movement and navigation in physics process
 	match current_state:
 		State.ENTERING:
@@ -205,6 +214,14 @@ func initialize(entrance: Vector3, display: Vector3, register: Vector3, exit: Ve
 	set_target_position(display_position)
 	current_state = State.ENTERING
 	print(customer_id, ": Initialized, heading to display case")
+
+func set_customer_ai_enabled(enabled: bool) -> void:
+	"""Enable or disable customer AI (used when reusing model for staff)"""
+	ai_enabled = enabled
+	if not enabled:
+		# Stop navigation when disabled
+		if navigation_agent:
+			navigation_agent.set_velocity(Vector3.ZERO)
 
 func set_target_position(target: Vector3) -> void:
 	"""Set navigation target"""
