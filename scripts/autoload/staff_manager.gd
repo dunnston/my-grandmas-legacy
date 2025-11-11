@@ -536,10 +536,10 @@ func _process_staff_walking_to_station(delta: float) -> void:
 
 		# Check if arrived (within 0.5 meters)
 		if distance < 0.5:
-			# Pause walking animation (freeze at current frame like customers do)
+			# Stop walking animation completely (not pause - stop!)
 			var anim_player: AnimationPlayer = _find_animation_player(character)
-			if anim_player and anim_player.is_playing():
-				anim_player.pause()
+			if anim_player:
+				anim_player.stop()
 
 			# Rotate to face forward (toward bakery interior)
 			character.rotation.y = 0
