@@ -255,11 +255,11 @@ func apply_campaign_effects(campaign: Dictionary) -> void:
 	"""Apply the effects of a campaign"""
 	var effects: Dictionary = campaign.get("effects", {})
 
-	# Traffic multiplier
+	# Traffic multiplier - update CustomerManager with total boost from all campaigns
 	if effects.has("traffic_multiplier") and CustomerManager:
-		var multiplier: float = effects["traffic_multiplier"]
-		CustomerManager.add_traffic_modifier("marketing_" + campaign["id"], multiplier)
-		traffic_boost_applied.emit(multiplier)
+		var total_boost: float = get_total_traffic_boost()
+		CustomerManager.set_traffic_modifier(total_boost)
+		traffic_boost_applied.emit(total_boost)
 
 	# One-time reputation gain
 	if effects.has("brand_recognition") and ProgressionManager:
@@ -298,9 +298,10 @@ func remove_campaign_effects(campaign: Dictionary) -> void:
 	"""Remove the effects of an expired campaign"""
 	var effects: Dictionary = campaign.get("effects", {})
 
-	# Remove traffic multiplier
+	# Update traffic multiplier to reflect remaining campaigns
 	if effects.has("traffic_multiplier") and CustomerManager:
-		CustomerManager.remove_traffic_modifier("marketing_" + campaign["id"])
+		var total_boost: float = get_total_traffic_boost()
+		CustomerManager.set_traffic_modifier(total_boost)
 
 func end_campaign(campaign_id: String) -> bool:
 	"""Manually end a campaign (for permanent ones)"""
