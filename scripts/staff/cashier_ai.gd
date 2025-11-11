@@ -70,8 +70,8 @@ func activate() -> void:
 	if character and nav_agent:
 		nav_agent.target_position = character.global_position
 
-	# Stop any walking animation
-	_set_animation("idle", false)
+	# Stop walking animation - pause at current frame
+	_set_animation("walk", false)
 
 func deactivate() -> void:
 	"""Deactivate the cashier AI"""
@@ -144,7 +144,7 @@ func _get_all_children(node: Node) -> Array:
 func _state_idle() -> void:
 	"""Idle at register, checking for customers"""
 	# Stop movement and animation when idle
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	# Make sure navigation is stopped
 	if nav_agent:
@@ -174,7 +174,7 @@ func _state_walking_to_display(delta: float) -> void:
 
 func _state_gathering_items(delta: float) -> void:
 	"""Standing at display case gathering items"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -202,7 +202,7 @@ func _state_walking_to_register(delta: float) -> void:
 
 func _state_checking_out(delta: float) -> void:
 	"""Processing payment at register"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	if not current_customer or not GameManager:
 		_complete_checkout()
@@ -307,5 +307,6 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 		if anim_player.current_animation != anim_name:
 			anim_player.play(anim_name)
 	elif not playing:
+		# Pause animation (freezes at current frame)
 		if anim_player.is_playing():
-			anim_player.stop()
+			anim_player.pause()

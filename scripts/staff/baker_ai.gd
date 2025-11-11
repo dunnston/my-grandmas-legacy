@@ -77,8 +77,8 @@ func activate() -> void:
 	if character and nav_agent:
 		nav_agent.target_position = character.global_position
 
-	# Stop any walking animation
-	_set_animation("idle", false)
+	# Stop walking animation - pause at current frame
+	_set_animation("walk", false)
 
 func deactivate() -> void:
 	"""Deactivate the baker AI"""
@@ -170,8 +170,8 @@ func _get_all_children(node: Node) -> Array:
 
 func _state_idle() -> void:
 	"""Idle, checking for work"""
-	# Stop movement and animation when idle
-	_set_animation("idle", false)
+	# Stop movement and pause animation
+	_set_animation("walk", false)
 
 	# Make sure navigation is stopped
 	if nav_agent and character:
@@ -200,7 +200,7 @@ func _state_walking_to_storage(delta: float) -> void:
 
 func _state_gathering_ingredients(delta: float) -> void:
 	"""Gathering ingredients from storage"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -227,7 +227,7 @@ func _state_walking_to_mixer(delta: float) -> void:
 
 func _state_mixing(delta: float) -> void:
 	"""Mixing ingredients"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -257,7 +257,7 @@ func _state_walking_to_oven_load(delta: float) -> void:
 
 func _state_loading_oven(delta: float) -> void:
 	"""Loading dough into oven"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -285,7 +285,7 @@ func _state_walking_to_oven_collect(delta: float) -> void:
 
 func _state_collecting_from_oven(delta: float) -> void:
 	"""Collecting baked goods from oven"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -523,5 +523,6 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 		if anim_player.current_animation != anim_name:
 			anim_player.play(anim_name)
 	elif not playing:
+		# Pause animation (freezes at current frame)
 		if anim_player.is_playing():
-			anim_player.stop()
+			anim_player.pause()

@@ -49,6 +49,10 @@ func _ready() -> void:
 			exit_marker.global_position
 		)
 		print("Customer navigation targets configured")
+
+		# Set up StaffManager entrance position (staff spawn at same place as customers)
+		StaffManager.set_entrance_position(entrance_marker.global_position)
+		print("Staff entrance position configured")
 	else:
 		push_warning("Some navigation markers are missing!")
 

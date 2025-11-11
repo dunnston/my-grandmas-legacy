@@ -29,6 +29,10 @@ var active_ai_workers: Dictionary = {}  # staff_id -> AI instance
 # Visual character instances
 var staff_characters: Dictionary = {}  # staff_id -> Node3D character
 
+# Staff spawning and navigation
+var entrance_position: Vector3 = Vector3(-8, 0, -4)  # Default entrance (same as customers)
+var staff_walking_to_station: Dictionary = {}  # staff_id -> { character, target_pos, ai_type, staff_data }
+
 # Customer scene for visual representation (reusing customer models)
 var customer_scene: PackedScene = preload("res://scenes/customer/customer.tscn")
 
@@ -64,8 +68,17 @@ func _load_balance_config() -> void:
 	skill_speed_multipliers = BalanceConfig.STAFF.skill_speed_multipliers.duplicate()
 	skill_quality_multipliers = BalanceConfig.STAFF.skill_quality_multipliers.duplicate()
 
+func set_entrance_position(position: Vector3) -> void:
+	"""Set the entrance position where staff will spawn (called by bakery scene)"""
+	entrance_position = position
+	print("[StaffManager] Entrance position set to: ", position)
+
 func _process(delta: float) -> void:
-	"""Process all active AI workers"""
+	"""Process all active AI workers and staff walking to stations"""
+	# Update staff walking to their stations
+	_process_staff_walking_to_station(delta)
+
+	# Process active AI workers
 	for staff_id in active_ai_workers.keys():
 		var ai_worker = active_ai_workers[staff_id]
 		if ai_worker and ai_worker.has_method("process"):
@@ -346,39 +359,13 @@ func _activate_cleaners() -> void:
 		_create_and_activate_ai(cleaner_data, "cleaner")
 
 func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
-	"""Create and activate an AI worker instance"""
+	"""Create and activate an AI worker instance - spawns at entrance and walks to station"""
 	var staff_id: String = staff_data.id
 
-	# Spawn visual character
+	# Spawn visual character at entrance (will walk to station, then AI activates)
 	_spawn_staff_character(staff_data, ai_type)
 
-	# Get the character reference
-	var character: Node3D = staff_characters.get(staff_id)
-
-	# Load the appropriate AI class
-	var ai_instance = null
-	match ai_type:
-		"baker":
-			var BakerAI = load("res://scripts/staff/baker_ai.gd")
-			ai_instance = BakerAI.new(staff_id, staff_data)
-		"cashier":
-			var CashierAI = load("res://scripts/staff/cashier_ai.gd")
-			ai_instance = CashierAI.new(staff_id, staff_data)
-		"cleaner":
-			var CleanerAI = load("res://scripts/staff/cleaner_ai.gd")
-			ai_instance = CleanerAI.new(staff_id, staff_data)
-
-	if ai_instance:
-		# Add AI to scene tree so it can access get_tree()
-		add_child(ai_instance)
-		active_ai_workers[staff_id] = ai_instance
-
-		# Give AI control of the visual character
-		if ai_instance.has_method("set_character") and character:
-			ai_instance.set_character(character)
-
-		ai_instance.activate()
-		print("[StaffManager] AI worker added to scene tree: ", staff_data.name)
+	# Note: AI activation happens in _activate_staff_ai() after character reaches station
 
 func _deactivate_all_ai() -> void:
 	"""Deactivate and cleanup all AI workers"""
@@ -396,6 +383,9 @@ func _deactivate_all_ai() -> void:
 		_remove_staff_character(staff_id)
 
 	active_ai_workers.clear()
+
+	# Clear any staff still walking to their stations
+	staff_walking_to_station.clear()
 
 # ============================================================================
 # SAVE/LOAD
@@ -452,7 +442,7 @@ func get_role_description(role: StaffRole) -> String:
 # ============================================================================
 
 func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
-	"""Spawn a visual character for this staff member"""
+	"""Spawn a visual character for this staff member at entrance, then walk to station"""
 	var staff_id: String = staff_data.id
 
 	# Get the bakery scene
@@ -466,13 +456,8 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	character.name = "Staff_" + staff_data.name
 	bakery.add_child(character)
 
-	# Position based on role
-	var spawn_result: Dictionary = _get_staff_spawn_position(ai_type, bakery)
-	character.global_position = spawn_result.position
-
-	# Set rotation to face workstation
-	if spawn_result.has("rotation_y"):
-		character.rotation.y = spawn_result.rotation_y
+	# Spawn at entrance position (same as customers)
+	character.global_position = entrance_position
 
 	# Disable customer AI behaviors (but keep NavigationAgent3D available)
 	if character.has_method("set_customer_ai_enabled"):
@@ -484,7 +469,131 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	# Store reference
 	staff_characters[staff_id] = character
 
-	print("[StaffManager] Spawned visual character for ", staff_data.name, " at ", spawn_result.position)
+	# Get target station position
+	var target_position: Vector3 = _get_staff_target_position(ai_type, bakery)
+
+	# Start walking animation
+	_play_character_animation(character, "walk")
+
+	# Begin navigation to station
+	staff_walking_to_station[staff_id] = {
+		"character": character,
+		"target_position": target_position,
+		"ai_type": ai_type,
+		"staff_data": staff_data
+	}
+
+	print("[StaffManager] Spawned ", staff_data.name, " at entrance ", entrance_position, " - walking to station at ", target_position)
+
+func _get_staff_target_position(ai_type: String, bakery: Node) -> Vector3:
+	"""Get the target position for a staff member based on their role"""
+	# Try to find StaffTarget markers
+	var targets = _find_staff_targets(bakery, ai_type)
+
+	match ai_type:
+		"baker":
+			# Target: storage
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and ("storage" in str(target_name).to_lower() or "cabinet" in str(target_name).to_lower()):
+					return target.global_position
+			return Vector3(2, 0, -2)  # Fallback
+
+		"cashier":
+			# Target: register
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and "register" in str(target_name).to_lower():
+					return target.global_position
+			return Vector3(7, 0, 3)  # Fallback
+
+		"cleaner":
+			# Target: sink
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and "sink" in str(target_name).to_lower():
+					return target.global_position
+			return Vector3(-2, 0, 2)  # Fallback
+
+	return Vector3.ZERO
+
+func _process_staff_walking_to_station(delta: float) -> void:
+	"""Process staff members walking from entrance to their stations"""
+	var arrived_staff: Array = []
+
+	for staff_id in staff_walking_to_station.keys():
+		var walk_data: Dictionary = staff_walking_to_station[staff_id]
+		var character: Node3D = walk_data.character
+		var target_position: Vector3 = walk_data.target_position
+
+		if not is_instance_valid(character):
+			arrived_staff.append(staff_id)
+			continue
+
+		# Calculate direction to target
+		var direction: Vector3 = (target_position - character.global_position)
+		var distance: float = direction.length()
+
+		# Check if arrived (within 0.5 meters)
+		if distance < 0.5:
+			# Pause walking animation (freeze at current frame like customers do)
+			var anim_player: AnimationPlayer = _find_animation_player(character)
+			if anim_player and anim_player.is_playing():
+				anim_player.pause()
+
+			# Rotate to face forward (toward bakery interior)
+			character.rotation.y = 0
+
+			# Mark as arrived
+			arrived_staff.append(staff_id)
+			print("[StaffManager] ", character.name, " arrived at station")
+			continue
+
+		# Move toward target
+		direction = direction.normalized()
+		var move_speed: float = 3.0  # Same speed as customers
+		character.global_position += direction * move_speed * delta
+
+		# Rotate to face movement direction
+		if direction.length_squared() > 0.001:
+			var target_rotation = atan2(direction.x, direction.z)
+			character.rotation.y = lerp_angle(character.rotation.y, target_rotation, 10.0 * delta)
+
+	# Activate AI for staff that arrived at their stations
+	for staff_id in arrived_staff:
+		var walk_data: Dictionary = staff_walking_to_station[staff_id]
+		_activate_staff_ai(walk_data.staff_data, walk_data.ai_type, staff_id)
+		staff_walking_to_station.erase(staff_id)
+
+func _activate_staff_ai(staff_data: Dictionary, ai_type: String, staff_id: String) -> void:
+	"""Activate AI for a staff member who has reached their station"""
+	# Get the character reference
+	var character: Node3D = staff_characters.get(staff_id)
+
+	# Load the appropriate AI class
+	var ai_instance = null
+	match ai_type:
+		"baker":
+			var BakerAI = load("res://scripts/staff/baker_ai.gd")
+			ai_instance = BakerAI.new(staff_id, staff_data)
+		"cashier":
+			var CashierAI = load("res://scripts/staff/cashier_ai.gd")
+			ai_instance = CashierAI.new(staff_id, staff_data)
+		"cleaner":
+			var CleanerAI = load("res://scripts/staff/cleaner_ai.gd")
+			ai_instance = CleanerAI.new(staff_id, staff_data)
+
+	if ai_instance:
+		# Add AI to scene tree so it can access get_tree()
+		add_child(ai_instance)
+		active_ai_workers[staff_id] = ai_instance
+
+		# Give AI control of the visual character
+		if ai_instance.has_method("set_character") and character:
+			ai_instance.set_character(character)
+
+		ai_instance.activate()
+		print("[StaffManager] AI activated for ", staff_data.name, " at their station")
 
 func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Dictionary:
 	"""Get the spawn position and rotation for a staff member based on their role"""
@@ -546,22 +655,32 @@ func _find_node_by_name(root: Node, search_name: String) -> Node:
 			return found
 	return null
 
-func _stop_character_animation(character: Node3D) -> void:
-	"""Stop walking animation and set to idle pose"""
-	# Find the AnimationPlayer node
-	var anim_player: AnimationPlayer = null
-	for child in character.get_children():
-		if child is AnimationPlayer:
-			anim_player = child
-			break
+func _play_character_animation(character: Node3D, anim_name: String) -> void:
+	"""Play an animation on the staff character"""
+	# Find the AnimationPlayer node (it's in the CustomerModel child)
+	var anim_player: AnimationPlayer = _find_animation_player(character)
 
 	if anim_player:
-		# Stop current animation and pause
-		if anim_player.is_playing():
-			anim_player.stop()
-		# Optionally play an idle animation if it exists
-		if anim_player.has_animation("idle"):
-			anim_player.play("idle")
+		if anim_player.has_animation(anim_name):
+			if anim_player.current_animation != anim_name:
+				anim_player.play(anim_name)
+		else:
+			print("[StaffManager] Animation '", anim_name, "' not found")
+
+func _find_animation_player(character: Node3D) -> AnimationPlayer:
+	"""Recursively find AnimationPlayer in character"""
+	for child in character.get_children():
+		if child is AnimationPlayer:
+			return child
+		# Check child's children (customer models are nested)
+		var found = _find_animation_player(child)
+		if found:
+			return found
+	return null
+
+func _stop_character_animation(character: Node3D) -> void:
+	"""Stop walking animation and set to idle pose"""
+	_play_character_animation(character, "idle")
 
 func _add_staff_name_label(character: Node3D, staff_name: String, ai_type: String) -> void:
 	"""Add a name label above the staff character"""

@@ -83,8 +83,8 @@ func activate() -> void:
 	if character and nav_agent:
 		nav_agent.target_position = character.global_position
 
-	# Stop any walking animation
-	_set_animation("idle", false)
+	# Stop walking animation - pause at current frame
+	_set_animation("walk", false)
 
 func deactivate() -> void:
 	"""Deactivate the cleaner AI"""
@@ -169,7 +169,7 @@ func _get_all_children(node: Node) -> Array:
 func _state_idle() -> void:
 	"""Idle, checking for cleanup work"""
 	# Stop movement and animation when idle
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	# Make sure navigation is stopped
 	if nav_agent and character:
@@ -197,7 +197,7 @@ func _state_walking_to_sink(delta: float) -> void:
 
 func _state_washing_dishes(delta: float) -> void:
 	"""Washing dishes at sink"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -225,7 +225,7 @@ func _state_walking_to_trash(delta: float) -> void:
 
 func _state_emptying_trash(delta: float) -> void:
 	"""Emptying trash can"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -253,7 +253,7 @@ func _state_walking_to_counter(delta: float) -> void:
 
 func _state_wiping_counter(delta: float) -> void:
 	"""Wiping down counter"""
-	_set_animation("idle", false)
+	_set_animation("walk", false)
 
 	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
@@ -477,5 +477,6 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 		if anim_player.current_animation != anim_name:
 			anim_player.play(anim_name)
 	elif not playing:
+		# Pause animation (freezes at current frame)
 		if anim_player.is_playing():
-			anim_player.stop()
+			anim_player.pause()
