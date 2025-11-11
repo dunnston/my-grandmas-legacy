@@ -174,9 +174,7 @@ func _get_all_children(node: Node) -> Array:
 
 func _state_idle() -> void:
 	"""Idle, checking for work"""
-	# Stop movement and pause animation
-	_set_animation("walk", false)
-
+	# Animation already stopped in activate() or after completing tasks
 	# Make sure navigation is stopped
 	if nav_agent and character:
 		nav_agent.target_position = character.global_position

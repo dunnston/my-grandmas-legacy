@@ -147,9 +147,7 @@ func _get_all_children(node: Node) -> Array:
 
 func _state_idle() -> void:
 	"""Idle at register, checking for customers"""
-	# Stop movement and animation when idle
-	_set_animation("walk", false)
-
+	# Animation already stopped in activate() or after completing tasks
 	# Make sure navigation is stopped
 	if nav_agent:
 		nav_agent.target_position = character.global_position if character else Vector3.ZERO
