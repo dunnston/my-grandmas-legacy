@@ -661,25 +661,34 @@ func _play_character_animation(character: Node3D, anim_name: String) -> void:
 	# Find the AnimationPlayer node (it's in the CustomerModel child)
 	var anim_player: AnimationPlayer = _find_animation_player(character)
 
-	if anim_player:
+	if anim_player and anim_player is AnimationPlayer:
+		# Make sure AnimationPlayer is active
+		anim_player.active = true
+		anim_player.process_mode = Node.PROCESS_MODE_INHERIT
+
+		# Get the first animation (same approach as customers)
 		var anims = anim_player.get_animation_list()
 		print("[StaffManager] Available animations: ", anims)
 
-		# Try to find a walking animation
-		var walk_anim = ""
-		for anim in anims:
-			var anim_lower = anim.to_lower()
-			if "walk" in anim_lower:
-				walk_anim = anim
-				break
+		if anims.size() > 0:
+			var anim = anims[0]
 
-		if walk_anim != "":
-			print("[StaffManager] Playing walk animation: ", walk_anim)
-			anim_player.play(walk_anim)
+			# Get the animation library and set loop mode
+			var anim_lib = anim_player.get_animation_library("")
+			if anim_lib and anim_lib.has_animation(anim):
+				var animation = anim_lib.get_animation(anim)
+				if animation:
+					animation.loop_mode = Animation.LOOP_LINEAR
+
+			# Play the animation immediately
+			anim_player.play(anim)
+
+			# Force update to ensure animation starts
+			anim_player.advance(0.0)
+
+			print("[StaffManager] Playing animation: ", anim)
 		else:
-			print("[StaffManager] No walk animation found, playing first: ", anims[0] if anims.size() > 0 else "none")
-			if anims.size() > 0:
-				anim_player.play(anims[0])
+			print("[StaffManager] No animations found!")
 	else:
 		print("[StaffManager] No AnimationPlayer found!")
 
