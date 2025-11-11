@@ -1,7 +1,7 @@
 extends Node
 
-# CleanerAI - Automates cleanup tasks during Cleanup Phase
-# Cleaners automatically handle washing, sweeping, wiping, trash, equipment checks
+# CleanerAI - Automates cleanup tasks during Cleanup Phase with realistic movement
+# Cleaners walk between stations: sink, trash, counters
 
 class_name CleanerAI
 
@@ -9,18 +9,41 @@ class_name CleanerAI
 var staff_data: Dictionary
 var staff_id: String
 
-# State
+# State machine
+enum CleanerState {
+	IDLE,                # Standing, checking for cleanup tasks
+	WALKING_TO_SINK,     # Walking to sink to wash dishes
+	WASHING_DISHES,      # At sink washing dishes
+	WALKING_TO_TRASH,    # Walking to trash can
+	EMPTYING_TRASH,      # At trash can emptying it
+	WALKING_TO_COUNTER,  # Walking to dirty counter
+	WIPING_COUNTER,      # At counter wiping it down
+	WALKING_TO_EQUIPMENT # Walking to equipment for inspection
+}
+
 var is_active: bool = false
-var current_task: Dictionary = {}
-var task_timer: float = 0.0
+var current_state: CleanerState = CleanerState.IDLE
+var state_timer: float = 0.0
 var tasks_completed: int = 0
 
-# AI behavior settings (loaded from BalanceConfig)
-var check_interval: float = 0.0  # Check for new tasks (loaded from config)
-var next_check_time: float = 0.0
+# Current task target
+var target_station: Node3D = null
+var current_task_type: String = ""
 
-# Cleanup equipment references
-var cleanup_stations: Array = []  # Sinks, trash cans, counter wipes, equipment checks
+# AI behavior settings
+var check_interval: float = 0.0
+var next_check_time: float = 0.0
+var action_time: float = 3.0  # Time to perform cleanup actions
+
+# Cleanup station references
+var sinks: Array = []
+var trash_cans: Array = []
+var counters: Array = []
+var equipment_stations: Array = []
+
+# Visual character reference
+var character: Node3D = null
+var nav_agent: NavigationAgent3D = null
 
 # Task priorities (higher = more important)
 const TASK_PRIORITIES = {
@@ -34,11 +57,24 @@ func _init(p_staff_id: String, p_staff_data: Dictionary) -> void:
 	staff_id = p_staff_id
 	staff_data = p_staff_data
 
+func set_character(p_character: Node3D) -> void:
+	"""Set the visual character this AI controls"""
+	character = p_character
+	if character:
+		for child in character.get_children():
+			if child is NavigationAgent3D:
+				nav_agent = child
+				nav_agent.path_desired_distance = 0.5
+				nav_agent.target_desired_distance = 0.5
+				nav_agent.avoidance_enabled = true
+				break
+
 func activate() -> void:
 	"""Activate the cleaner AI for this phase"""
 	is_active = true
 	tasks_completed = 0
 	next_check_time = 0.0
+	current_state = CleanerState.IDLE
 	check_interval = BalanceConfig.STAFF.cleaner_check_interval
 	print("[CleanerAI] ", staff_data.name, " is now cleaning!")
 	_find_cleanup_stations()
@@ -46,40 +82,58 @@ func activate() -> void:
 func deactivate() -> void:
 	"""Deactivate the cleaner AI"""
 	is_active = false
-	current_task.clear()
+	current_state = CleanerState.IDLE
 	print("[CleanerAI] ", staff_data.name, " finished cleaning. Tasks completed: ", tasks_completed)
 
 func process(delta: float) -> void:
 	"""Process AI logic each frame during Cleanup Phase"""
-	if not is_active:
+	if not is_active or not character:
 		return
 
-	# If we have a current task, work on it
-	if not current_task.is_empty():
-		_process_current_task(delta)
-		return
-
-	# Check for new tasks periodically
-	if Time.get_ticks_msec() / 1000.0 >= next_check_time:
-		_check_for_tasks()
-		next_check_time = Time.get_ticks_msec() / 1000.0 + check_interval
+	# State machine
+	match current_state:
+		CleanerState.IDLE:
+			_state_idle()
+		CleanerState.WALKING_TO_SINK:
+			_state_walking_to_sink(delta)
+		CleanerState.WASHING_DISHES:
+			_state_washing_dishes(delta)
+		CleanerState.WALKING_TO_TRASH:
+			_state_walking_to_trash(delta)
+		CleanerState.EMPTYING_TRASH:
+			_state_emptying_trash(delta)
+		CleanerState.WALKING_TO_COUNTER:
+			_state_walking_to_counter(delta)
+		CleanerState.WIPING_COUNTER:
+			_state_wiping_counter(delta)
+		CleanerState.WALKING_TO_EQUIPMENT:
+			_state_walking_to_equipment(delta)
 
 func _find_cleanup_stations() -> void:
-	"""Find cleanup stations in the bakery"""
-	cleanup_stations.clear()
+	"""Find all cleanup stations in the bakery"""
+	sinks.clear()
+	trash_cans.clear()
+	counters.clear()
+	equipment_stations.clear()
 
 	var bakery = get_tree().current_scene
 	if not bakery:
 		return
 
-	# Find all cleanup-related objects
+	# Find cleanup stations
 	for child in _get_all_children(bakery):
-		var child_name: String = child.name.to_lower()
-		if "sink" in child_name or "trash" in child_name or \
-		   "counter" in child_name or "equipment_check" in child_name:
-			cleanup_stations.append(child)
+		var child_name = child.name.to_lower()
+		if "sink" in child_name:
+			sinks.append(child)
+		elif "trash" in child_name or "bin" in child_name:
+			trash_cans.append(child)
+		elif "counter" in child_name or "table" in child_name:
+			counters.append(child)
+		elif "oven" in child_name or "mixer" in child_name or "display" in child_name:
+			equipment_stations.append(child)
 
-	print("[CleanerAI] Found ", cleanup_stations.size(), " cleanup stations")
+	print("[CleanerAI] Found ", sinks.size(), " sinks, ", trash_cans.size(), " trash cans")
+	print("[CleanerAI] Found ", counters.size(), " counters, ", equipment_stations.size(), " equipment")
 
 func _get_all_children(node: Node) -> Array:
 	"""Recursively get all children of a node"""
@@ -89,95 +143,296 @@ func _get_all_children(node: Node) -> Array:
 		result.append_array(_get_all_children(child))
 	return result
 
-func _check_for_tasks() -> void:
-	"""Check for cleanup tasks, prioritized"""
-	var available_tasks: Array = []
+# ============================================================================
+# STATE MACHINE
+# ============================================================================
 
-	# Check each cleanup station
-	for station in cleanup_stations:
-		if not station.has_method("needs_cleaning"):
-			continue
+func _state_idle() -> void:
+	"""Idle, checking for cleanup work"""
+	_set_animation("idle", false)
 
-		if station.needs_cleaning():
-			var station_type: String = _get_station_type(station)
-			var priority: int = TASK_PRIORITIES.get(station_type, 1)
+	# Check periodically for tasks
+	if Time.get_ticks_msec() / 1000.0 >= next_check_time:
+		_check_for_tasks()
+		next_check_time = Time.get_ticks_msec() / 1000.0 + check_interval
 
-			available_tasks.append({
-				"station": station,
-				"type": station_type,
-				"priority": priority
-			})
-
-	if available_tasks.is_empty():
-		# print("[CleanerAI] ", staff_data.name, " is idle - everything is clean!")
+func _state_walking_to_sink(delta: float) -> void:
+	"""Walking to sink"""
+	if not target_station:
+		current_state = CleanerState.IDLE
 		return
 
-	# Sort by priority (highest first)
-	available_tasks.sort_custom(func(a, b): return a.priority > b.priority)
+	_navigate_towards(target_station.global_position, delta)
+	_set_animation("walk", true)
 
-	# Start the highest priority task
-	var best_task = available_tasks[0]
-	_start_task(best_task)
+	if _is_at_position(target_station.global_position):
+		print("[CleanerAI] ", staff_data.name, " reached sink")
+		current_state = CleanerState.WASHING_DISHES
+		state_timer = 0.0
 
-func _get_station_type(station: Node) -> String:
-	"""Determine the type of cleanup station"""
-	var name: String = station.name.to_lower()
-	if "trash" in name:
-		return "trash"
-	elif "equipment" in name:
-		return "equipment_check"
-	elif "sink" in name:
-		return "sink"
-	elif "counter" in name or "wipe" in name:
-		return "counter_wipe"
-	return "unknown"
+func _state_washing_dishes(delta: float) -> void:
+	"""Washing dishes at sink"""
+	_set_animation("idle", false)
 
-func _start_task(task_data: Dictionary) -> void:
-	"""Start a cleanup task"""
-	var station = task_data.station
-	var task_type: String = task_data.type
-
-	# Get base duration from station
-	var base_duration: float = 10.0
-	if station.has_method("get_cleanup_duration"):
-		base_duration = station.get_cleanup_duration()
-
-	current_task = {
-		"station": station,
-		"type": task_type,
-		"duration": base_duration
-	}
-	task_timer = 0.0
-
-	print("[CleanerAI] ", staff_data.name, " cleaning ", task_type, "...")
-
-func _process_current_task(delta: float) -> void:
-	"""Process the current cleanup task"""
-	if not GameManager:
-		return
-
-	# Apply time scale and staff speed multiplier
-	var time_mult: float = GameManager.get_time_scale()
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
 	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
-	task_timer += delta * time_mult * speed_mult
+	state_timer += delta * time_mult * speed_mult
 
-	# Calculate actual duration (faster staff = faster cleaning)
-	var actual_duration: float = current_task.duration / speed_mult
-
-	if task_timer >= actual_duration:
-		_complete_current_task()
-
-func _complete_current_task() -> void:
-	"""Complete the current cleanup task"""
-	var station = current_task.station
-
-	if station and station.has_method("auto_clean"):
-		# Apply quality multiplier from staff skill (affects thoroughness)
-		var quality_mult: float = StaffManager.get_staff_quality_multiplier(staff_id)
-		station.auto_clean(quality_mult)
-
-		print("[CleanerAI] ", staff_data.name, " completed ", current_task.type, " (quality: ", int(quality_mult * 100), "%)")
+	if state_timer >= action_time / speed_mult:
+		_complete_sink_task()
+		current_state = CleanerState.IDLE
 		tasks_completed += 1
 
-	current_task.clear()
-	task_timer = 0.0
+func _state_walking_to_trash(delta: float) -> void:
+	"""Walking to trash can"""
+	if not target_station:
+		current_state = CleanerState.IDLE
+		return
+
+	_navigate_towards(target_station.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(target_station.global_position):
+		print("[CleanerAI] ", staff_data.name, " reached trash can")
+		current_state = CleanerState.EMPTYING_TRASH
+		state_timer = 0.0
+
+func _state_emptying_trash(delta: float) -> void:
+	"""Emptying trash can"""
+	_set_animation("idle", false)
+
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	state_timer += delta * time_mult * speed_mult
+
+	if state_timer >= action_time / speed_mult:
+		_complete_trash_task()
+		current_state = CleanerState.IDLE
+		tasks_completed += 1
+
+func _state_walking_to_counter(delta: float) -> void:
+	"""Walking to counter"""
+	if not target_station:
+		current_state = CleanerState.IDLE
+		return
+
+	_navigate_towards(target_station.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(target_station.global_position):
+		print("[CleanerAI] ", staff_data.name, " reached counter")
+		current_state = CleanerState.WIPING_COUNTER
+		state_timer = 0.0
+
+func _state_wiping_counter(delta: float) -> void:
+	"""Wiping down counter"""
+	_set_animation("idle", false)
+
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	state_timer += delta * time_mult * speed_mult
+
+	if state_timer >= action_time / speed_mult:
+		_complete_counter_task()
+		current_state = CleanerState.IDLE
+		tasks_completed += 1
+
+func _state_walking_to_equipment(delta: float) -> void:
+	"""Walking to equipment for inspection"""
+	if not target_station:
+		current_state = CleanerState.IDLE
+		return
+
+	_navigate_towards(target_station.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(target_station.global_position):
+		print("[CleanerAI] ", staff_data.name, " inspecting equipment")
+		# Equipment check is instant
+		_complete_equipment_task()
+		current_state = CleanerState.IDLE
+		tasks_completed += 1
+
+# ============================================================================
+# TASK CHECKING
+# ============================================================================
+
+func _check_for_tasks() -> void:
+	"""Check for cleanup tasks - priority order"""
+	# Priority 1: Empty trash
+	if _try_empty_trash():
+		return
+
+	# Priority 2: Wash dishes
+	if _try_wash_dishes():
+		return
+
+	# Priority 3: Wipe counters
+	if _try_wipe_counter():
+		return
+
+	# Priority 4: Check equipment (always available)
+	if _try_check_equipment():
+		return
+
+func _try_wash_dishes() -> bool:
+	"""Try to wash dishes at sink"""
+	if sinks.is_empty():
+		return false
+
+	# Check if sink has dirty dishes
+	for sink in sinks:
+		if sink.has_method("needs_cleaning") and sink.needs_cleaning():
+			target_station = sink
+			current_task_type = "sink"
+			current_state = CleanerState.WALKING_TO_SINK
+			print("[CleanerAI] ", staff_data.name, " going to wash dishes")
+			return true
+
+	# If no method, just pick first sink periodically
+	if randf() < 0.3:  # 30% chance to clean sink anyway
+		target_station = sinks[0]
+		current_task_type = "sink"
+		current_state = CleanerState.WALKING_TO_SINK
+		print("[CleanerAI] ", staff_data.name, " going to clean sink")
+		return true
+
+	return false
+
+func _try_empty_trash() -> bool:
+	"""Try to empty trash cans"""
+	if trash_cans.is_empty():
+		return false
+
+	# Check if trash needs emptying
+	for trash in trash_cans:
+		if trash.has_method("needs_emptying") and trash.needs_emptying():
+			target_station = trash
+			current_task_type = "trash"
+			current_state = CleanerState.WALKING_TO_TRASH
+			print("[CleanerAI] ", staff_data.name, " going to empty trash")
+			return true
+
+	# Periodically empty trash anyway
+	if randf() < 0.2:  # 20% chance
+		target_station = trash_cans[0]
+		current_task_type = "trash"
+		current_state = CleanerState.WALKING_TO_TRASH
+		print("[CleanerAI] ", staff_data.name, " going to empty trash")
+		return true
+
+	return false
+
+func _try_wipe_counter() -> bool:
+	"""Try to wipe down counters"""
+	if counters.is_empty():
+		return false
+
+	# Periodically wipe counters
+	if randf() < 0.4:  # 40% chance
+		target_station = counters[randi() % counters.size()]
+		current_task_type = "counter_wipe"
+		current_state = CleanerState.WALKING_TO_COUNTER
+		print("[CleanerAI] ", staff_data.name, " going to wipe counter")
+		return true
+
+	return false
+
+func _try_check_equipment() -> bool:
+	"""Try to inspect equipment"""
+	if equipment_stations.is_empty():
+		return false
+
+	# Periodically check equipment
+	if randf() < 0.3:  # 30% chance
+		target_station = equipment_stations[randi() % equipment_stations.size()]
+		current_task_type = "equipment_check"
+		current_state = CleanerState.WALKING_TO_EQUIPMENT
+		print("[CleanerAI] ", staff_data.name, " going to check equipment")
+		return true
+
+	return false
+
+# ============================================================================
+# TASK COMPLETION
+# ============================================================================
+
+func _complete_sink_task() -> void:
+	"""Complete washing dishes"""
+	if target_station and target_station.has_method("auto_clean"):
+		target_station.auto_clean()
+	print("[CleanerAI] ", staff_data.name, " finished washing dishes")
+	target_station = null
+
+func _complete_trash_task() -> void:
+	"""Complete emptying trash"""
+	if target_station and target_station.has_method("auto_empty"):
+		target_station.auto_empty()
+	print("[CleanerAI] ", staff_data.name, " emptied trash")
+	target_station = null
+
+func _complete_counter_task() -> void:
+	"""Complete wiping counter"""
+	if target_station and target_station.has_method("auto_wipe"):
+		target_station.auto_wipe()
+	print("[CleanerAI] ", staff_data.name, " wiped counter")
+	target_station = null
+
+func _complete_equipment_task() -> void:
+	"""Complete equipment check"""
+	if target_station and target_station.has_method("auto_inspect"):
+		target_station.auto_inspect()
+	print("[CleanerAI] ", staff_data.name, " inspected equipment")
+	target_station = null
+
+# ============================================================================
+# MOVEMENT HELPERS
+# ============================================================================
+
+func _navigate_towards(target_pos: Vector3, delta: float) -> void:
+	"""Navigate character towards target position"""
+	if not character or not nav_agent:
+		return
+
+	nav_agent.target_position = target_pos
+
+	if nav_agent.is_navigation_finished():
+		return
+
+	var next_position = nav_agent.get_next_path_position()
+	var direction = (next_position - character.global_position).normalized()
+
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	var move_speed: float = 3.0 * speed_mult
+	character.global_position += direction * move_speed * delta
+
+	if direction.length() > 0.01:
+		var target_rotation = atan2(direction.x, direction.z)
+		character.rotation.y = lerp_angle(character.rotation.y, target_rotation, delta * 10.0)
+
+func _is_at_position(target_pos: Vector3) -> bool:
+	"""Check if character is at target position"""
+	if not character:
+		return true
+	return character.global_position.distance_to(target_pos) < 1.0
+
+func _set_animation(anim_name: String, playing: bool) -> void:
+	"""Set character animation"""
+	if not character:
+		return
+
+	var anim_player: AnimationPlayer = null
+	for child in character.get_children():
+		if child is AnimationPlayer:
+			anim_player = child
+			break
+
+	if not anim_player:
+		return
+
+	if playing and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name)
+	elif not playing:
+		if anim_player.is_playing():
+			anim_player.stop()

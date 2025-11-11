@@ -1,7 +1,7 @@
 extends Node
 
-# BakerAI - Automates baking during Baking Phase
-# Bakers automatically craft recipes based on their skill level
+# BakerAI - Automates baking during Baking Phase with realistic movement
+# Bakers walk between stations: storage -> mixer -> oven -> cooling
 
 class_name BakerAI
 
@@ -9,29 +9,66 @@ class_name BakerAI
 var staff_data: Dictionary
 var staff_id: String
 
-# State
+# State machine
+enum BakerState {
+	IDLE,                    # Standing, checking for work
+	WALKING_TO_STORAGE,      # Walking to get ingredients
+	GATHERING_INGREDIENTS,   # At storage getting ingredients
+	WALKING_TO_MIXER,        # Walking to mixing bowl
+	MIXING,                  # At mixer, mixing ingredients
+	WALKING_TO_OVEN_LOAD,    # Walking to oven with dough
+	LOADING_OVEN,            # Placing dough in oven
+	WALKING_TO_OVEN_COLLECT, # Walking to finished oven
+	COLLECTING_FROM_OVEN,    # Taking baked goods from oven
+	WALKING_TO_STORAGE_DROP  # Walking to storage with finished goods
+}
+
 var is_active: bool = false
-var current_task: Dictionary = {}
-var task_timer: float = 0.0
+var current_state: BakerState = BakerState.IDLE
+var state_timer: float = 0.0
 var tasks_completed: int = 0
 
-# AI behavior settings
-var check_interval: float = 0.0  # Loaded from BalanceConfig
-var next_check_time: float = 0.0
+# Current recipe/task data
+var current_recipe: Dictionary = {}
+var target_equipment: Node3D = null
 
-# Equipment references (found at runtime)
+# AI behavior settings
+var check_interval: float = 0.0
+var next_check_time: float = 0.0
+var action_time: float = 2.0  # Time to perform actions (gathering, mixing, etc.)
+
+# Equipment references
+var ingredient_storage: Node3D = null
 var available_mixing_bowls: Array = []
 var available_ovens: Array = []
+var storage_id: String = "ingredient_storage_IngredientStorage"
+
+# Visual character reference
+var character: Node3D = null
+var nav_agent: NavigationAgent3D = null
 
 func _init(p_staff_id: String, p_staff_data: Dictionary) -> void:
 	staff_id = p_staff_id
 	staff_data = p_staff_data
+
+func set_character(p_character: Node3D) -> void:
+	"""Set the visual character this AI controls"""
+	character = p_character
+	if character:
+		for child in character.get_children():
+			if child is NavigationAgent3D:
+				nav_agent = child
+				nav_agent.path_desired_distance = 0.5
+				nav_agent.target_desired_distance = 0.5
+				nav_agent.avoidance_enabled = true
+				break
 
 func activate() -> void:
 	"""Activate the baker AI for this phase"""
 	is_active = true
 	tasks_completed = 0
 	next_check_time = 0.0
+	current_state = BakerState.IDLE
 	check_interval = BalanceConfig.STAFF.baker_check_interval
 	print("[BakerAI] ", staff_data.name, " is now working!")
 	_find_equipment()
@@ -39,42 +76,59 @@ func activate() -> void:
 func deactivate() -> void:
 	"""Deactivate the baker AI"""
 	is_active = false
-	current_task.clear()
+	current_recipe.clear()
+	current_state = BakerState.IDLE
 	print("[BakerAI] ", staff_data.name, " finished work. Tasks completed: ", tasks_completed)
 
 func process(delta: float) -> void:
 	"""Process AI logic each frame during Baking Phase"""
-	if not is_active:
+	if not is_active or not character:
 		return
 
-	# If we have a current task, work on it
-	if not current_task.is_empty():
-		_process_current_task(delta)
-		return
-
-	# Check for new tasks periodically
-	if Time.get_ticks_msec() / 1000.0 >= next_check_time:
-		_check_for_tasks()
-		next_check_time = Time.get_ticks_msec() / 1000.0 + check_interval
+	# State machine
+	match current_state:
+		BakerState.IDLE:
+			_state_idle()
+		BakerState.WALKING_TO_STORAGE:
+			_state_walking_to_storage(delta)
+		BakerState.GATHERING_INGREDIENTS:
+			_state_gathering_ingredients(delta)
+		BakerState.WALKING_TO_MIXER:
+			_state_walking_to_mixer(delta)
+		BakerState.MIXING:
+			_state_mixing(delta)
+		BakerState.WALKING_TO_OVEN_LOAD:
+			_state_walking_to_oven_load(delta)
+		BakerState.LOADING_OVEN:
+			_state_loading_oven(delta)
+		BakerState.WALKING_TO_OVEN_COLLECT:
+			_state_walking_to_oven_collect(delta)
+		BakerState.COLLECTING_FROM_OVEN:
+			_state_collecting_from_oven(delta)
+		BakerState.WALKING_TO_STORAGE_DROP:
+			_state_walking_to_storage_drop(delta)
 
 func _find_equipment() -> void:
 	"""Find available equipment in the bakery"""
 	available_mixing_bowls.clear()
 	available_ovens.clear()
 
-	# Get the bakery scene
 	var bakery = get_tree().current_scene
 	if not bakery:
 		return
 
-	# Find mixing bowls
+	# Find equipment
 	for child in _get_all_children(bakery):
-		if child.has_method("get_inventory_id"):
-			if "mixing_bowl" in child.name.to_lower():
+		var child_name = child.name.to_lower()
+		if "ingredient_storage" in child_name or "cabinet" in child_name:
+			ingredient_storage = child
+		elif child.has_method("get_inventory_id"):
+			if "mixing_bowl" in child_name:
 				available_mixing_bowls.append(child)
-			elif "oven" in child.name.to_lower():
+			elif "oven" in child_name:
 				available_ovens.append(child)
 
+	print("[BakerAI] Found storage: ", ingredient_storage != null)
 	print("[BakerAI] Found ", available_mixing_bowls.size(), " mixing bowls and ", available_ovens.size(), " ovens")
 
 func _get_all_children(node: Node) -> Array:
@@ -85,184 +139,339 @@ func _get_all_children(node: Node) -> Array:
 		result.append_array(_get_all_children(child))
 	return result
 
+# ============================================================================
+# STATE MACHINE
+# ============================================================================
+
+func _state_idle() -> void:
+	"""Idle, checking for work"""
+	_set_animation("idle", false)
+
+	# Check periodically for tasks
+	if Time.get_ticks_msec() / 1000.0 >= next_check_time:
+		_check_for_tasks()
+		next_check_time = Time.get_ticks_msec() / 1000.0 + check_interval
+
+func _state_walking_to_storage(delta: float) -> void:
+	"""Walking to ingredient storage"""
+	if not ingredient_storage:
+		# Skip to gathering if no storage
+		current_state = BakerState.GATHERING_INGREDIENTS
+		return
+
+	_navigate_towards(ingredient_storage.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(ingredient_storage.global_position):
+		print("[BakerAI] ", staff_data.name, " reached storage")
+		current_state = BakerState.GATHERING_INGREDIENTS
+		state_timer = 0.0
+
+func _state_gathering_ingredients(delta: float) -> void:
+	"""Gathering ingredients from storage"""
+	_set_animation("idle", false)
+
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	state_timer += delta * time_mult * speed_mult
+
+	if state_timer >= action_time / speed_mult:
+		print("[BakerAI] ", staff_data.name, " got ingredients for ", current_recipe.name)
+		current_state = BakerState.WALKING_TO_MIXER
+
+func _state_walking_to_mixer(delta: float) -> void:
+	"""Walking to mixing bowl"""
+	if not target_equipment:
+		current_state = BakerState.IDLE
+		return
+
+	_navigate_towards(target_equipment.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(target_equipment.global_position):
+		print("[BakerAI] ", staff_data.name, " reached mixing bowl")
+		current_state = BakerState.MIXING
+		state_timer = 0.0
+
+func _state_mixing(delta: float) -> void:
+	"""Mixing ingredients"""
+	_set_animation("idle", false)
+
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	state_timer += delta * time_mult * speed_mult
+
+	if state_timer >= action_time / speed_mult:
+		# Remove ingredients and start crafting
+		_start_mixing_recipe()
+		# Now check for oven work
+		current_state = BakerState.IDLE
+		tasks_completed += 1
+
+func _state_walking_to_oven_load(delta: float) -> void:
+	"""Walking to oven with dough"""
+	if not target_equipment:
+		current_state = BakerState.IDLE
+		return
+
+	_navigate_towards(target_equipment.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(target_equipment.global_position):
+		print("[BakerAI] ", staff_data.name, " reached oven")
+		current_state = BakerState.LOADING_OVEN
+		state_timer = 0.0
+
+func _state_loading_oven(delta: float) -> void:
+	"""Loading dough into oven"""
+	_set_animation("idle", false)
+
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	state_timer += delta * time_mult * speed_mult
+
+	if state_timer >= action_time / speed_mult:
+		_load_oven_with_dough()
+		current_state = BakerState.IDLE
+		tasks_completed += 1
+
+func _state_walking_to_oven_collect(delta: float) -> void:
+	"""Walking to oven to collect finished goods"""
+	if not target_equipment:
+		current_state = BakerState.IDLE
+		return
+
+	_navigate_towards(target_equipment.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(target_equipment.global_position):
+		print("[BakerAI] ", staff_data.name, " reached oven to collect")
+		current_state = BakerState.COLLECTING_FROM_OVEN
+		state_timer = 0.0
+
+func _state_collecting_from_oven(delta: float) -> void:
+	"""Collecting baked goods from oven"""
+	_set_animation("idle", false)
+
+	var time_mult: float = GameManager.get_time_scale() if GameManager else 1.0
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	state_timer += delta * time_mult * speed_mult
+
+	if state_timer >= action_time / speed_mult:
+		_collect_from_oven()
+		# Move finished goods to storage (simplified - auto collected)
+		current_state = BakerState.IDLE
+		tasks_completed += 1
+
+func _state_walking_to_storage_drop(delta: float) -> void:
+	"""Walking back to storage with finished goods"""
+	if not ingredient_storage:
+		current_state = BakerState.IDLE
+		return
+
+	_navigate_towards(ingredient_storage.global_position, delta)
+	_set_animation("walk", true)
+
+	if _is_at_position(ingredient_storage.global_position):
+		print("[BakerAI] ", staff_data.name, " returned to storage")
+		current_state = BakerState.IDLE
+
+# ============================================================================
+# TASK CHECKING
+# ============================================================================
+
 func _check_for_tasks() -> void:
-	"""Check if there's work to be done"""
-	# Priority 1: Move baked goods from oven to storage
+	"""Check for work - priority order"""
+	# Priority 1: Collect finished items from oven
 	if _try_collect_from_oven():
 		return
 
-	# Priority 2: Load prepared dough into oven
+	# Priority 2: Load dough into empty oven
 	if _try_load_oven():
 		return
 
-	# Priority 3: Start mixing a recipe
+	# Priority 3: Start new recipe
 	if _try_start_recipe():
 		return
-
-	# No tasks available
-	# print("[BakerAI] ", staff_data.name, " is idle - no tasks available")
 
 func _try_collect_from_oven() -> bool:
 	"""Try to collect finished items from ovens"""
 	for oven in available_ovens:
-		if not oven.is_baking and oven.has_finished_item:
-			# Found finished item - collect it
-			current_task = {
-				"type": "collect_oven",
-				"equipment": oven,
-				"duration": 2.0  # 2 seconds to collect
-			}
-			task_timer = 0.0
-			print("[BakerAI] ", staff_data.name, " collecting from oven...")
+		if oven.has("has_finished_item") and oven.has_finished_item:
+			target_equipment = oven
+			current_state = BakerState.WALKING_TO_OVEN_COLLECT
+			print("[BakerAI] ", staff_data.name, " going to collect from oven")
 			return true
 	return false
 
 func _try_load_oven() -> bool:
 	"""Try to load dough into an available oven"""
-	# Find an empty oven
+	# Find empty oven
 	var empty_oven = null
 	for oven in available_ovens:
-		if not oven.is_baking and not oven.has_finished_item:
-			empty_oven = oven
-			break
+		if oven.has("is_baking") and not oven.is_baking:
+			if oven.has("has_finished_item") and not oven.has_finished_item:
+				empty_oven = oven
+				break
 
 	if not empty_oven:
 		return false
 
-	# Check if we have any dough/batter in storage
-	var storage_id: String = "ingredient_storage_IngredientStorage"
+	# Check for dough/batter in storage
 	var storage_inv: Dictionary = InventoryManager.get_inventory(storage_id)
-
 	for item_id in storage_inv.keys():
 		if "dough" in item_id or "batter" in item_id:
-			# Found dough - load it into oven
-			current_task = {
-				"type": "load_oven",
-				"equipment": empty_oven,
-				"item_id": item_id,
-				"duration": 3.0  # 3 seconds to load
-			}
-			task_timer = 0.0
-			print("[BakerAI] ", staff_data.name, " loading ", item_id, " into oven...")
+			target_equipment = empty_oven
+			current_recipe = {"item_id": item_id}
+			current_state = BakerState.WALKING_TO_OVEN_LOAD
+			print("[BakerAI] ", staff_data.name, " going to load oven with ", item_id)
 			return true
 
 	return false
 
 func _try_start_recipe() -> bool:
 	"""Try to start mixing a new recipe"""
-	# Find an available mixing bowl
+	# Find available mixing bowl
 	var available_bowl = null
 	for bowl in available_mixing_bowls:
-		if not bowl.is_crafting:
+		if bowl.has("is_crafting") and not bowl.is_crafting:
 			available_bowl = bowl
 			break
 
 	if not available_bowl:
 		return false
 
-	# Get unlocked recipes and pick one we can make
+	# Find recipe we can make
 	var unlocked_recipes: Array = RecipeManager.get_all_unlocked_recipes()
-	var storage_id: String = "ingredient_storage_IngredientStorage"
 
 	for recipe_data in unlocked_recipes:
-		var recipe_id: String = recipe_data.id
-		var ingredients: Array = recipe_data.ingredients
-
-		# Check if we have all ingredients
 		var can_make: bool = true
-		for ingredient in ingredients:
-			var required_qty: int = ingredient.quantity
+		for ingredient in recipe_data.ingredients:
 			var available_qty: int = InventoryManager.get_item_quantity(storage_id, ingredient.id)
-
-			if available_qty < required_qty:
+			if available_qty < ingredient.quantity:
 				can_make = false
 				break
 
 		if can_make:
-			# Start this recipe
-			current_task = {
-				"type": "start_mixing",
-				"equipment": available_bowl,
-				"recipe_id": recipe_id,
-				"recipe_data": recipe_data,
-				"duration": 4.0  # 4 seconds to gather and start
-			}
-			task_timer = 0.0
+			current_recipe = recipe_data
+			target_equipment = available_bowl
+			current_state = BakerState.WALKING_TO_STORAGE
 			print("[BakerAI] ", staff_data.name, " starting recipe: ", recipe_data.name)
 			return true
 
 	return false
 
-func _process_current_task(delta: float) -> void:
-	"""Process the current task"""
-	if not GameManager:
+# ============================================================================
+# TASK COMPLETION
+# ============================================================================
+
+func _start_mixing_recipe() -> void:
+	"""Remove ingredients and start mixing"""
+	if not target_equipment or current_recipe.is_empty():
 		return
 
-	# Apply time scale and staff speed multiplier
-	var time_mult: float = GameManager.get_time_scale()
-	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
-	task_timer += delta * time_mult * speed_mult
+	var bowl = target_equipment
+	if not bowl.has_method("auto_start_recipe"):
+		return
 
-	if task_timer >= current_task.duration:
-		_complete_current_task()
+	# Check and remove ingredients
+	var can_craft: bool = true
+	for ingredient in current_recipe.ingredients:
+		if not InventoryManager.has_item(storage_id, ingredient.id, ingredient.quantity):
+			can_craft = false
+			break
 
-func _complete_current_task() -> void:
-	"""Complete the current task"""
-	match current_task.type:
-		"collect_oven":
-			_complete_collect_oven()
-		"load_oven":
-			_complete_load_oven()
-		"start_mixing":
-			_complete_start_mixing()
+	if can_craft:
+		# Remove ingredients
+		for ingredient in current_recipe.ingredients:
+			InventoryManager.remove_item(storage_id, ingredient.id, ingredient.quantity)
 
-	tasks_completed += 1
-	current_task.clear()
-	task_timer = 0.0
+		# Apply quality multiplier
+		var quality_mult: float = StaffManager.get_staff_quality_multiplier(staff_id)
 
-func _complete_collect_oven() -> void:
-	"""Complete collecting from oven"""
-	var oven = current_task.equipment
-	if oven and oven.has_method("auto_collect_baked_goods"):
-		oven.auto_collect_baked_goods()
-		print("[BakerAI] ", staff_data.name, " collected baked goods from oven")
+		# Start crafting
+		bowl.auto_start_recipe(current_recipe.id, current_recipe, quality_mult)
+		print("[BakerAI] ", staff_data.name, " started mixing ", current_recipe.name)
 
-func _complete_load_oven() -> void:
-	"""Complete loading oven"""
-	var oven = current_task.equipment
-	var item_id: String = current_task.item_id
+	current_recipe.clear()
+	target_equipment = null
 
-	if oven and oven.has_method("auto_load_item"):
-		# Remove from storage
-		var storage_id: String = "ingredient_storage_IngredientStorage"
+func _load_oven_with_dough() -> void:
+	"""Load dough into oven"""
+	if not target_equipment or current_recipe.is_empty():
+		return
+
+	var oven = target_equipment
+	var item_id: String = current_recipe.item_id
+
+	if oven.has_method("auto_load_item"):
 		if InventoryManager.remove_item(storage_id, item_id, 1):
 			oven.auto_load_item(item_id)
 			print("[BakerAI] ", staff_data.name, " loaded ", item_id, " into oven")
 
-func _complete_start_mixing() -> void:
-	"""Complete starting mixing"""
-	var bowl = current_task.equipment
-	var recipe_id: String = current_task.recipe_id
-	var recipe_data: Dictionary = current_task.recipe_data
+	current_recipe.clear()
+	target_equipment = null
 
-	if bowl and bowl.has_method("auto_start_recipe"):
-		# Remove ingredients from storage
-		var storage_id: String = "ingredient_storage_IngredientStorage"
-		var can_craft: bool = true
+func _collect_from_oven() -> void:
+	"""Collect finished baked goods"""
+	if not target_equipment:
+		return
 
-		for ingredient in recipe_data.ingredients:
-			if not InventoryManager.has_item(storage_id, ingredient.id, ingredient.quantity):
-				can_craft = false
-				break
+	var oven = target_equipment
+	if oven.has_method("auto_collect_baked_goods"):
+		oven.auto_collect_baked_goods()
+		print("[BakerAI] ", staff_data.name, " collected baked goods from oven")
 
-		if can_craft:
-			# Remove ingredients
-			for ingredient in recipe_data.ingredients:
-				InventoryManager.remove_item(storage_id, ingredient.id, ingredient.quantity)
+	target_equipment = null
 
-			# Apply quality multiplier from staff skill
-			var quality_mult: float = StaffManager.get_staff_quality_multiplier(staff_id)
+# ============================================================================
+# MOVEMENT HELPERS
+# ============================================================================
 
-			# Start crafting
-			bowl.auto_start_recipe(recipe_id, recipe_data, quality_mult)
-			print("[BakerAI] ", staff_data.name, " started mixing ", recipe_data.name)
+func _navigate_towards(target_pos: Vector3, delta: float) -> void:
+	"""Navigate character towards target position"""
+	if not character or not nav_agent:
+		return
+
+	nav_agent.target_position = target_pos
+
+	if nav_agent.is_navigation_finished():
+		return
+
+	var next_position = nav_agent.get_next_path_position()
+	var direction = (next_position - character.global_position).normalized()
+
+	var speed_mult: float = StaffManager.get_staff_speed_multiplier(staff_id)
+	var move_speed: float = 3.0 * speed_mult
+	character.global_position += direction * move_speed * delta
+
+	if direction.length() > 0.01:
+		var target_rotation = atan2(direction.x, direction.z)
+		character.rotation.y = lerp_angle(character.rotation.y, target_rotation, delta * 10.0)
+
+func _is_at_position(target_pos: Vector3) -> bool:
+	"""Check if character is at target position"""
+	if not character:
+		return true
+	return character.global_position.distance_to(target_pos) < 1.0
+
+func _set_animation(anim_name: String, playing: bool) -> void:
+	"""Set character animation"""
+	if not character:
+		return
+
+	var anim_player: AnimationPlayer = null
+	for child in character.get_children():
+		if child is AnimationPlayer:
+			anim_player = child
+			break
+
+	if not anim_player:
+		return
+
+	if playing and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name)
+	elif not playing:
+		if anim_player.is_playing():
+			anim_player.stop()
