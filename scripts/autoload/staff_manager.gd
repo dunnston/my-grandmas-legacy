@@ -26,6 +26,12 @@ var next_staff_id: int = 1
 # AI instances (created when staff activated)
 var active_ai_workers: Dictionary = {}  # staff_id -> AI instance
 
+# Visual character instances
+var staff_characters: Dictionary = {}  # staff_id -> Node3D character
+
+# Customer scene for visual representation (reusing customer models)
+var customer_scene: PackedScene = preload("res://scenes/customer/customer.tscn")
+
 # Staff generation settings
 var staff_names: Array = [
 	"Alice", "Bob", "Carlos", "Diana", "Emma", "Frank", "Grace", "Henry",
@@ -326,6 +332,9 @@ func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
 	"""Create and activate an AI worker instance"""
 	var staff_id: String = staff_data.id
 
+	# Spawn visual character
+	_spawn_staff_character(staff_data, ai_type)
+
 	# Load the appropriate AI class
 	var ai_instance = null
 	match ai_type:
@@ -357,6 +366,9 @@ func _deactivate_all_ai() -> void:
 			if ai_worker.get_parent():
 				ai_worker.get_parent().remove_child(ai_worker)
 			ai_worker.queue_free()
+
+		# Remove visual character
+		_remove_staff_character(staff_id)
 
 	active_ai_workers.clear()
 
@@ -409,3 +421,98 @@ func get_role_description(role: StaffRole) -> String:
 			return "Completes cleanup tasks during Cleanup Phase"
 		_:
 			return ""
+
+# ============================================================================
+# VISUAL STAFF CHARACTERS
+# ============================================================================
+
+func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
+	"""Spawn a visual character for this staff member"""
+	var staff_id: String = staff_data.id
+
+	# Get the bakery scene
+	var bakery = get_tree().current_scene
+	if not bakery:
+		print("[StaffManager] Cannot spawn character - no current scene")
+		return
+
+	# Instance the customer scene (reusing for staff visuals)
+	var character: Node3D = customer_scene.instantiate()
+	character.name = "Staff_" + staff_data.name
+	bakery.add_child(character)
+
+	# Position based on role
+	var spawn_position: Vector3 = _get_staff_spawn_position(ai_type, bakery)
+	character.global_position = spawn_position
+
+	# Disable customer AI behaviors
+	if character.has_method("set_customer_ai_enabled"):
+		character.set_customer_ai_enabled(false)
+
+	# Add name label
+	_add_staff_name_label(character, staff_data.name, ai_type)
+
+	# Store reference
+	staff_characters[staff_id] = character
+
+	print("[StaffManager] Spawned visual character for ", staff_data.name, " at ", spawn_position)
+
+func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Vector3:
+	"""Get the spawn position for a staff member based on their role"""
+	# Try to find appropriate equipment/workstation
+	match ai_type:
+		"baker":
+			# Position near mixing bowls/ovens
+			var mixing_bowl = _find_node_by_name(bakery, "mixing_bowl")
+			if mixing_bowl and mixing_bowl is Node3D:
+				return mixing_bowl.global_position + Vector3(-1, 0, 1)
+			return Vector3(2, 0, -2)  # Default baker position
+
+		"cashier":
+			# Position near register
+			var register = _find_node_by_name(bakery, "register")
+			if register and register is Node3D:
+				return register.global_position + Vector3(0, 0, -1.5)
+			return Vector3(7, 0, 3)  # Default cashier position
+
+		"cleaner":
+			# Position near sinks/trash
+			var sink = _find_node_by_name(bakery, "sink")
+			if sink and sink is Node3D:
+				return sink.global_position + Vector3(0, 0, -1)
+			return Vector3(-2, 0, 2)  # Default cleaner position
+
+	return Vector3.ZERO
+
+func _find_node_by_name(root: Node, search_name: String) -> Node:
+	"""Recursively find a node by name (case-insensitive partial match)"""
+	for child in root.get_children():
+		if search_name.to_lower() in child.name.to_lower():
+			return child
+		var found = _find_node_by_name(child, search_name)
+		if found:
+			return found
+	return null
+
+func _add_staff_name_label(character: Node3D, staff_name: String, ai_type: String) -> void:
+	"""Add a name label above the staff character"""
+	# Create a Label3D node
+	var label = Label3D.new()
+	label.name = "NameLabel"
+	label.text = staff_name + " (" + ai_type.capitalize() + ")"
+	label.position = Vector3(0, 2.2, 0)  # Above character's head
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.font_size = 24
+	label.outline_size = 4
+	label.modulate = Color(0.3, 0.8, 1.0)  # Light blue color for staff
+
+	character.add_child(label)
+
+func _remove_staff_character(staff_id: String) -> void:
+	"""Remove visual character for a staff member"""
+	if staff_characters.has(staff_id):
+		var character = staff_characters[staff_id]
+		if character and is_instance_valid(character):
+			character.queue_free()
+		staff_characters.erase(staff_id)
+		print("[StaffManager] Removed visual character for staff ", staff_id)
