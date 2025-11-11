@@ -27,7 +27,7 @@ var state_timer: float = 0.0
 var tasks_completed: int = 0
 
 # Current task target
-var target_station: Node3D = null
+var target_station: Node = null  # Can be any Node type
 var current_task_type: String = ""
 
 # AI behavior settings
@@ -162,10 +162,11 @@ func _state_walking_to_sink(delta: float) -> void:
 		current_state = CleanerState.IDLE
 		return
 
-	_navigate_towards(target_station.global_position, delta)
+	var target_pos = _get_node_position(target_station)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_station.global_position):
+	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached sink")
 		current_state = CleanerState.WASHING_DISHES
 		state_timer = 0.0
@@ -189,10 +190,11 @@ func _state_walking_to_trash(delta: float) -> void:
 		current_state = CleanerState.IDLE
 		return
 
-	_navigate_towards(target_station.global_position, delta)
+	var target_pos = _get_node_position(target_station)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_station.global_position):
+	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached trash can")
 		current_state = CleanerState.EMPTYING_TRASH
 		state_timer = 0.0
@@ -216,10 +218,11 @@ func _state_walking_to_counter(delta: float) -> void:
 		current_state = CleanerState.IDLE
 		return
 
-	_navigate_towards(target_station.global_position, delta)
+	var target_pos = _get_node_position(target_station)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_station.global_position):
+	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached counter")
 		current_state = CleanerState.WIPING_COUNTER
 		state_timer = 0.0
@@ -243,10 +246,11 @@ func _state_walking_to_equipment(delta: float) -> void:
 		current_state = CleanerState.IDLE
 		return
 
-	_navigate_towards(target_station.global_position, delta)
+	var target_pos = _get_node_position(target_station)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_station.global_position):
+	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " inspecting equipment")
 		# Equipment check is instant
 		_complete_equipment_task()
@@ -388,6 +392,15 @@ func _complete_equipment_task() -> void:
 # ============================================================================
 # MOVEMENT HELPERS
 # ============================================================================
+
+func _get_node_position(node: Node) -> Vector3:
+	"""Safely get position from any node type"""
+	if node is Node3D:
+		return node.global_position
+	elif node is Control:
+		return Vector3.ZERO
+	else:
+		return Vector3.ZERO
 
 func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	"""Navigate character towards target position"""

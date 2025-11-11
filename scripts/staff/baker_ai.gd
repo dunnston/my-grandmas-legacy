@@ -30,7 +30,7 @@ var tasks_completed: int = 0
 
 # Current recipe/task data
 var current_recipe: Dictionary = {}
-var target_equipment: Node3D = null
+var target_equipment: Node = null  # Can be any Node type (Node3D, Control, etc.)
 
 # AI behavior settings
 var check_interval: float = 0.0
@@ -38,7 +38,7 @@ var next_check_time: float = 0.0
 var action_time: float = 2.0  # Time to perform actions (gathering, mixing, etc.)
 
 # Equipment references
-var ingredient_storage: Node3D = null
+var ingredient_storage: Node = null  # Can be any Node type
 var available_mixing_bowls: Array = []
 var available_ovens: Array = []
 var storage_id: String = "ingredient_storage_IngredientStorage"
@@ -159,10 +159,11 @@ func _state_walking_to_storage(delta: float) -> void:
 		current_state = BakerState.GATHERING_INGREDIENTS
 		return
 
-	_navigate_towards(ingredient_storage.global_position, delta)
+	var target_pos = _get_node_position(ingredient_storage)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(ingredient_storage.global_position):
+	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached storage")
 		current_state = BakerState.GATHERING_INGREDIENTS
 		state_timer = 0.0
@@ -185,10 +186,11 @@ func _state_walking_to_mixer(delta: float) -> void:
 		current_state = BakerState.IDLE
 		return
 
-	_navigate_towards(target_equipment.global_position, delta)
+	var target_pos = _get_node_position(target_equipment)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_equipment.global_position):
+	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached mixing bowl")
 		current_state = BakerState.MIXING
 		state_timer = 0.0
@@ -214,10 +216,11 @@ func _state_walking_to_oven_load(delta: float) -> void:
 		current_state = BakerState.IDLE
 		return
 
-	_navigate_towards(target_equipment.global_position, delta)
+	var target_pos = _get_node_position(target_equipment)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_equipment.global_position):
+	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached oven")
 		current_state = BakerState.LOADING_OVEN
 		state_timer = 0.0
@@ -241,10 +244,11 @@ func _state_walking_to_oven_collect(delta: float) -> void:
 		current_state = BakerState.IDLE
 		return
 
-	_navigate_towards(target_equipment.global_position, delta)
+	var target_pos = _get_node_position(target_equipment)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(target_equipment.global_position):
+	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached oven to collect")
 		current_state = BakerState.COLLECTING_FROM_OVEN
 		state_timer = 0.0
@@ -269,10 +273,11 @@ func _state_walking_to_storage_drop(delta: float) -> void:
 		current_state = BakerState.IDLE
 		return
 
-	_navigate_towards(ingredient_storage.global_position, delta)
+	var target_pos = _get_node_position(ingredient_storage)
+	_navigate_towards(target_pos, delta)
 	_set_animation("walk", true)
 
-	if _is_at_position(ingredient_storage.global_position):
+	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " returned to storage")
 		current_state = BakerState.IDLE
 
@@ -427,6 +432,16 @@ func _collect_from_oven() -> void:
 # ============================================================================
 # MOVEMENT HELPERS
 # ============================================================================
+
+func _get_node_position(node: Node) -> Vector3:
+	"""Get position from any node type"""
+	if node is Node3D:
+		return node.global_position
+	elif node is Control:
+		# For Control nodes, use a default position (they're 2D UI elements)
+		return Vector3.ZERO
+	else:
+		return Vector3.ZERO
 
 func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	"""Navigate character towards target position"""
