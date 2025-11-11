@@ -400,16 +400,29 @@ func _complete_equipment_task() -> void:
 
 func _get_node_position(node: Node) -> Vector3:
 	"""Safely get position from any node type"""
+	if not node:
+		print("[CleanerAI] WARNING: Trying to get position of null node!")
+		return Vector3.ZERO
+
 	if node is Node3D:
-		return node.global_position
+		var pos = node.global_position
+		print("[CleanerAI] Got position from Node3D '", node.name, "': ", pos)
+		return pos
 	elif node is Control:
+		print("[CleanerAI] WARNING: Trying to navigate to Control node '", node.name, "' - returning ZERO")
 		return Vector3.ZERO
 	else:
+		print("[CleanerAI] WARNING: Unknown node type for '", node.name, "': ", node.get_class())
 		return Vector3.ZERO
 
 func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	"""Navigate character towards target position"""
 	if not character or not nav_agent:
+		return
+
+	# Check if target is Vector3.ZERO (invalid position)
+	if target_pos == Vector3.ZERO:
+		print("[CleanerAI] WARNING: Trying to navigate to ZERO position - equipment node might be wrong type!")
 		return
 
 	nav_agent.target_position = target_pos
