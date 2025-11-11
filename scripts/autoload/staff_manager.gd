@@ -338,6 +338,9 @@ func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
 	# Spawn visual character
 	_spawn_staff_character(staff_data, ai_type)
 
+	# Get the character reference
+	var character: Node3D = staff_characters.get(staff_id)
+
 	# Load the appropriate AI class
 	var ai_instance = null
 	match ai_type:
@@ -355,6 +358,11 @@ func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
 		# Add AI to scene tree so it can access get_tree()
 		add_child(ai_instance)
 		active_ai_workers[staff_id] = ai_instance
+
+		# Give AI control of the visual character
+		if ai_instance.has_method("set_character") and character:
+			ai_instance.set_character(character)
+
 		ai_instance.activate()
 		print("[StaffManager] AI worker added to scene tree: ", staff_data.name)
 
@@ -452,12 +460,9 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	if spawn_result.has("rotation_y"):
 		character.rotation.y = spawn_result.rotation_y
 
-	# Disable customer AI behaviors
+	# Disable customer AI behaviors (but keep NavigationAgent3D available)
 	if character.has_method("set_customer_ai_enabled"):
 		character.set_customer_ai_enabled(false)
-
-	# Stop walking animation - pause at idle
-	_stop_character_animation(character)
 
 	# Add name label
 	_add_staff_name_label(character, staff_data.name, ai_type)
