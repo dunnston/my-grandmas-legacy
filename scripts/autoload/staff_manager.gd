@@ -445,12 +445,19 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	bakery.add_child(character)
 
 	# Position based on role
-	var spawn_position: Vector3 = _get_staff_spawn_position(ai_type, bakery)
-	character.global_position = spawn_position
+	var spawn_result: Dictionary = _get_staff_spawn_position(ai_type, bakery)
+	character.global_position = spawn_result.position
+
+	# Set rotation to face workstation
+	if spawn_result.has("rotation_y"):
+		character.rotation.y = spawn_result.rotation_y
 
 	# Disable customer AI behaviors
 	if character.has_method("set_customer_ai_enabled"):
 		character.set_customer_ai_enabled(false)
+
+	# Stop walking animation - pause at idle
+	_stop_character_animation(character)
 
 	# Add name label
 	_add_staff_name_label(character, staff_data.name, ai_type)
@@ -458,34 +465,46 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	# Store reference
 	staff_characters[staff_id] = character
 
-	print("[StaffManager] Spawned visual character for ", staff_data.name, " at ", spawn_position)
+	print("[StaffManager] Spawned visual character for ", staff_data.name, " at ", spawn_result.position)
 
-func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Vector3:
-	"""Get the spawn position for a staff member based on their role"""
+func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Dictionary:
+	"""Get the spawn position and rotation for a staff member based on their role"""
 	# Try to find appropriate equipment/workstation
 	match ai_type:
 		"baker":
 			# Position near mixing bowls/ovens
 			var mixing_bowl = _find_node_by_name(bakery, "mixing_bowl")
 			if mixing_bowl and mixing_bowl is Node3D:
-				return mixing_bowl.global_position + Vector3(-1, 0, 1)
-			return Vector3(2, 0, -2)  # Default baker position
+				var pos = mixing_bowl.global_position + Vector3(-1, 0, 1)
+				# Face the mixing bowl
+				var direction = (mixing_bowl.global_position - pos).normalized()
+				var rotation_y = atan2(direction.x, direction.z)
+				return {"position": pos, "rotation_y": rotation_y}
+			return {"position": Vector3(2, 0, -2), "rotation_y": PI}  # Default baker position, facing forward
 
 		"cashier":
 			# Position near register
 			var register = _find_node_by_name(bakery, "register")
 			if register and register is Node3D:
-				return register.global_position + Vector3(0, 0, -1.5)
-			return Vector3(7, 0, 3)  # Default cashier position
+				var pos = register.global_position + Vector3(0, 0, -1.5)
+				# Face the register
+				var direction = (register.global_position - pos).normalized()
+				var rotation_y = atan2(direction.x, direction.z)
+				return {"position": pos, "rotation_y": rotation_y}
+			return {"position": Vector3(7, 0, 3), "rotation_y": 0}  # Default cashier position
 
 		"cleaner":
 			# Position near sinks/trash
 			var sink = _find_node_by_name(bakery, "sink")
 			if sink and sink is Node3D:
-				return sink.global_position + Vector3(0, 0, -1)
-			return Vector3(-2, 0, 2)  # Default cleaner position
+				var pos = sink.global_position + Vector3(0, 0, -1)
+				# Face the sink
+				var direction = (sink.global_position - pos).normalized()
+				var rotation_y = atan2(direction.x, direction.z)
+				return {"position": pos, "rotation_y": rotation_y}
+			return {"position": Vector3(-2, 0, 2), "rotation_y": PI / 2}  # Default cleaner position
 
-	return Vector3.ZERO
+	return {"position": Vector3.ZERO, "rotation_y": 0}
 
 func _find_node_by_name(root: Node, search_name: String) -> Node:
 	"""Recursively find a node by name (case-insensitive partial match)"""
@@ -496,6 +515,23 @@ func _find_node_by_name(root: Node, search_name: String) -> Node:
 		if found:
 			return found
 	return null
+
+func _stop_character_animation(character: Node3D) -> void:
+	"""Stop walking animation and set to idle pose"""
+	# Find the AnimationPlayer node
+	var anim_player: AnimationPlayer = null
+	for child in character.get_children():
+		if child is AnimationPlayer:
+			anim_player = child
+			break
+
+	if anim_player:
+		# Stop current animation and pause
+		if anim_player.is_playing():
+			anim_player.stop()
+		# Optionally play an idle animation if it exists
+		if anim_player.has_animation("idle"):
+			anim_player.play("idle")
 
 func _add_staff_name_label(character: Node3D, staff_name: String, ai_type: String) -> void:
 	"""Add a name label above the staff character"""
