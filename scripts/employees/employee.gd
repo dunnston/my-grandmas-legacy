@@ -44,10 +44,32 @@ func _select_random_employee_model() -> void:
 	# Find and cache AnimationPlayer
 	animation_player = _find_animation_player(selected_model)
 
-	if animation_player:
-		# Don't stop animation - StaffManager will start walk animation
-		# AI scripts will control it after that
-		print("Employee: Found AnimationPlayer in ", selected_model.name)
+	if animation_player and animation_player is AnimationPlayer:
+		# Make sure AnimationPlayer is active (same as customer.gd)
+		animation_player.active = true
+		animation_player.process_mode = Node.PROCESS_MODE_INHERIT
+
+		# Get the first animation
+		var anims = animation_player.get_animation_list()
+		if anims.size() > 0:
+			var anim_name = anims[0]
+
+			# Get the animation library and set loop mode
+			var anim_lib = animation_player.get_animation_library("")
+			if anim_lib and anim_lib.has_animation(anim_name):
+				var animation = anim_lib.get_animation(anim_name)
+				if animation:
+					animation.loop_mode = Animation.LOOP_LINEAR
+
+			# Play the animation immediately
+			animation_player.play(anim_name)
+
+			# Force update to ensure animation starts
+			animation_player.advance(0.0)
+
+			print("Employee: Animation started (", anim_name, ")")
+		else:
+			print("Employee: Warning - No animations found")
 	else:
 		print("Employee: Warning - Could not find AnimationPlayer")
 
