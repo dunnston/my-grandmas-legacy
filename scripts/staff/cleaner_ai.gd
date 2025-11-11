@@ -188,7 +188,6 @@ func _state_walking_to_sink(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_station)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached sink")
@@ -216,7 +215,6 @@ func _state_walking_to_trash(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_station)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached trash can")
@@ -244,7 +242,6 @@ func _state_walking_to_counter(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_station)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " reached counter")
@@ -272,7 +269,6 @@ func _state_walking_to_equipment(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_station)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[CleanerAI] ", staff_data.name, " inspecting equipment")
@@ -440,7 +436,12 @@ func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	nav_agent.target_position = target_pos
 
 	if nav_agent.is_navigation_finished():
+		# Stopped at destination - pause animation
+		_set_animation("walk", false)
 		return
+
+	# Still moving - ensure animation is playing
+	_set_animation("walk", true)
 
 	var next_position = nav_agent.get_next_path_position()
 	var direction = (next_position - character.global_position).normalized()

@@ -191,7 +191,6 @@ func _state_walking_to_storage(delta: float) -> void:
 
 	var target_pos = _get_node_position(ingredient_storage)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached storage")
@@ -218,7 +217,6 @@ func _state_walking_to_mixer(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_equipment)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached mixing bowl")
@@ -248,7 +246,6 @@ func _state_walking_to_oven_load(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_equipment)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached oven")
@@ -276,7 +273,6 @@ func _state_walking_to_oven_collect(delta: float) -> void:
 
 	var target_pos = _get_node_position(target_equipment)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " reached oven to collect")
@@ -305,7 +301,6 @@ func _state_walking_to_storage_drop(delta: float) -> void:
 
 	var target_pos = _get_node_position(ingredient_storage)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	if _is_at_position(target_pos):
 		print("[BakerAI] ", staff_data.name, " returned to storage")
@@ -486,7 +481,12 @@ func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	nav_agent.target_position = target_pos
 
 	if nav_agent.is_navigation_finished():
+		# Stopped at destination - pause animation
+		_set_animation("walk", false)
 		return
+
+	# Still moving - ensure animation is playing
+	_set_animation("walk", true)
 
 	var next_position = nav_agent.get_next_path_position()
 	var direction = (next_position - character.global_position).normalized()

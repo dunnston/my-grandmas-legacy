@@ -164,7 +164,6 @@ func _state_walking_to_display(delta: float) -> void:
 
 	var target_pos = _get_node_position(display_case)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	# Check if reached display
 	if _is_at_position(target_pos):
@@ -192,7 +191,6 @@ func _state_walking_to_register(delta: float) -> void:
 
 	var target_pos = _get_node_position(register)
 	_navigate_towards(target_pos, delta)
-	_set_animation("walk", true)
 
 	# Check if reached register
 	if _is_at_position(target_pos):
@@ -268,7 +266,12 @@ func _navigate_towards(target_pos: Vector3, delta: float) -> void:
 	nav_agent.target_position = target_pos
 
 	if nav_agent.is_navigation_finished():
+		# Stopped at destination - pause animation
+		_set_animation("walk", false)
 		return
+
+	# Still moving - ensure animation is playing
+	_set_animation("walk", true)
 
 	var next_position = nav_agent.get_next_path_position()
 	var direction = (next_position - character.global_position).normalized()
