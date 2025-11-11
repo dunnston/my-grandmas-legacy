@@ -45,8 +45,8 @@ func _select_random_employee_model() -> void:
 	animation_player = _find_animation_player(selected_model)
 
 	if animation_player:
-		# Stop animation initially - AI will control it
-		animation_player.stop()
+		# Don't stop animation - StaffManager will start walk animation
+		# AI scripts will control it after that
 		print("Employee: Found AnimationPlayer in ", selected_model.name)
 	else:
 		print("Employee: Warning - Could not find AnimationPlayer")

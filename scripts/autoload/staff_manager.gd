@@ -662,11 +662,26 @@ func _play_character_animation(character: Node3D, anim_name: String) -> void:
 	var anim_player: AnimationPlayer = _find_animation_player(character)
 
 	if anim_player:
-		if anim_player.has_animation(anim_name):
-			if anim_player.current_animation != anim_name:
-				anim_player.play(anim_name)
+		var anims = anim_player.get_animation_list()
+		print("[StaffManager] Available animations: ", anims)
+
+		# Try to find a walking animation
+		var walk_anim = ""
+		for anim in anims:
+			var anim_lower = anim.to_lower()
+			if "walk" in anim_lower:
+				walk_anim = anim
+				break
+
+		if walk_anim != "":
+			print("[StaffManager] Playing walk animation: ", walk_anim)
+			anim_player.play(walk_anim)
 		else:
-			print("[StaffManager] Animation '", anim_name, "' not found")
+			print("[StaffManager] No walk animation found, playing first: ", anims[0] if anims.size() > 0 else "none")
+			if anims.size() > 0:
+				anim_player.play(anims[0])
+	else:
+		print("[StaffManager] No AnimationPlayer found!")
 
 func _find_animation_player(character: Node3D) -> AnimationPlayer:
 	"""Recursively find AnimationPlayer in character"""
