@@ -100,7 +100,9 @@ func hire_staff(applicant_data: Dictionary) -> bool:
 	# Remove from applicant pool
 	applicant_pool.erase(applicant_data)
 
-	print("Hired ", staff_data.name, " as ", _get_role_name(staff_data.role), " (", staff_data.skill, " stars)")
+	print("[StaffManager] Hired ", staff_data.name, " as ", _get_role_name(staff_data.role), " (", staff_data.skill, " stars)")
+	print("[StaffManager] Total staff now: ", hired_staff.size(), "/", max_staff_slots)
+	print("[StaffManager] Staff data: ", staff_data)
 	staff_hired.emit(staff_data)
 	return true
 
@@ -279,19 +281,28 @@ func increase_staff_capacity(additional_slots: int) -> void:
 
 func _on_phase_changed(new_phase: int) -> void:
 	"""Handle phase changes to activate/deactivate staff AI"""
+	print("[StaffManager] Phase changed to: ", new_phase)
+	print("[StaffManager] Currently hired staff: ", hired_staff.size())
+
 	# Deactivate all current AI
 	_deactivate_all_ai()
 
 	# Activate AI for the appropriate phase
 	match new_phase:
 		0:  # BAKING phase
+			print("[StaffManager] Activating bakers...")
 			_activate_bakers()
 		1:  # BUSINESS phase
+			print("[StaffManager] Activating cashiers...")
 			_activate_cashiers()
 		2:  # CLEANUP phase
+			print("[StaffManager] Activating cleaners...")
 			_activate_cleaners()
 		3:  # PLANNING phase
+			print("[StaffManager] Planning phase - no automation")
 			pass  # No automation during planning
+
+	print("[StaffManager] Active AI workers: ", active_ai_workers.size())
 
 func _activate_bakers() -> void:
 	"""Activate all hired bakers"""
