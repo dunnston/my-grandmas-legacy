@@ -293,22 +293,36 @@ func _on_phase_changed(new_phase: int) -> void:
 	# Deactivate all current AI
 	_deactivate_all_ai()
 
-	# Activate AI for the appropriate phase
+	# Activate ALL staff during BUSINESS phase (when shop is open)
 	match new_phase:
-		0:  # BAKING phase
-			print("[StaffManager] Activating bakers...")
-			_activate_bakers()
-		1:  # BUSINESS phase
-			print("[StaffManager] Activating cashiers...")
-			_activate_cashiers()
-		2:  # CLEANUP phase
-			print("[StaffManager] Activating cleaners...")
-			_activate_cleaners()
-		3:  # PLANNING phase
-			print("[StaffManager] Planning phase - no automation")
-			pass  # No automation during planning
+		1:  # BUSINESS phase - Shop is open, all staff work
+			print("[StaffManager] Shop opened - activating all staff...")
+			_activate_all_staff()
+		_:  # All other phases - no staff active
+			print("[StaffManager] Shop closed - staff inactive")
+			pass
 
 	print("[StaffManager] Active AI workers: ", active_ai_workers.size())
+
+func _activate_all_staff() -> void:
+	"""Activate ALL hired staff when shop opens"""
+	print("[StaffManager] Activating all ", hired_staff.size(), " staff members...")
+
+	for staff_id in hired_staff.keys():
+		var staff_data: Dictionary = hired_staff[staff_id]
+		var ai_type: String = ""
+
+		# Determine AI type based on role
+		match staff_data.role:
+			StaffRole.BAKER:
+				ai_type = "baker"
+			StaffRole.CASHIER:
+				ai_type = "cashier"
+			StaffRole.CLEANER:
+				ai_type = "cleaner"
+
+		if ai_type != "":
+			_create_and_activate_ai(staff_data, ai_type)
 
 func _activate_bakers() -> void:
 	"""Activate all hired bakers"""
