@@ -465,11 +465,8 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 	if not character:
 		return
 
-	var anim_player: AnimationPlayer = null
-	for child in character.get_children():
-		if child is AnimationPlayer:
-			anim_player = child
-			break
+	# Recursively search for AnimationPlayer (it's nested in customer models)
+	var anim_player: AnimationPlayer = _find_animation_player_recursive(character)
 
 	if not anim_player:
 		return
@@ -481,3 +478,19 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 		# Pause animation (freezes at current frame)
 		if anim_player.is_playing():
 			anim_player.pause()
+
+func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
+	"""Recursively search for AnimationPlayer in node hierarchy"""
+	if node is AnimationPlayer:
+		return node
+
+	for child in node.get_children():
+		if child is AnimationPlayer:
+			return child
+
+	for child in node.get_children():
+		var result = _find_animation_player_recursive(child)
+		if result:
+			return result
+
+	return null
