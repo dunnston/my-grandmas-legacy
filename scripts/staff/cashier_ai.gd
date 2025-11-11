@@ -95,6 +95,7 @@ func _find_equipment() -> void:
 	"""Find the register and display case in the bakery"""
 	var bakery = get_tree().current_scene
 	if not bakery:
+		print("[CashierAI] ERROR: No current scene found")
 		return
 
 	# Find equipment
@@ -106,6 +107,12 @@ func _find_equipment() -> void:
 		elif "display" in child_name:
 			display_case = child
 			print("[CashierAI] Found display case: ", display_case.name)
+
+	# Warn if equipment not found
+	if not register:
+		print("[CashierAI] WARNING: No register found in scene! Looking for node with 'register' in name")
+	if not display_case:
+		print("[CashierAI] WARNING: No display case found in scene! Looking for node with 'display' in name")
 
 func _get_all_children(node: Node) -> Array:
 	"""Recursively get all children of a node"""

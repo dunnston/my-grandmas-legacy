@@ -115,6 +115,7 @@ func _find_equipment() -> void:
 
 	var bakery = get_tree().current_scene
 	if not bakery:
+		print("[BakerAI] ERROR: No current scene found")
 		return
 
 	# Find equipment
@@ -122,14 +123,22 @@ func _find_equipment() -> void:
 		var child_name = child.name.to_lower()
 		if "ingredient_storage" in child_name or "cabinet" in child_name:
 			ingredient_storage = child
+			print("[BakerAI] Found storage: ", ingredient_storage.name)
 		elif child.has_method("get_inventory_id"):
 			if "mixing_bowl" in child_name:
 				available_mixing_bowls.append(child)
 			elif "oven" in child_name:
 				available_ovens.append(child)
 
-	print("[BakerAI] Found storage: ", ingredient_storage != null)
 	print("[BakerAI] Found ", available_mixing_bowls.size(), " mixing bowls and ", available_ovens.size(), " ovens")
+
+	# Warn if equipment not found
+	if not ingredient_storage:
+		print("[BakerAI] WARNING: No storage found! Looking for node with 'ingredient_storage' or 'cabinet' in name")
+	if available_mixing_bowls.is_empty():
+		print("[BakerAI] WARNING: No mixing bowls found! Looking for nodes with 'mixing_bowl' in name")
+	if available_ovens.is_empty():
+		print("[BakerAI] WARNING: No ovens found! Looking for nodes with 'oven' in name")
 
 func _get_all_children(node: Node) -> Array:
 	"""Recursively get all children of a node"""
