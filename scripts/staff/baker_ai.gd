@@ -78,6 +78,9 @@ func activate() -> void:
 	if character and nav_agent:
 		nav_agent.target_position = character.global_position
 
+	# Cache animation name BEFORE stopping (so we can resume later)
+	_cache_animation_name()
+
 	# Stop walking animation - pause at current frame
 	_set_animation("walk", false)
 
@@ -506,6 +509,25 @@ func _is_at_position(target_pos: Vector3) -> bool:
 		return true
 	return character.global_position.distance_to(target_pos) < 1.0
 
+func _cache_animation_name() -> void:
+	"""Cache the animation name from AnimationPlayer before stopping"""
+	if not character or cached_animation_name != "":
+		return
+
+	var anim_player: AnimationPlayer = _find_animation_player_recursive(character)
+	if not anim_player:
+		return
+
+	# Try to get from current_animation first
+	if anim_player.current_animation != "":
+		cached_animation_name = anim_player.current_animation
+		return
+
+	# Fallback: Get first animation from list
+	var anims = anim_player.get_animation_list()
+	if anims.size() > 0:
+		cached_animation_name = anims[0]
+
 func _set_animation(anim_name: String, playing: bool) -> void:
 	"""Set character animation"""
 	if not character:
@@ -517,21 +539,10 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 	if not anim_player:
 		return
 
-	# Cache the animation name on first call
-	if cached_animation_name == "" and anim_player.current_animation != "":
-		cached_animation_name = anim_player.current_animation
-
 	if playing:
-		# Play the cached animation (or first available if not cached)
-		if not anim_player.is_playing():
-			if cached_animation_name != "":
-				anim_player.play(cached_animation_name)
-			else:
-				# Try to get first animation
-				var anims = anim_player.get_animation_list()
-				if anims.size() > 0:
-					cached_animation_name = anims[0]
-					anim_player.play(cached_animation_name)
+		# Play the cached animation
+		if not anim_player.is_playing() and cached_animation_name != "":
+			anim_player.play(cached_animation_name)
 	else:
 		# Stop animation completely
 		anim_player.stop()
