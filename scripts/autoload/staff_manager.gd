@@ -33,8 +33,8 @@ var staff_characters: Dictionary = {}  # staff_id -> Node3D character
 var entrance_position: Vector3 = Vector3(-8, 0, -4)  # Default entrance (same as customers)
 var staff_walking_to_station: Dictionary = {}  # staff_id -> { character, target_pos, ai_type, staff_data }
 
-# Customer scene for visual representation (reusing customer models)
-var customer_scene: PackedScene = preload("res://scenes/customer/customer.tscn")
+# Employee scene for visual representation
+var employee_scene: PackedScene = preload("res://scenes/employees/employee.tscn")
 
 # Staff generation settings
 var staff_names: Array = [
@@ -451,17 +451,19 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 		print("[StaffManager] Cannot spawn character - no current scene")
 		return
 
-	# Instance the customer scene (reusing for staff visuals)
-	var character: Node3D = customer_scene.instantiate()
+	# Instance the employee scene
+	var character: Node3D = employee_scene.instantiate()
 	character.name = "Staff_" + staff_data.name
 	bakery.add_child(character)
 
 	# Spawn at entrance position (same as customers)
 	character.global_position = entrance_position
 
-	# Disable customer AI behaviors (but keep NavigationAgent3D available)
-	if character.has_method("set_customer_ai_enabled"):
-		character.set_customer_ai_enabled(false)
+	# Set employee properties
+	if character.has("employee_id"):
+		character.employee_id = staff_id
+		character.employee_name = staff_data.name
+		character.employee_role = role
 
 	# Add name label
 	_add_staff_name_label(character, staff_data.name, ai_type)
