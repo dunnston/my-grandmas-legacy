@@ -223,7 +223,7 @@ func start_campaign(campaign_id: String) -> bool:
 			return false
 
 		# Deduct cost
-		EconomyManager.add_transaction(-campaign["cost"], "Marketing: " + campaign["name"], false)
+		EconomyManager.remove_money(campaign["cost"], "Marketing: " + campaign["name"])
 
 	total_marketing_spent += campaign["cost"]
 

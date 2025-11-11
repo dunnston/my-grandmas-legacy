@@ -195,7 +195,7 @@ func batch_purchase_ingredients(ingredient_id: String, quantity: int) -> bool:
 
 	# Process purchase
 	if EconomyManager and InventoryManager:
-		EconomyManager.add_transaction(-calc["total_cost"], "Bulk purchase: %d x %s" % [quantity, ingredient_name], false)
+		EconomyManager.remove_money(calc["total_cost"], "Bulk purchase: %d x %s" % [quantity, ingredient_name])
 		InventoryManager.add_to_player_inventory(ingredient_id, quantity)
 		print("Purchased %d x %s for $%.2f" % [quantity, ingredient_name, calc["total_cost"]])
 		return true

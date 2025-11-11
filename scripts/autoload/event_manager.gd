@@ -414,12 +414,12 @@ func apply_event_rewards(event_id: String, rewards: Dictionary) -> void:
 
 	if rewards.has("success_cash") and EconomyManager:
 		var cash: float = rewards["success_cash"]
-		EconomyManager.add_transaction(cash, "Event reward: " + event_id, true)
+		EconomyManager.add_money(cash, "Event reward: " + event_id)
 		print("  • Cash bonus: $%.2f" % cash)
 
 	if rewards.has("success_cash_bonus") and EconomyManager:
 		var bonus: float = rewards["success_cash_bonus"]
-		EconomyManager.add_transaction(bonus, "Event bonus", true)
+		EconomyManager.add_money(bonus, "Event bonus")
 		print("  • Bonus: $%.2f" % bonus)
 
 func get_active_events() -> Array[Dictionary]:
