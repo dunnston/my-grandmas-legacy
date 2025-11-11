@@ -497,50 +497,63 @@ func _update_pricing_display(recipe_id: String, container: VBoxContainer) -> voi
 # ============================================================================
 
 func _create_staff_tab() -> void:
-	"""Create the Staff management tab (placeholder)"""
+	"""Create the Staff management tab"""
 	var scroll = ScrollContainer.new()
 	scroll.name = "Staff"
 	tab_container.add_child(scroll)
 
-	var vbox = VBoxContainer.new()
-	scroll.add_child(vbox)
+	# Load the staff hiring panel script
+	var StaffHiringPanel = load("res://scripts/ui/staff_hiring_panel.gd")
+	staff_panel = StaffHiringPanel.new()
+	staff_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(staff_panel)
 
-	var title = Label.new()
-	title.text = "STAFF MANAGEMENT"
-	title.add_theme_font_size_override("font_size", 20)
-	vbox.add_child(title)
-
-	var placeholder = Label.new()
-	placeholder.text = "Staff hiring and management coming soon!\n\nThis tab will allow you to:\n• Hire bakers, cashiers, and cleaners\n• Assign staff to phases\n• Manage wages and morale\n• View staff performance"
-	placeholder.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(placeholder)
-
-	staff_panel = scroll
+	print("Staff tab created with StaffHiringPanel")
 
 # ============================================================================
 # TAB 4: MARKETING (Placeholder)
 # ============================================================================
 
 func _create_marketing_tab() -> void:
-	"""Create the Marketing tab (placeholder)"""
+	"""Create the Marketing tab"""
 	var scroll = ScrollContainer.new()
 	scroll.name = "Marketing"
 	tab_container.add_child(scroll)
 
 	var vbox = VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(vbox)
 
+	# Title
 	var title = Label.new()
 	title.text = "MARKETING & ADVERTISING"
 	title.add_theme_font_size_override("font_size", 20)
 	vbox.add_child(title)
 
-	var placeholder = Label.new()
-	placeholder.text = "Marketing campaigns coming soon!\n\nThis tab will allow you to:\n• Purchase newspaper ads\n• Run social media campaigns\n• Book radio spots\n• View active campaigns and their effects"
-	placeholder.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(placeholder)
+	# Active campaigns section
+	var active_title = Label.new()
+	active_title.text = "Active Campaigns"
+	active_title.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(active_title)
 
-	marketing_panel = scroll
+	var active_container = VBoxContainer.new()
+	active_container.name = "ActiveCampaignsContainer"
+	vbox.add_child(active_container)
+
+	vbox.add_child(HSeparator.new())
+
+	# Available campaigns section
+	var available_title = Label.new()
+	available_title.text = "Available Campaigns"
+	available_title.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(available_title)
+
+	var campaigns_container = VBoxContainer.new()
+	campaigns_container.name = "CampaignsContainer"
+	vbox.add_child(campaigns_container)
+
+	marketing_panel = vbox
+	_populate_marketing_campaigns()
 
 # ============================================================================
 # TAB 5: STATISTICS (Placeholder)
@@ -684,3 +697,154 @@ func _refresh_all_tabs() -> void:
 			for child in recipe_list.get_children():
 				child.queue_free()
 			_populate_pricing_list(recipe_list)
+
+	# Refresh staff panel
+	if staff_panel and staff_panel.has_method("refresh_display"):
+		staff_panel.refresh_display()
+
+	# Refresh marketing panel
+	if marketing_panel:
+		_populate_marketing_campaigns()
+
+func _populate_marketing_campaigns() -> void:
+	"""Populate the marketing campaigns list"""
+	if not marketing_panel:
+		return
+
+	var active_container = marketing_panel.find_child("ActiveCampaignsContainer", true, false)
+	var campaigns_container = marketing_panel.find_child("CampaignsContainer", true, false)
+
+	if not active_container or not campaigns_container:
+		return
+
+	# Clear existing
+	for child in active_container.get_children():
+		child.queue_free()
+	for child in campaigns_container.get_children():
+		child.queue_free()
+
+	# Get active campaigns
+	var active_campaigns = MarketingManager.get_active_campaigns()
+	if active_campaigns.is_empty():
+		var no_active = Label.new()
+		no_active.text = "No active campaigns"
+		no_active.modulate = Color(0.7, 0.7, 0.7)
+		active_container.add_child(no_active)
+	else:
+		for campaign in active_campaigns:
+			_add_active_campaign_card(active_container, campaign)
+
+	# Get available campaigns
+	var all_campaigns = MarketingManager.get_all_campaigns()
+	for campaign_id in all_campaigns.keys():
+		var campaign = all_campaigns[campaign_id]
+		_add_campaign_card(campaigns_container, campaign_id, campaign)
+
+func _add_active_campaign_card(container: VBoxContainer, campaign: Dictionary) -> void:
+	"""Add a card showing an active campaign"""
+	var panel = PanelContainer.new()
+	container.add_child(panel)
+
+	var hbox = HBoxContainer.new()
+	panel.add_child(hbox)
+
+	var name_label = Label.new()
+	name_label.text = campaign.get("name", "Campaign")
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(name_label)
+
+	var days_label = Label.new()
+	days_label.text = "Days left: %d" % campaign.get("days_remaining", 0)
+	hbox.add_child(days_label)
+
+	var boost_label = Label.new()
+	var boost = (campaign.get("traffic_boost", 1.0) - 1.0) * 100
+	boost_label.text = "+%.0f%% traffic" % boost
+	boost_label.modulate = Color.GREEN
+	hbox.add_child(boost_label)
+
+func _add_campaign_card(container: VBoxContainer, campaign_id: String, campaign: Dictionary) -> void:
+	"""Add a campaign purchase card"""
+	var panel = PanelContainer.new()
+	container.add_child(panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 5)
+	panel.add_child(vbox)
+
+	# Header: Icon + Name
+	var header_hbox = HBoxContainer.new()
+	vbox.add_child(header_hbox)
+
+	var name_label = Label.new()
+	name_label.text = "%s %s" % [campaign.get("icon", ""), campaign.get("name", campaign_id)]
+	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_hbox.add_child(name_label)
+
+	# Description
+	var desc_label = Label.new()
+	desc_label.text = campaign.get("description", "")
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_label.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(desc_label)
+
+	# Stats row
+	var stats_hbox = HBoxContainer.new()
+	vbox.add_child(stats_hbox)
+
+	var duration_label = Label.new()
+	duration_label.text = "Duration: %d days" % campaign.get("duration_days", 0)
+	stats_hbox.add_child(duration_label)
+
+	var boost_label = Label.new()
+	var boost = (campaign.get("traffic_boost", 1.0) - 1.0) * 100
+	boost_label.text = "Traffic: +%.0f%%" % boost
+	boost_label.modulate = Color.GREEN
+	stats_hbox.add_child(boost_label)
+
+	# Cost and button row
+	var action_hbox = HBoxContainer.new()
+	vbox.add_child(action_hbox)
+
+	var cost_label = Label.new()
+	cost_label.text = "Cost: $%.2f" % campaign.get("cost", 0.0)
+	cost_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_hbox.add_child(cost_label)
+
+	var button = Button.new()
+	var is_unlocked = campaign.get("unlocked", false)
+	var can_afford = EconomyManager.can_afford(campaign.get("cost", 0.0))
+	var is_active = _is_campaign_running(campaign_id)
+
+	if not is_unlocked:
+		button.text = "🔒 Locked"
+		button.disabled = true
+		button.tooltip_text = "Unlock at $%.2f total revenue" % campaign.get("unlock_revenue", 0)
+	elif is_active:
+		button.text = "✓ Active"
+		button.disabled = true
+	elif not can_afford:
+		button.text = "Can't Afford"
+		button.disabled = true
+	else:
+		button.text = "Launch Campaign"
+		button.pressed.connect(_on_launch_campaign.bind(campaign_id))
+
+	action_hbox.add_child(button)
+
+func _is_campaign_running(campaign_id: String) -> bool:
+	"""Check if a campaign is currently active"""
+	var active = MarketingManager.get_active_campaigns()
+	for campaign in active:
+		if campaign.get("id") == campaign_id:
+			return true
+	return false
+
+func _on_launch_campaign(campaign_id: String) -> void:
+	"""Launch a marketing campaign"""
+	if MarketingManager.start_campaign(campaign_id):
+		print("Launched campaign: ", campaign_id)
+		_populate_marketing_campaigns()  # Refresh the display
+	else:
+		print("Failed to launch campaign: ", campaign_id)
