@@ -15,8 +15,8 @@ var current_task: Dictionary = {}
 var task_timer: float = 0.0
 var tasks_completed: int = 0
 
-# AI behavior settings
-var check_interval: float = 2.0  # Check for new tasks every 2 seconds
+# AI behavior settings (loaded from BalanceConfig)
+var check_interval: float = 0.0  # Check for new tasks (loaded from config)
 var next_check_time: float = 0.0
 
 # Cleanup equipment references
@@ -39,6 +39,7 @@ func activate() -> void:
 	is_active = true
 	tasks_completed = 0
 	next_check_time = 0.0
+	check_interval = BalanceConfig.STAFF.cleaner_check_interval
 	print("[CleanerAI] ", staff_data.name, " is now cleaning!")
 	_find_cleanup_stations()
 

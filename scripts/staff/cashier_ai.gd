@@ -15,9 +15,9 @@ var current_customer: Node3D = null
 var checkout_timer: float = 0.0
 var customers_served: int = 0
 
-# AI behavior settings
-var base_checkout_time: float = 8.0  # Base time to process a customer
-var check_interval: float = 1.0      # Check for customers every second
+# AI behavior settings (loaded from BalanceConfig)
+var base_checkout_time: float = 0.0  # Base time to process a customer
+var check_interval: float = 0.0      # Check for customers every second
 var next_check_time: float = 0.0
 
 # Equipment references
@@ -32,6 +32,8 @@ func activate() -> void:
 	is_active = true
 	customers_served = 0
 	next_check_time = 0.0
+	check_interval = BalanceConfig.STAFF.cashier_check_interval
+	base_checkout_time = BalanceConfig.STAFF.cashier_base_checkout_time
 	print("[CashierAI] ", staff_data.name, " is now working at register!")
 	_find_register()
 

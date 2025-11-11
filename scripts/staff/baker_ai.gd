@@ -16,7 +16,7 @@ var task_timer: float = 0.0
 var tasks_completed: int = 0
 
 # AI behavior settings
-var check_interval: float = 5.0  # Check for new tasks every 5 seconds
+var check_interval: float = 0.0  # Loaded from BalanceConfig
 var next_check_time: float = 0.0
 
 # Equipment references (found at runtime)
@@ -32,6 +32,7 @@ func activate() -> void:
 	is_active = true
 	tasks_completed = 0
 	next_check_time = 0.0
+	check_interval = BalanceConfig.STAFF.baker_check_interval
 	print("[BakerAI] ", staff_data.name, " is now working!")
 	_find_equipment()
 

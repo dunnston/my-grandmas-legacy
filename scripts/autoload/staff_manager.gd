@@ -20,7 +20,7 @@ enum StaffRole {
 # Staff state
 var hired_staff: Dictionary = {}  # staff_id -> staff_data
 var applicant_pool: Array = []    # Available applicants (refreshes weekly)
-var max_staff_slots: int = 3      # Upgradeable
+var max_staff_slots: int = 3      # Upgradeable (loaded from BalanceConfig)
 var next_staff_id: int = 1
 
 # AI instances (created when staff activated)
@@ -33,33 +33,15 @@ var staff_names: Array = [
 	"Quinn", "Rachel", "Sam", "Taylor", "Uma", "Victor", "Wendy", "Xavier"
 ]
 
-# Wage rates per skill level (daily)
-var wage_rates: Dictionary = {
-	1: 20.0,   # 1-star: $20/day
-	2: 35.0,   # 2-star: $35/day
-	3: 55.0,   # 3-star: $55/day
-	4: 80.0,   # 4-star: $80/day
-	5: 120.0   # 5-star: $120/day
-}
-
-# Skill modifiers (affects speed and quality)
-var skill_speed_multipliers: Dictionary = {
-	1: 0.6,   # 1-star: 60% speed
-	2: 0.8,   # 2-star: 80% speed
-	3: 1.0,   # 3-star: 100% speed
-	4: 1.3,   # 4-star: 130% speed
-	5: 1.6    # 5-star: 160% speed
-}
-
-var skill_quality_multipliers: Dictionary = {
-	1: 0.8,   # 1-star: 80% quality
-	2: 0.9,   # 2-star: 90% quality
-	3: 1.0,   # 3-star: 100% quality
-	4: 1.1,   # 4-star: 110% quality
-	5: 1.2    # 5-star: 120% quality
-}
+# Balance values (loaded from BalanceConfig on ready)
+var wage_rates: Dictionary = {}
+var skill_speed_multipliers: Dictionary = {}
+var skill_quality_multipliers: Dictionary = {}
 
 func _ready() -> void:
+	# Load balance values from BalanceConfig
+	_load_balance_config()
+
 	print("StaffManager initialized")
 	# Connect to day change and phase change signals
 	if GameManager:
@@ -68,6 +50,13 @@ func _ready() -> void:
 
 	# Generate initial applicant pool
 	refresh_applicants()
+
+func _load_balance_config() -> void:
+	"""Load all staff balance parameters from BalanceConfig"""
+	max_staff_slots = BalanceConfig.STAFF.max_staff_slots
+	wage_rates = BalanceConfig.STAFF.wage_rates.duplicate()
+	skill_speed_multipliers = BalanceConfig.STAFF.skill_speed_multipliers.duplicate()
+	skill_quality_multipliers = BalanceConfig.STAFF.skill_quality_multipliers.duplicate()
 
 func _process(delta: float) -> void:
 	"""Process all active AI workers"""
@@ -135,8 +124,11 @@ func refresh_applicants() -> void:
 	"""Generate new applicant pool (called weekly)"""
 	applicant_pool.clear()
 
-	# Generate 5-8 random applicants
-	var num_applicants: int = randi_range(5, 8)
+	# Generate random applicants (using BalanceConfig range)
+	var num_applicants: int = randi_range(
+		BalanceConfig.STAFF.applicant_pool_size_min,
+		BalanceConfig.STAFF.applicant_pool_size_max
+	)
 
 	for i in range(num_applicants):
 		var applicant: Dictionary = _generate_random_applicant()
@@ -158,19 +150,19 @@ func _generate_random_applicant() -> Dictionary:
 	}
 
 func _weighted_random_skill() -> int:
-	"""Generate skill level with weighted randomness (lower skills more common)"""
+	"""Generate skill level with weighted randomness (using BalanceConfig distribution)"""
 	var roll: float = randf()
+	var cumulative: float = 0.0
 
-	if roll < 0.40:   # 40% chance
-		return 1
-	elif roll < 0.70: # 30% chance
-		return 2
-	elif roll < 0.88: # 18% chance
-		return 3
-	elif roll < 0.97: # 9% chance
-		return 4
-	else:             # 3% chance
-		return 5
+	# Use BalanceConfig skill distribution
+	var distribution: Dictionary = BalanceConfig.STAFF.skill_distribution
+
+	for skill_level in [1, 2, 3, 4, 5]:
+		cumulative += distribution[skill_level]
+		if roll < cumulative:
+			return skill_level
+
+	return 5  # Fallback (should never reach here if distribution sums to 1.0)
 
 # ============================================================================
 # WAGES & PROGRESSION
@@ -206,8 +198,8 @@ func _check_skill_improvement(staff_id: String) -> void:
 	if current_skill >= 5:
 		return  # Already max skill
 
-	# Experience thresholds for skill improvement
-	var experience_needed: int = current_skill * 30  # 30, 60, 90, 120 days
+	# Experience thresholds for skill improvement (using BalanceConfig)
+	var experience_needed: int = current_skill * BalanceConfig.STAFF.experience_per_skill_level
 
 	if staff_data.experience >= experience_needed:
 		staff_data.skill += 1
@@ -220,8 +212,8 @@ func _on_day_changed(new_day: int) -> void:
 	"""Called when day changes - pay wages and handle weekly events"""
 	pay_daily_wages()
 
-	# Refresh applicants weekly (every 7 days)
-	if new_day % 7 == 0:
+	# Refresh applicants weekly (using BalanceConfig interval)
+	if new_day % BalanceConfig.STAFF.applicant_refresh_days == 0:
 		refresh_applicants()
 
 # ============================================================================

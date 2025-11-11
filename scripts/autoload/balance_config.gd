@@ -604,6 +604,64 @@ const STARTING_RESOURCES = {
 }
 
 ## =============================================================================
+## STAFF PARAMETERS
+## =============================================================================
+const STAFF = {
+	# Staff Capacity
+	"max_staff_slots": 3,                # Starting staff slots (upgradeable)
+
+	# Wage Rates (daily cost per skill level)
+	"wage_rates": {
+		1: 20.0,                         # 1-star: $20/day
+		2: 35.0,                         # 2-star: $35/day
+		3: 55.0,                         # 3-star: $55/day
+		4: 80.0,                         # 4-star: $80/day
+		5: 120.0                         # 5-star: $120/day
+	},
+
+	# Skill Performance Multipliers
+	"skill_speed_multipliers": {
+		1: 0.6,                          # 1-star: 60% speed
+		2: 0.8,                          # 2-star: 80% speed
+		3: 1.0,                          # 3-star: 100% speed (baseline)
+		4: 1.3,                          # 4-star: 130% speed
+		5: 1.6                           # 5-star: 160% speed
+	},
+
+	"skill_quality_multipliers": {
+		1: 0.8,                          # 1-star: 80% quality
+		2: 0.9,                          # 2-star: 90% quality
+		3: 1.0,                          # 3-star: 100% quality (baseline)
+		4: 1.1,                          # 4-star: 110% quality
+		5: 1.2                           # 5-star: 120% quality
+	},
+
+	# Progression
+	"experience_per_skill_level": 30,    # Days needed to level up = skill × 30
+	                                     # (30, 60, 90, 120 days for levels 1→2, 2→3, 3→4, 4→5)
+
+	# Applicant Pool
+	"applicant_pool_size_min": 5,        # Minimum applicants per week
+	"applicant_pool_size_max": 8,        # Maximum applicants per week
+	"applicant_refresh_days": 7,         # Refresh pool every 7 days
+
+	# Applicant Skill Distribution (must sum to 1.0)
+	"skill_distribution": {
+		1: 0.40,                         # 40% chance of 1-star
+		2: 0.30,                         # 30% chance of 2-star
+		3: 0.18,                         # 18% chance of 3-star
+		4: 0.09,                         # 9% chance of 4-star
+		5: 0.03                          # 3% chance of 5-star
+	},
+
+	# AI Behavior
+	"baker_check_interval": 5.0,         # Baker AI checks for tasks every 5 seconds
+	"cashier_check_interval": 1.0,       # Cashier AI checks for customers every second
+	"cleaner_check_interval": 2.0,       # Cleaner AI checks for tasks every 2 seconds
+	"cashier_base_checkout_time": 8.0,   # Base time for cashier to process one customer
+}
+
+## =============================================================================
 ## PLAYER PARAMETERS
 ## =============================================================================
 const PLAYER = {
