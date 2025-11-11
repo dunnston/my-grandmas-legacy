@@ -98,15 +98,17 @@ func _find_equipment() -> void:
 		print("[CashierAI] ERROR: No current scene found")
 		return
 
-	# Find equipment
+	# Find equipment (prioritize Node3D objects)
 	for child in _get_all_children(bakery):
 		var child_name = child.name.to_lower()
-		if "register" in child_name:
-			register = child
-			print("[CashierAI] Found register: ", register.name)
-		elif "display" in child_name:
-			display_case = child
-			print("[CashierAI] Found display case: ", display_case.name)
+		if "register" in child_name and child is Node3D:
+			if not register:  # Only set if not already found
+				register = child
+				print("[CashierAI] Found register: ", register.name)
+		elif "display" in child_name and child is Node3D:
+			if not display_case:  # Only set if not already found
+				display_case = child
+				print("[CashierAI] Found display case: ", display_case.name)
 
 	# Warn if equipment not found
 	if not register:
