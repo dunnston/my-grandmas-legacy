@@ -100,13 +100,14 @@ func _find_equipment() -> void:
 
 	# Find StaffTarget nodes
 	for child in _get_all_children(bakery):
-		if child is Node3D and child.get_class() == "Node3D":
+		# Check if node has the StaffTarget properties
+		if child.get_script():
 			var target_name_prop = child.get("target_name")
 			var target_type_prop = child.get("target_type")
 
 			# Check if this is a staff target for cashiers
-			if target_type_prop and (target_type_prop == "cashier" or target_type_prop == "any"):
-				if target_name_prop:
+			if target_name_prop and target_type_prop:
+				if target_type_prop == "cashier" or target_type_prop == "any":
 					var name_lower = str(target_name_prop).to_lower()
 					if "register" in name_lower and not register:
 						register = child

@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://c3j7y8x9m2n4p"]
+[gd_scene load_steps=3 format=3 uid="uid://c3j7y8yam2n4p"]
 
-[ext_resource type="Script" path="res://scripts/staff/staff_target.gd" id="1"]
+[ext_resource type="Script" uid="uid://cn5l4ol4gg7bu" path="res://scripts/staff/staff_target.gd" id="1"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_1"]
 size = Vector3(0.5, 0.1, 0.5)
@@ -14,6 +14,7 @@ mesh = SubResource("BoxMesh_1")
 
 [node name="Label3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+visible = false
 billboard = 1
 text = "Target"
 font_size = 16

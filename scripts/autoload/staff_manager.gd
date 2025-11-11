@@ -488,42 +488,53 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 
 func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Dictionary:
 	"""Get the spawn position and rotation for a staff member based on their role"""
-	# Try to find appropriate equipment/workstation
+	# Try to find StaffTarget markers for initial spawn position
+	var targets = _find_staff_targets(bakery, ai_type)
+
 	match ai_type:
 		"baker":
-			# Position near mixing bowls/ovens
-			var mixing_bowl = _find_node_by_name(bakery, "mixing_bowl")
-			if mixing_bowl and mixing_bowl is Node3D:
-				var pos = mixing_bowl.global_position + Vector3(-1, 0, 1)
-				# Face the mixing bowl
-				var direction = (mixing_bowl.global_position - pos).normalized()
-				var rotation_y = atan2(direction.x, direction.z)
-				return {"position": pos, "rotation_y": rotation_y}
-			return {"position": Vector3(2, 0, -2), "rotation_y": PI}  # Default baker position, facing forward
+			# Spawn at storage target
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and ("storage" in str(target_name).to_lower() or "cabinet" in str(target_name).to_lower()):
+					return {"position": target.global_position, "rotation_y": 0}
+			return {"position": Vector3(2, 0, -2), "rotation_y": PI}
 
 		"cashier":
-			# Position near register
-			var register = _find_node_by_name(bakery, "register")
-			if register and register is Node3D:
-				var pos = register.global_position + Vector3(0, 0, -1.5)
-				# Face the register
-				var direction = (register.global_position - pos).normalized()
-				var rotation_y = atan2(direction.x, direction.z)
-				return {"position": pos, "rotation_y": rotation_y}
-			return {"position": Vector3(7, 0, 3), "rotation_y": 0}  # Default cashier position
+			# Spawn at register target
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and "register" in str(target_name).to_lower():
+					return {"position": target.global_position, "rotation_y": 0}
+			return {"position": Vector3(7, 0, 3), "rotation_y": 0}
 
 		"cleaner":
-			# Position near sinks/trash
-			var sink = _find_node_by_name(bakery, "sink")
-			if sink and sink is Node3D:
-				var pos = sink.global_position + Vector3(0, 0, -1)
-				# Face the sink
-				var direction = (sink.global_position - pos).normalized()
-				var rotation_y = atan2(direction.x, direction.z)
-				return {"position": pos, "rotation_y": rotation_y}
-			return {"position": Vector3(-2, 0, 2), "rotation_y": PI / 2}  # Default cleaner position
+			# Spawn at sink target
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and "sink" in str(target_name).to_lower():
+					return {"position": target.global_position, "rotation_y": 0}
+			return {"position": Vector3(-2, 0, 2), "rotation_y": PI / 2}
 
 	return {"position": Vector3.ZERO, "rotation_y": 0}
+
+func _find_staff_targets(bakery: Node, staff_type: String) -> Array:
+	"""Find all StaffTarget nodes for a given staff type"""
+	var targets: Array = []
+	for child in _get_all_descendants(bakery):
+		if child.get_script():
+			var target_type_prop = child.get("target_type")
+			if target_type_prop and (target_type_prop == staff_type or target_type_prop == "any"):
+				targets.append(child)
+	return targets
+
+func _get_all_descendants(node: Node) -> Array:
+	"""Recursively get all descendants of a node"""
+	var result: Array = []
+	for child in node.get_children():
+		result.append(child)
+		result.append_array(_get_all_descendants(child))
+	return result
 
 func _find_node_by_name(root: Node, search_name: String) -> Node:
 	"""Recursively find a node by name (case-insensitive partial match)"""

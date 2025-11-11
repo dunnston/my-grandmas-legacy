@@ -1,4 +1,4 @@
-[gd_scene load_steps=45 format=3 uid="uid://bkhdw8n7xmqpo"]
+[gd_scene load_steps=46 format=3 uid="uid://bkhdw8n7xmqpo"]
 
 [ext_resource type="Script" uid="uid://cyo76ljp20m3q" path="res://scripts/bakery/bakery.gd" id="1_bakery"]
 [ext_resource type="Texture2D" uid="uid://dflxrxqaofl3k" path="res://assets/textures/floor.png" id="2_floor_texture"]
@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/catalog_menu.tscn" id="12_catalogmenu"]
 [ext_resource type="PackedScene" uid="uid://b4xas2q3nxm5t" path="res://scenes/ui/recipe_book.tscn" id="12_recipebook"]
 [ext_resource type="PackedScene" uid="uid://bj481uu4rrf3" path="res://scenes/ui/story_letter.tscn" id="13_storyletter"]
+[ext_resource type="PackedScene" uid="uid://c3j7y8yam2n4p" path="res://scenes/staff/staff_target.tscn" id="14_66x8v"]
 [ext_resource type="PackedScene" uid="uid://bck6a2vv5ssg4" path="res://scenes/ui/event_notification.tscn" id="14_eventnotif"]
 [ext_resource type="PackedScene" path="res://scenes/ui/shop_management_menu.tscn" id="14_shopmgmt"]
 [ext_resource type="PackedScene" uid="uid://cbpcjwwajl5xu" path="res://assets/enviroment/Shelf_Display_Stand_1109143342_texture.glb" id="15_ccpe0"]
@@ -222,6 +223,41 @@ gizmo_extents = 0.5
 [node name="PackageSpawn" type="Marker3D" parent="NavigationMarkers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 6)
 gizmo_extents = 0.5
+
+[node name="StaffTarget" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.711466, 0, -4.8996143)
+target_name = "sink"
+target_type = "cleaner"
+
+[node name="StaffTarget3" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.072268, 0, -7.7342186)
+target_name = "storage"
+target_type = "baker"
+
+[node name="StaffTarget4" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.167636, 0, -8.00861)
+target_name = "mixing_bowl"
+target_type = "baker"
+
+[node name="StaffTarget5" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7829286, 0, -7.3353405)
+target_name = "oven"
+target_type = "baker"
+
+[node name="StaffTarget2" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9713962, 0, -0.003097415)
+target_name = "trash"
+target_type = "cleaner"
+
+[node name="StaffTarget6" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2778573, 0, -1.4102167)
+target_name = "display"
+target_type = "cashier"
+
+[node name="StaffTarget7" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5159855, 0, -1.4102167)
+target_name = "register"
+target_type = "cashier"
 
 [node name="Customers" type="Node3D" parent="."]
 
