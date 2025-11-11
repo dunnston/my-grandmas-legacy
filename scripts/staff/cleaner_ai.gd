@@ -471,13 +471,14 @@ func _set_animation(anim_name: String, playing: bool) -> void:
 	if not anim_player:
 		return
 
-	if playing and anim_player.has_animation(anim_name):
-		if anim_player.current_animation != anim_name:
-			anim_player.play(anim_name)
-	elif not playing:
-		# Pause animation (freezes at current frame)
-		if anim_player.is_playing():
-			anim_player.pause()
+	if playing:
+		# Resume playing whatever animation is loaded (don't care about name)
+		if not anim_player.is_playing():
+			anim_player.play()
+	else:
+		# Stop animation completely (not pause - stop!)
+		if anim_player.is_playing() or anim_player.current_animation != "":
+			anim_player.stop()
 
 func _find_animation_player_recursive(node: Node) -> AnimationPlayer:
 	"""Recursively search for AnimationPlayer in node hierarchy"""
