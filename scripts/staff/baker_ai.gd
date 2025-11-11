@@ -145,7 +145,12 @@ func _get_all_children(node: Node) -> Array:
 
 func _state_idle() -> void:
 	"""Idle, checking for work"""
+	# Stop movement and animation when idle
 	_set_animation("idle", false)
+
+	# Make sure navigation is stopped
+	if nav_agent and character:
+		nav_agent.target_position = character.global_position
 
 	# Check periodically for tasks
 	if Time.get_ticks_msec() / 1000.0 >= next_check_time:

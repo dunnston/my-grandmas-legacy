@@ -121,13 +121,17 @@ func _get_all_children(node: Node) -> Array:
 
 func _state_idle() -> void:
 	"""Idle at register, checking for customers"""
+	# Stop movement and animation when idle
+	_set_animation("idle", false)
+
+	# Make sure navigation is stopped
+	if nav_agent:
+		nav_agent.target_position = character.global_position if character else Vector3.ZERO
+
 	# Check periodically for customers
 	if Time.get_ticks_msec() / 1000.0 >= next_check_time:
 		_check_for_customers()
 		next_check_time = Time.get_ticks_msec() / 1000.0 + check_interval
-
-	# Stop animation when idle
-	_set_animation("idle", false)
 
 func _state_walking_to_display(delta: float) -> void:
 	"""Walking to display case to get items"""
