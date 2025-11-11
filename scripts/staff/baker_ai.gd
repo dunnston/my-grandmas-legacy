@@ -307,7 +307,7 @@ func _check_for_tasks() -> void:
 func _try_collect_from_oven() -> bool:
 	"""Try to collect finished items from ovens"""
 	for oven in available_ovens:
-		if oven.has("has_finished_item") and oven.has_finished_item:
+		if "has_finished_item" in oven and oven.has_finished_item:
 			target_equipment = oven
 			current_state = BakerState.WALKING_TO_OVEN_COLLECT
 			print("[BakerAI] ", staff_data.name, " going to collect from oven")
@@ -319,8 +319,8 @@ func _try_load_oven() -> bool:
 	# Find empty oven
 	var empty_oven = null
 	for oven in available_ovens:
-		if oven.has("is_baking") and not oven.is_baking:
-			if oven.has("has_finished_item") and not oven.has_finished_item:
+		if "is_baking" in oven and not oven.is_baking:
+			if "has_finished_item" in oven and not oven.has_finished_item:
 				empty_oven = oven
 				break
 
@@ -344,7 +344,7 @@ func _try_start_recipe() -> bool:
 	# Find available mixing bowl
 	var available_bowl = null
 	for bowl in available_mixing_bowls:
-		if bowl.has("is_crafting") and not bowl.is_crafting:
+		if "is_crafting" in bowl and not bowl.is_crafting:
 			available_bowl = bowl
 			break
 
