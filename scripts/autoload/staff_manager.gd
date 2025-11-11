@@ -463,7 +463,7 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	if character.has("employee_id"):
 		character.employee_id = staff_id
 		character.employee_name = staff_data.name
-		character.employee_role = role
+		character.employee_role = ai_type
 
 	# Add name label
 	_add_staff_name_label(character, staff_data.name, ai_type)
