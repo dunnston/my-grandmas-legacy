@@ -543,7 +543,11 @@ func _process_staff_walking_to_station(delta: float) -> void:
 			# Stop walking animation completely (not pause - stop!)
 			var anim_player: AnimationPlayer = _find_animation_player(character)
 			if anim_player:
+				print("[StaffManager] Stopping animation for ", character.name, " - was playing: ", anim_player.is_playing())
 				anim_player.stop()
+				print("[StaffManager] After stop() - is playing: ", anim_player.is_playing())
+			else:
+				print("[StaffManager] WARNING: No AnimationPlayer found for ", character.name)
 
 			# Rotate to face forward (toward bakery interior)
 			character.rotation.y = 0
