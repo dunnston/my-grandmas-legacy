@@ -734,11 +734,13 @@ func _populate_marketing_campaigns() -> void:
 		for campaign in active_campaigns:
 			_add_active_campaign_card(active_container, campaign)
 
-	# Get available campaigns
-	var all_campaigns = MarketingManager.get_all_campaigns()
+	# Get all campaigns (including locked ones) from MarketingManager
+	var all_campaigns = MarketingManager.available_campaigns
 	for campaign_id in all_campaigns.keys():
 		var campaign = all_campaigns[campaign_id]
-		_add_campaign_card(campaigns_container, campaign_id, campaign)
+		var campaign_with_id = campaign.duplicate()
+		campaign_with_id["id"] = campaign_id
+		_add_campaign_card(campaigns_container, campaign_id, campaign_with_id)
 
 func _add_active_campaign_card(container: VBoxContainer, campaign: Dictionary) -> void:
 	"""Add a card showing an active campaign"""
