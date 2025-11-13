@@ -227,37 +227,37 @@ gizmo_extents = 0.5
 [node name="StaffTargetSink" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.711466, 0, -4.8996143)
 target_name = "sink"
-target_type = "cleaner"
+target_type = "cleanup"
 
 [node name="StaffTargetStorage" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.072268, 0, -7.7342186)
 target_name = "storage"
-target_type = "baker"
+target_type = "baking"
 
 [node name="StaffTargetMixer" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.167636, 0, -8.00861)
 target_name = "mixing_bowl"
-target_type = "baker"
+target_type = "baking"
 
 [node name="StaffTargetOven" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7829286, 0, -7.3353405)
 target_name = "oven"
-target_type = "baker"
+target_type = "baking"
 
 [node name="StaffTargetTrash" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9713962, 0, -0.003097415)
 target_name = "trash"
-target_type = "cleaner"
+target_type = "cleanup"
 
 [node name="StaffTargetDisplay" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2778573, 0, -1.4102167)
 target_name = "display"
-target_type = "cashier"
+target_type = "checkout"
 
 [node name="StaffTargetRegister" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5159855, 0, -1.4102167)
 target_name = "register"
-target_type = "cashier"
+target_type = "checkout"
 
 [node name="Customers" type="Node3D" parent="."]
 

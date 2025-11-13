@@ -154,8 +154,8 @@ func _remove_item_with_metadata(inventory_id: String, item_id: String, quantity:
 
 	# Sort stacks - remove from preferred quality first, then lowest quality
 	stacks.sort_custom(func(a, b):
-		var qa = a.metadata.get("quality_data", {}).get("tier", 0)
-		var qb = b.metadata.get("quality_data", {}).get("tier", 0)
+		var qa = (a.metadata["quality_data"] if a.metadata.has("quality_data") else {}).get("tier", 0)
+		var qb = (b.metadata["quality_data"] if b.metadata.has("quality_data") else {}).get("tier", 0)
 		if prefer_quality >= 0:
 			# Prefer specific quality first
 			if qa == prefer_quality and qb != prefer_quality:
@@ -263,10 +263,14 @@ func get_highest_quality_stack(inventory_id: String, item_id: String) -> Diction
 		return {}
 
 	var best_stack = stacks[0]
-	var best_quality: float = best_stack.get("metadata", {}).get("quality_data", {}).get("quality", 0.0)
+	var best_metadata = best_stack["metadata"] if best_stack.has("metadata") else {}
+	var best_quality_data = best_metadata["quality_data"] if best_metadata.has("quality_data") else {}
+	var best_quality: float = best_quality_data.get("quality", 0.0)
 
 	for stack in stacks:
-		var quality: float = stack.get("metadata", {}).get("quality_data", {}).get("quality", 0.0)
+		var stack_metadata = stack["metadata"] if stack.has("metadata") else {}
+		var quality_data = stack_metadata["quality_data"] if stack_metadata.has("quality_data") else {}
+		var quality: float = quality_data.get("quality", 0.0)
 		if quality > best_quality:
 			best_quality = quality
 			best_stack = stack

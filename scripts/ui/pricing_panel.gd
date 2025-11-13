@@ -59,7 +59,7 @@ func _add_recipe_row(recipe: Dictionary) -> void:
 
 	# Recipe name label
 	var name_label = Label.new()
-	name_label.text = recipe.name
+	name_label.text = recipe.get("name", "Unknown")
 	name_label.custom_minimum_size = Vector2(200, 0)
 	row.add_child(name_label)
 

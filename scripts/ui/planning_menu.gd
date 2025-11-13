@@ -307,7 +307,7 @@ func _add_campaign_card(campaign_id: String, campaign: Dictionary) -> void:
 
 	# Effects
 	var effects_label: Label = Label.new()
-	var effects: Dictionary = campaign.get("effects", {})
+	var effects: Dictionary = campaign["effects"] if campaign.has("effects") else {}
 	var traffic_mult: float = effects.get("traffic_multiplier", 1.0)
 	var duration_days: int = campaign.get("duration_days", 0)
 	var duration_text: String = " for %d day%s" % [duration_days, "s" if duration_days != 1 else ""] if duration_days > 0 else " (permanent)"

@@ -101,7 +101,7 @@ func _refresh_equipment_inventory() -> void:
 
 				# Item button with quality indicator
 				var metadata = InventoryManager.get_item_metadata(equipment_inventory_id, item_id)
-				var quality_data = metadata.get("quality_data", {})
+				var quality_data = metadata["quality_data"] if metadata.has("quality_data") else {}
 				var quality = quality_data.get("quality", 70)
 
 				var item_button = Button.new()

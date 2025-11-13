@@ -172,7 +172,7 @@ func open_crafting_ui(player: Node3D) -> void:
 func transfer_ingredients_and_start(from_inventory: String, recipe: Dictionary, recipe_id: String = "") -> void:
 	# Transfer ingredients from player to mixing bowl
 	var station_inventory = get_inventory_id()
-	var ingredients: Dictionary = recipe.get("ingredients", {})
+	var ingredients: Dictionary = recipe["ingredients"] if recipe.has("ingredients") else {}
 
 	for ingredient in ingredients:
 		var quantity: int = ingredients[ingredient]

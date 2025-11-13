@@ -228,12 +228,13 @@ func start_campaign(campaign_id: String) -> bool:
 	total_marketing_spent += campaign["cost"]
 
 	# Create active campaign
+	var campaign_effects = campaign["effects"] if campaign.has("effects") else {}
 	var active_campaign: Dictionary = {
 		"id": campaign_id,
 		"name": campaign["name"],
 		"start_day": GameManager.get_current_day() if GameManager else 1,
 		"duration": campaign["duration_days"],
-		"effects": campaign.get("effects", {}).duplicate(true),
+		"effects": campaign_effects.duplicate(true),
 		"data": campaign.duplicate(true)
 	}
 
@@ -253,7 +254,7 @@ func start_campaign(campaign_id: String) -> bool:
 
 func apply_campaign_effects(campaign: Dictionary) -> void:
 	"""Apply the effects of a campaign"""
-	var effects: Dictionary = campaign.get("effects", {})
+	var effects: Dictionary = campaign["effects"] if campaign.has("effects") else {}
 
 	# Traffic multiplier - update CustomerManager with total boost from all campaigns
 	if effects.has("traffic_multiplier") and CustomerManager:
@@ -296,7 +297,7 @@ func update_campaigns(current_day: int) -> void:
 
 func remove_campaign_effects(campaign: Dictionary) -> void:
 	"""Remove the effects of an expired campaign"""
-	var effects: Dictionary = campaign.get("effects", {})
+	var effects: Dictionary = campaign["effects"] if campaign.has("effects") else {}
 
 	# Update traffic multiplier to reflect remaining campaigns
 	if effects.has("traffic_multiplier") and CustomerManager:

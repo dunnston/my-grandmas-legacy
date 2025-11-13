@@ -759,7 +759,7 @@ func get_recipes_by_category(category: String) -> Array[Dictionary]:
 func get_recipe_ingredients(recipe_id: String) -> Dictionary:
 	"""Get ingredients dictionary for a recipe"""
 	var recipe: Dictionary = get_recipe(recipe_id)
-	return recipe.get("ingredients", {})
+	return recipe["ingredients"] if recipe.has("ingredients") else {}
 
 func get_recipe_cost(recipe_id: String) -> float:
 	"""Calculate the ingredient cost of a recipe"""
@@ -768,7 +768,7 @@ func get_recipe_cost(recipe_id: String) -> float:
 		return 0.0
 
 	var total_cost: float = 0.0
-	var ingredients: Dictionary = recipe.get("ingredients", {})
+	var ingredients: Dictionary = recipe["ingredients"] if recipe.has("ingredients") else {}
 
 	for ingredient_id in ingredients:
 		var quantity: int = ingredients[ingredient_id]

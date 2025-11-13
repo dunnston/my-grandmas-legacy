@@ -140,7 +140,8 @@ func _on_player_item_clicked(item_id: String) -> void:
 	# Remove from player
 	if InventoryManager.remove_item(player_inventory_id, item_id, 1):
 		# Add to cooling rack
-		cooling_rack_script.add_item_to_cool(item_id, metadata.get("quality_data", {}))
+		var quality_data = metadata["quality_data"] if metadata.has("quality_data") else {}
+		cooling_rack_script.add_item_to_cool(item_id, quality_data)
 
 		print("Added %s to cooling rack" % item_id)
 		item_transferred.emit(player_inventory_id, equipment_inventory_id, item_id)

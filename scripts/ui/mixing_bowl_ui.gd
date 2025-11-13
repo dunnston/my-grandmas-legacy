@@ -348,7 +348,7 @@ func _create_recipe_button(recipe: Dictionary, player_inv: Dictionary) -> Button
 
 func _check_has_ingredients(recipe: Dictionary, player_inv: Dictionary) -> bool:
 	"""Check if player has all required ingredients"""
-	var ingredients = recipe.get("ingredients", {})
+	var ingredients = recipe["ingredients"] if recipe.has("ingredients") else {}
 	for ingredient_id in ingredients.keys():
 		var required = ingredients[ingredient_id]
 		var have = player_inv.get(ingredient_id, 0)
@@ -368,7 +368,7 @@ func _on_recipe_selected(recipe: Dictionary) -> void:
 		return
 
 	# Transfer ingredients from player to mixing bowl
-	var ingredients = recipe.get("ingredients", {})
+	var ingredients = recipe["ingredients"] if recipe.has("ingredients") else {}
 	for ingredient_id in ingredients.keys():
 		var amount = ingredients[ingredient_id]
 		if not InventoryManager.transfer_item(player_inventory_id, equipment_inventory_id, ingredient_id, amount):
@@ -389,7 +389,7 @@ func _on_recipe_hover(recipe: Dictionary, player_inv: Dictionary) -> void:
 	# Build ingredient list with color coding
 	var tooltip_text = "[b]%s[/b]\n\n[u]Ingredients:[/u]\n" % recipe.get("name", "Recipe")
 
-	var ingredients = recipe.get("ingredients", {})
+	var ingredients = recipe["ingredients"] if recipe.has("ingredients") else {}
 	for ingredient_id in ingredients.keys():
 		var required = ingredients[ingredient_id]
 		var have = player_inv.get(ingredient_id, 0)

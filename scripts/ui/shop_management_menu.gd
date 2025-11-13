@@ -335,7 +335,7 @@ func _add_pricing_row(container: VBoxContainer, recipe: Dictionary) -> void:
 
 	# Recipe name
 	var name_label = Label.new()
-	name_label.text = recipe.name
+	name_label.text = recipe.get("name", "Unknown")
 	name_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(name_label)
 

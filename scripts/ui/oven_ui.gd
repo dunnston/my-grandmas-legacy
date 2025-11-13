@@ -288,7 +288,8 @@ func _on_player_item_clicked(item_id: String) -> void:
 
 		# Start baking in a new slot
 		if oven_script.has_method("start_baking"):
-			if oven_script.start_baking(item_id, metadata.get("quality_data", {})):
+			var quality_data = metadata["quality_data"] if metadata.has("quality_data") else {}
+			if oven_script.start_baking(item_id, quality_data):
 				print("Added %s to oven (slot %d/%d)" % [item_id, oven_script.get_slot_count(), oven_script.get_max_slots()])
 				item_transferred.emit(player_inventory_id, equipment_inventory_id, item_id)
 			else:

@@ -266,7 +266,7 @@ func get_save_info(slot: String) -> Dictionary:
 		return {}
 
 	var save_data: Dictionary = json.data
-	return save_data.get("metadata", {})
+	return save_data["metadata"] if save_data.has("metadata") else {}
 
 func delete_save(slot: String) -> bool:
 	"""Delete a save file"""

@@ -165,7 +165,8 @@ func _select_recipe(recipe_id: String) -> void:
 	# Update ingredients list
 	if detail_ingredients:
 		if is_unlocked:
-			detail_ingredients.text = _format_ingredients(recipe.get("ingredients", {}))
+			var ingredients = recipe["ingredients"] if recipe.has("ingredients") else {}
+			detail_ingredients.text = _format_ingredients(ingredients)
 		else:
 			detail_ingredients.text = "[color=gray]🔒 Unlock to see ingredients[/color]"
 
@@ -199,8 +200,8 @@ func _format_ingredients(ingredients: Dictionary) -> String:
 func _sort_recipes(a: String, b: String) -> bool:
 	"""Sort recipes by tier then name"""
 	var all_recipes: Dictionary = RecipeManager.get_all_recipes()
-	var recipe_a: Dictionary = all_recipes.get(a, {})
-	var recipe_b: Dictionary = all_recipes.get(b, {})
+	var recipe_a: Dictionary = all_recipes[a] if all_recipes.has(a) else {}
+	var recipe_b: Dictionary = all_recipes[b] if all_recipes.has(b) else {}
 
 	# Define tier order
 	var tier_order := {

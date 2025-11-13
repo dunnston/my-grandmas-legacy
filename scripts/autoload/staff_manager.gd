@@ -6,16 +6,14 @@ extends Node
 # Signals
 signal staff_hired(staff_data: Dictionary)
 signal staff_fired(staff_id: String)
-signal staff_skill_improved(staff_id: String, new_skill: int)
+signal staff_skill_improved(staff_id: String, skill_name: String, new_value: int)
 signal applicants_refreshed(applicants: Array)
 signal wages_paid(total_amount: float)
+signal staff_raised(staff_id: String, new_wage: float)
+signal staff_bonus_given(staff_id: String, amount: float)
 
-# Staff roles
-enum StaffRole {
-	BAKER,      # Automates baking during Baking Phase
-	CASHIER,    # Automates checkout during Business Phase
-	CLEANER     # Automates cleanup during Cleanup Phase
-}
+# Save version for migration handling
+const SAVE_VERSION: int = 2  # Version 1 = old role-based system
 
 # Staff state
 var hired_staff: Dictionary = {}  # staff_id -> staff_data
@@ -44,9 +42,9 @@ var staff_names: Array = [
 ]
 
 # Balance values (loaded from BalanceConfig on ready)
-var wage_rates: Dictionary = {}
-var skill_speed_multipliers: Dictionary = {}
-var skill_quality_multipliers: Dictionary = {}
+# Note: Skill-based system no longer uses fixed wage/speed/quality dictionaries
+# Wages calculated dynamically based on total skill points
+# Performance calculated from individual skill values (0-100)
 
 func _ready() -> void:
 	# Load balance values from BalanceConfig
@@ -64,9 +62,7 @@ func _ready() -> void:
 func _load_balance_config() -> void:
 	"""Load all staff balance parameters from BalanceConfig"""
 	max_staff_slots = BalanceConfig.STAFF.max_staff_slots
-	wage_rates = BalanceConfig.STAFF.wage_rates.duplicate()
-	skill_speed_multipliers = BalanceConfig.STAFF.skill_speed_multipliers.duplicate()
-	skill_quality_multipliers = BalanceConfig.STAFF.skill_quality_multipliers.duplicate()
+	# Skill-based system - config will be loaded as needed from BalanceConfig.STAFF
 
 func set_entrance_position(position: Vector3) -> void:
 	"""Set the entrance position where staff will spawn (called by bakery scene)"""
@@ -95,47 +91,70 @@ func hire_staff(applicant_data: Dictionary) -> bool:
 		return false
 
 	# Check if can afford first day's wage
-	var daily_wage: float = wage_rates[applicant_data.skill]
+	var daily_wage: float = applicant_data["base_wage"]
 	if EconomyManager.get_current_cash() < daily_wage:
 		print("Cannot hire - insufficient funds for wage")
 		return false
 
-	# Create staff record
-	var staff_id: String = "staff_%d" % next_staff_id
+	# Create employee record with new skill-based structure
+	var employee_id: String = "employee_%d" % next_staff_id
 	next_staff_id += 1
 
-	var staff_data: Dictionary = {
-		"id": staff_id,
-		"name": applicant_data.name,
-		"role": applicant_data.role,
-		"skill": applicant_data.skill,
-		"days_worked": 0,
-		"experience": 0,
-		"hire_date": GameManager.current_day if GameManager else 1
+	var employee_data: Dictionary = {
+		# Identity
+		"employee_id": employee_id,
+		"employee_name": applicant_data["employee_name"],
+		"portrait": null,  # For future expansion
+		"hire_date": GameManager.current_day if GameManager else 1,
+
+		# Skills (0-100 each)
+		"culinary_skill": applicant_data["culinary_skill"],
+		"customer_service_skill": applicant_data["customer_service_skill"],
+		"cleaning_skill": applicant_data["cleaning_skill"],
+		"organization_skill": applicant_data["organization_skill"],
+
+		# Attributes
+		"energy": 100,  # Start at full energy
+		"morale": 80,   # Start at good morale
+		"experience_points": 0,
+		"days_employed": 0,
+
+		# Employment
+		"base_wage": applicant_data["base_wage"],
+		"assigned_phase": applicant_data.get("assigned_phase", "none"),  # Default to unassigned
+		"current_task": "",
+
+		# Traits (copy from applicant)
+		"traits": []
 	}
 
-	hired_staff[staff_id] = staff_data
+	# Copy traits if present
+	if applicant_data.has("traits"):
+		employee_data["traits"] = applicant_data["traits"].duplicate()
+
+	hired_staff[employee_id] = employee_data
 
 	# Remove from applicant pool
 	applicant_pool.erase(applicant_data)
 
-	print("[StaffManager] Hired ", staff_data.name, " as ", _get_role_name(staff_data.role), " (", staff_data.skill, " stars)")
+	print("[StaffManager] Hired ", employee_data["employee_name"], " - Wage: $", employee_data["base_wage"], "/day")
+	print("[StaffManager] Skills - Culinary:", employee_data["culinary_skill"], " Service:", employee_data["customer_service_skill"],
+		  " Cleaning:", employee_data["cleaning_skill"], " Organization:", employee_data["organization_skill"])
 	print("[StaffManager] Total staff now: ", hired_staff.size(), "/", max_staff_slots)
-	print("[StaffManager] Staff data: ", staff_data)
-	staff_hired.emit(staff_data)
+	staff_hired.emit(employee_data)
 	return true
 
-func fire_staff(staff_id: String) -> void:
+func fire_staff(employee_id: String) -> void:
 	"""Fire a staff member"""
-	if not hired_staff.has(staff_id):
-		print("Cannot fire - staff not found: ", staff_id)
+	if not hired_staff.has(employee_id):
+		print("Cannot fire - employee not found: ", employee_id)
 		return
 
-	var staff_data: Dictionary = hired_staff[staff_id]
-	print("Fired ", staff_data.name)
+	var employee_data: Dictionary = hired_staff[employee_id]
+	print("[StaffManager] Fired ", employee_data["employee_name"])
 
-	hired_staff.erase(staff_id)
-	staff_fired.emit(staff_id)
+	hired_staff.erase(employee_id)
+	staff_fired.emit(employee_id)
 
 # ============================================================================
 # APPLICANT POOL
@@ -159,31 +178,110 @@ func refresh_applicants() -> void:
 	applicants_refreshed.emit(applicant_pool)
 
 func _generate_random_applicant() -> Dictionary:
-	"""Generate a random staff applicant"""
-	var name: String = staff_names[randi() % staff_names.size()]
-	var role: StaffRole = randi() % 3  # Random role
-	var skill: int = _weighted_random_skill()
+	"""Generate a random employee applicant using archetypes and traits from BalanceConfig"""
+	var employee_name: String = staff_names[randi() % staff_names.size()]
+
+	# Select archetype based on spawn weights
+	var archetype_name: String = _select_random_archetype()
+	var archetype_data: Dictionary = BalanceConfig.STAFF.archetypes[archetype_name]
+
+	# Generate skills based on archetype
+	var culinary_skill: int
+	var customer_service_skill: int
+	var cleaning_skill: int
+	var organization_skill: int
+
+	if archetype_name == "Specialist":
+		# Specialist: one skill high, others low
+		var skills: Array = ["culinary", "customer_service", "cleaning", "organization"]
+		var chosen_skill: String = skills[randi() % skills.size()]
+		var high_range: Array = archetype_data.high_skill
+		var low_range: Array = archetype_data.low_skills
+
+		culinary_skill = randi_range(high_range[0], high_range[1]) if chosen_skill == "culinary" else randi_range(low_range[0], low_range[1])
+		customer_service_skill = randi_range(high_range[0], high_range[1]) if chosen_skill == "customer_service" else randi_range(low_range[0], low_range[1])
+		cleaning_skill = randi_range(high_range[0], high_range[1]) if chosen_skill == "cleaning" else randi_range(low_range[0], low_range[1])
+		organization_skill = randi_range(high_range[0], high_range[1]) if chosen_skill == "organization" else randi_range(low_range[0], low_range[1])
+	else:
+		# Standard archetypes: use defined ranges for each skill
+		var cul_range: Array = archetype_data.culinary_skill
+		var cs_range: Array = archetype_data.customer_service_skill
+		var clean_range: Array = archetype_data.cleaning_skill
+		var org_range: Array = archetype_data.organization_skill
+
+		culinary_skill = randi_range(cul_range[0], cul_range[1])
+		customer_service_skill = randi_range(cs_range[0], cs_range[1])
+		cleaning_skill = randi_range(clean_range[0], clean_range[1])
+		organization_skill = randi_range(org_range[0], org_range[1])
+
+	# Generate traits (0-2 random traits based on spawn chance)
+	var traits: Array = _generate_random_traits()
+
+	# Apply trait bonuses to skills
+	for trait_name in traits:
+		if not BalanceConfig.STAFF.traits.has(trait_name):
+			continue
+		var trait_data: Dictionary = BalanceConfig.STAFF.traits[trait_name]
+		if trait_data.has("customer_service_bonus"):
+			customer_service_skill = mini(customer_service_skill + trait_data.customer_service_bonus, 100)
+
+	# Calculate wage based on total skill points
+	# Formula: base_wage = 30 + (total_skills / 10)
+	var total_skills: int = culinary_skill + customer_service_skill + cleaning_skill + organization_skill
+	var base_wage: float = 30.0 + (total_skills / 10.0)
+
+	# Assign default phase (will be set by player during hiring or after)
+	var assigned_phase: String = "none"  # Unassigned by default
 
 	return {
-		"name": name,
-		"role": role,
-		"skill": skill
+		"employee_name": employee_name,
+		"archetype": archetype_name,
+		"culinary_skill": culinary_skill,
+		"customer_service_skill": customer_service_skill,
+		"cleaning_skill": cleaning_skill,
+		"organization_skill": organization_skill,
+		"base_wage": base_wage,
+		"assigned_phase": assigned_phase,
+		"traits": traits
 	}
 
-func _weighted_random_skill() -> int:
-	"""Generate skill level with weighted randomness (using BalanceConfig distribution)"""
+func _select_random_archetype() -> String:
+	"""Select a random archetype based on spawn weights"""
 	var roll: float = randf()
 	var cumulative: float = 0.0
+	var archetypes: Dictionary = BalanceConfig.STAFF.archetypes
 
-	# Use BalanceConfig skill distribution
-	var distribution: Dictionary = BalanceConfig.STAFF.skill_distribution
-
-	for skill_level in [1, 2, 3, 4, 5]:
-		cumulative += distribution[skill_level]
+	for archetype_name in archetypes.keys():
+		cumulative += archetypes[archetype_name].spawn_weight
 		if roll < cumulative:
-			return skill_level
+			return archetype_name
 
-	return 5  # Fallback (should never reach here if distribution sums to 1.0)
+	# Fallback (should never reach here if weights sum properly)
+	return "All-Rounder"
+
+func _generate_random_traits() -> Array:
+	"""Generate 0-2 random traits based on spawn chance"""
+	var traits: Array = []
+	var trait_data: Dictionary = BalanceConfig.STAFF.traits
+	var num_traits: int = randi() % 3  # 0, 1, or 2 traits
+
+	# Create pool of available traits
+	var available_traits: Array = trait_data.keys()
+	available_traits.shuffle()
+
+	for i in range(num_traits):
+		if i >= available_traits.size():
+			break
+
+		var trait_name: String = available_traits[i]
+		var trait_info: Dictionary = trait_data[trait_name]
+		var spawn_chance: float = trait_info.get("spawn_chance", 0.0)
+
+		# Roll for this trait
+		if randf() < spawn_chance:
+			traits.append(trait_name)
+
+	return traits
 
 # ============================================================================
 # WAGES & PROGRESSION
@@ -193,48 +291,99 @@ func pay_daily_wages() -> float:
 	"""Pay all staff their daily wages (called at end of day)"""
 	var total_wages: float = 0.0
 
-	for staff_id in hired_staff.keys():
-		var staff_data: Dictionary = hired_staff[staff_id]
-		var daily_wage: float = wage_rates[staff_data.skill]
+	for employee_id in hired_staff.keys():
+		var employee_data: Dictionary = hired_staff[employee_id]
+		var daily_wage: float = employee_data["base_wage"]
 
 		total_wages += daily_wage
-		staff_data.days_worked += 1
+		employee_data["days_employed"] += 1
 
-		# Gain experience
-		staff_data.experience += 1
-		_check_skill_improvement(staff_id)
+		# Gain experience points (will be used for skill improvements in Phase 8)
+		# For now, just increment days_employed
 
 	if total_wages > 0:
 		EconomyManager.remove_cash(total_wages, "Staff wages")
-		print("Paid $", total_wages, " in staff wages")
+		print("[StaffManager] Paid $%.2f in staff wages" % total_wages)
 		wages_paid.emit(total_wages)
 
 	return total_wages
 
-func _check_skill_improvement(staff_id: String) -> void:
-	"""Check if staff member's skill should improve with experience"""
-	var staff_data: Dictionary = hired_staff[staff_id]
-	var current_skill: int = staff_data.skill
+func grant_employee_xp(employee_id: String, phase: String) -> void:
+	"""Grant XP to employee for completing a task in their assigned phase"""
+	if not hired_staff.has(employee_id):
+		return
 
-	if current_skill >= 5:
-		return  # Already max skill
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var xp_gain: int = BalanceConfig.STAFF.xp_per_task
 
-	# Experience thresholds for skill improvement (using BalanceConfig)
-	var experience_needed: int = current_skill * BalanceConfig.STAFF.experience_per_skill_level
+	# Check for Quick Learner trait (bonus XP)
+	var traits: Array = []
+	if employee_data.has("traits"):
+		traits = employee_data["traits"]
+	if "Quick Learner" in traits and BalanceConfig.STAFF.traits.has("Quick Learner"):
+		var trait_data: Dictionary = BalanceConfig.STAFF.traits["Quick Learner"]
+		var multiplier: float = trait_data.get("xp_multiplier", 1.0)
+		xp_gain = int(xp_gain * multiplier)
 
-	if staff_data.experience >= experience_needed:
-		staff_data.skill += 1
-		staff_data.experience = 0  # Reset experience for next level
+	# Grant XP
+	employee_data.experience_points = employee_data.get("experience_points", 0) + xp_gain
 
-		print(staff_data.name, " improved to ", staff_data.skill, " stars!")
-		staff_skill_improved.emit(staff_id, staff_data.skill)
+	# Check for skill improvement
+	_check_skill_improvement(employee_id, phase)
+
+func _check_skill_improvement(employee_id: String, phase: String) -> void:
+	"""Check if employee should improve a skill based on XP"""
+	if not hired_staff.has(employee_id):
+		return
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var xp: int = employee_data.get("experience_points", 0)
+	var xp_threshold: int = BalanceConfig.STAFF.xp_for_skill_point
+
+	# Check if enough XP for skill improvement
+	if xp >= xp_threshold:
+		# Deduct XP
+		employee_data["experience_points"] = xp - xp_threshold
+
+		# Determine which skill to improve based on phase
+		var skill_to_improve: String = _get_skill_for_phase(phase)
+
+		if skill_to_improve != "":
+			var current_value: int = employee_data.get(skill_to_improve, 0)
+			var max_skill: int = BalanceConfig.STAFF.max_skill
+
+			# Improve skill (cap at max)
+			if current_value < max_skill:
+				employee_data[skill_to_improve] = current_value + 1
+				print("[StaffManager] ", employee_data["employee_name"], " improved ", skill_to_improve, ": ", current_value, " -> ", current_value + 1)
+				staff_skill_improved.emit(employee_id, skill_to_improve, current_value + 1)
+
+func _get_skill_for_phase(phase: String) -> String:
+	"""Get the skill name associated with a phase"""
+	match phase:
+		"baking":
+			return "culinary_skill"
+		"checkout":
+			return "customer_service_skill"
+		"cleanup":
+			return "cleaning_skill"
+		"restocking":
+			return "organization_skill"
+		_:
+			return ""
 
 func _on_day_changed(new_day: int) -> void:
-	"""Called when day changes - pay wages and handle weekly events"""
+	"""Called when day changes - pay wages, update morale, handle weekly events"""
 	pay_daily_wages()
 
+	# Update morale and energy at end of day
+	_process_daily_morale_and_energy()
+
+	# Check for auto-quits due to low morale
+	_check_employee_auto_quit()
+
 	# Refresh applicants weekly (using BalanceConfig interval)
-	if new_day % BalanceConfig.STAFF.applicant_refresh_days == 0:
+	if new_day % BalanceConfig.STAFF.get("applicant_refresh_days", 7) == 0:
 		refresh_applicants()
 
 # ============================================================================
@@ -242,38 +391,69 @@ func _on_day_changed(new_day: int) -> void:
 # ============================================================================
 
 func get_hired_staff_count() -> int:
-	"""Get number of currently hired staff"""
+	"""Get number of currently hired employees"""
 	return hired_staff.size()
 
-func get_staff_by_role(role: StaffRole) -> Array:
-	"""Get all hired staff with specific role"""
+func get_staff_by_phase(phase: String) -> Array:
+	"""Get all hired employees assigned to a specific phase"""
 	var result: Array = []
-	for staff_data in hired_staff.values():
-		if staff_data.role == role:
-			result.append(staff_data)
+	for employee_data in hired_staff.values():
+		if employee_data["assigned_phase"] == phase:
+			result.append(employee_data)
 	return result
 
-func has_staff_role(role: StaffRole) -> bool:
-	"""Check if any staff member has this role"""
-	return get_staff_by_role(role).size() > 0
+func has_staff_in_phase(phase: String) -> bool:
+	"""Check if any employee is assigned to this phase"""
+	return get_staff_by_phase(phase).size() > 0
 
-func get_staff_speed_multiplier(staff_id: String) -> float:
-	"""Get speed multiplier for staff member"""
-	if not hired_staff.has(staff_id):
-		return 1.0
-	return skill_speed_multipliers[hired_staff[staff_id].skill]
+func get_employee_skill_for_phase(employee_id: String, phase: String) -> int:
+	"""Get the relevant skill value (0-100) for an employee in a specific phase"""
+	if not hired_staff.has(employee_id):
+		return 0
 
-func get_staff_quality_multiplier(staff_id: String) -> float:
-	"""Get quality multiplier for staff member"""
-	if not hired_staff.has(staff_id):
-		return 1.0
-	return skill_quality_multipliers[hired_staff[staff_id].skill]
+	var employee_data: Dictionary = hired_staff[employee_id]
+
+	match phase:
+		"baking":
+			return employee_data["culinary_skill"]
+		"checkout":
+			return employee_data["customer_service_skill"]
+		"cleanup":
+			return employee_data["cleaning_skill"]
+		"restocking":
+			return employee_data["organization_skill"]
+		_:
+			return 0
+
+func get_employee_performance_multiplier(employee_id: String, phase: String) -> Dictionary:
+	"""Get speed and quality multipliers based on skills, energy, and morale"""
+	if not hired_staff.has(employee_id):
+		return {"speed": 1.0, "quality": 1.0}
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var skill_value: int = get_employee_skill_for_phase(employee_id, phase)
+
+	# Calculate multipliers based on skill (0-100), energy (0-100), morale (0-100)
+	# Speed: skill affects time taken (higher skill = faster)
+	# Formula: time_mult = 2.0 - (skill/100) → ranges from 2.0x (slow) to 1.0x (baseline)
+	var speed_mult: float = 2.0 - (skill_value / 100.0)
+
+	# Quality: skill, energy, and morale all affect quality
+	# Formula: quality_mult = (skill/100) * (energy/100) * (morale/100)
+	var energy_factor: float = employee_data["energy"] / 100.0
+	var morale_factor: float = employee_data["morale"] / 100.0
+	var quality_mult: float = (skill_value / 100.0) * energy_factor * morale_factor
+
+	return {
+		"speed": speed_mult,
+		"quality": quality_mult
+	}
 
 func get_total_daily_wages() -> float:
 	"""Calculate total daily wages for all hired staff"""
 	var total: float = 0.0
-	for staff_data in hired_staff.values():
-		total += wage_rates[staff_data.skill]
+	for employee_data in hired_staff.values():
+		total += employee_data["base_wage"]
 	return total
 
 func get_applicant_pool() -> Array:
@@ -282,8 +462,180 @@ func get_applicant_pool() -> Array:
 
 func can_afford_staff(applicant_data: Dictionary) -> bool:
 	"""Check if player can afford to hire this applicant"""
-	var daily_wage: float = wage_rates[applicant_data.skill]
+	var daily_wage: float = applicant_data["base_wage"]
 	return EconomyManager.get_current_cash() >= daily_wage
+
+# ============================================================================
+# EMPLOYEE MANAGEMENT METHODS
+# ============================================================================
+
+func assign_staff_to_phase(employee_id: String, phase: String) -> bool:
+	"""Assign an employee to a specific phase (baking, checkout, cleanup, restocking, none)"""
+	if not hired_staff.has(employee_id):
+		print("[StaffManager] Cannot assign - employee not found: ", employee_id)
+		return false
+
+	var valid_phases: Array = ["baking", "checkout", "cleanup", "restocking", "none"]
+	if not phase in valid_phases:
+		print("[StaffManager] Invalid phase: ", phase)
+		return false
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var old_phase: String = employee_data["assigned_phase"]
+	employee_data["assigned_phase"] = phase
+
+	print("[StaffManager] Assigned ", employee_data["employee_name"], " from ", old_phase, " to ", phase)
+	return true
+
+func give_raise(employee_id: String, amount: float) -> bool:
+	"""Give an employee a permanent wage raise"""
+	if not hired_staff.has(employee_id):
+		print("[StaffManager] Cannot give raise - employee not found: ", employee_id)
+		return false
+
+	if amount <= 0:
+		print("[StaffManager] Raise amount must be positive")
+		return false
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	employee_data["base_wage"] += amount
+
+	print("[StaffManager] Gave ", employee_data["employee_name"], " a $", amount, " raise (new wage: $", employee_data["base_wage"], "/day)")
+	staff_raised.emit(employee_id, employee_data["base_wage"])
+	return true
+
+func give_bonus(employee_id: String, amount: float, morale_boost: int = 10) -> bool:
+	"""Give an employee a one-time bonus (costs money, boosts morale)"""
+	if not hired_staff.has(employee_id):
+		print("[StaffManager] Cannot give bonus - employee not found: ", employee_id)
+		return false
+
+	if amount <= 0:
+		print("[StaffManager] Bonus amount must be positive")
+		return false
+
+	if EconomyManager.get_current_cash() < amount:
+		print("[StaffManager] Cannot afford bonus - insufficient funds")
+		return false
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+
+	# Deduct cost
+	EconomyManager.remove_cash(amount, "Employee bonus for " + employee_data["employee_name"])
+
+	# Boost morale (cap at 100)
+	employee_data["morale"] = mini(employee_data["morale"] + morale_boost, 100)
+
+	print("[StaffManager] Gave ", employee_data["employee_name"], " a $", amount, " bonus (+", morale_boost, " morale)")
+	staff_bonus_given.emit(employee_id, amount)
+	return true
+
+# ============================================================================
+# ENERGY & MORALE SYSTEMS
+# ============================================================================
+
+func deplete_employee_energy(employee_id: String, task_type: String) -> void:
+	"""Deplete energy when employee completes a task"""
+	if not hired_staff.has(employee_id):
+		return
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var energy_cost: int = BalanceConfig.STAFF.energy_cost_per_task.get(task_type, 3)
+
+	# Check for Night Owl trait (reduces energy drain)
+	var traits: Array = []
+	if employee_data.has("traits"):
+		traits = employee_data["traits"]
+	if "Night Owl" in traits and BalanceConfig.STAFF.traits.has("Night Owl"):
+		var trait_data: Dictionary = BalanceConfig.STAFF.traits["Night Owl"]
+		var reduction: float = trait_data.get("energy_drain_reduction", 0.0)
+		energy_cost = int(energy_cost * (1.0 - reduction))
+
+	# Deplete energy (minimum 0)
+	employee_data["energy"] = maxi(employee_data["energy"] - energy_cost, 0)
+
+	# Low energy affects morale
+	if employee_data["energy"] < BalanceConfig.STAFF.low_energy_threshold:
+		var morale_penalty: int = BalanceConfig.STAFF.morale_events.get("low_energy_penalty", -2)
+		adjust_employee_morale(employee_id, morale_penalty, "low energy")
+
+func regenerate_employee_energy(employee_id: String) -> void:
+	"""Regenerate energy when employee is off duty"""
+	if not hired_staff.has(employee_id):
+		return
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var regen_amount: int = BalanceConfig.STAFF.energy_regen_per_phase
+
+	# Check for Morning Person trait (bonus regeneration)
+	var traits: Array = []
+	if employee_data.has("traits"):
+		traits = employee_data["traits"]
+	if "Morning Person" in traits and BalanceConfig.STAFF.traits.has("Morning Person"):
+		var trait_data: Dictionary = BalanceConfig.STAFF.traits["Morning Person"]
+		regen_amount += trait_data.get("energy_regen_bonus", 0)
+
+	# Regenerate energy (cap at max)
+	employee_data["energy"] = mini(employee_data["energy"] + regen_amount, BalanceConfig.STAFF.max_energy)
+
+func adjust_employee_morale(employee_id: String, amount: int, reason: String = "") -> void:
+	"""Adjust employee morale (positive or negative)"""
+	if not hired_staff.has(employee_id):
+		return
+
+	var employee_data: Dictionary = hired_staff[employee_id]
+	var old_morale: int = employee_data["morale"]
+
+	# Apply morale change (cap at 0-100)
+	employee_data["morale"] = clampi(employee_data["morale"] + amount, 0, 100)
+
+	if amount != 0:
+		var change_str: String = "+" if amount > 0 else ""
+		print("[StaffManager] ", employee_data["employee_name"], " morale: ", old_morale, " -> ", employee_data["morale"], " (", change_str, amount, " ", reason, ")")
+
+func _process_daily_morale_and_energy() -> void:
+	"""Process daily morale decay and energy recovery"""
+	for employee_id in hired_staff.keys():
+		var employee_data: Dictionary = hired_staff[employee_id]
+
+		# Natural morale decay
+		var decay: int = BalanceConfig.STAFF.morale_daily_decay
+		adjust_employee_morale(employee_id, -decay, "daily decay")
+
+		# Penalty for no assignment
+		if employee_data["assigned_phase"] == "none":
+			var penalty: int = BalanceConfig.STAFF.morale_events.get("no_assignment", -3)
+			adjust_employee_morale(employee_id, penalty, "no assignment")
+
+		# Regenerate energy to full overnight
+		employee_data["energy"] = BalanceConfig.STAFF.max_energy
+
+func _check_employee_auto_quit() -> void:
+	"""Check if any employees should auto-quit due to low morale"""
+	var employees_to_fire: Array = []
+
+	for employee_id in hired_staff.keys():
+		var employee_data: Dictionary = hired_staff[employee_id]
+
+		# Check for miserable morale (< 20 for 3+ days)
+		if employee_data["morale"] < BalanceConfig.STAFF.morale_thresholds.miserable:
+			# Track consecutive miserable days
+			if not employee_data.has("miserable_days"):
+				employee_data["miserable_days"] = 0
+
+			employee_data["miserable_days"] += 1
+
+			# Auto-quit after 3 days of misery
+			if employee_data["miserable_days"] >= 3:
+				print("[StaffManager] ", employee_data["employee_name"], " quit due to low morale (", employee_data["morale"], ")")
+				employees_to_fire.append(employee_id)
+		else:
+			# Reset counter if morale improves
+			employee_data["miserable_days"] = 0
+
+	# Fire employees who quit
+	for employee_id in employees_to_fire:
+		fire_staff(employee_id)
 
 # ============================================================================
 # UPGRADES
@@ -319,51 +671,24 @@ func _on_phase_changed(new_phase: int) -> void:
 
 func _activate_all_staff() -> void:
 	"""Activate ALL hired staff when shop opens"""
-	print("[StaffManager] Activating all ", hired_staff.size(), " staff members...")
+	print("[StaffManager] Activating all ", hired_staff.size(), " employees...")
 
-	for staff_id in hired_staff.keys():
-		var staff_data: Dictionary = hired_staff[staff_id]
-		var ai_type: String = ""
+	for employee_id in hired_staff.keys():
+		var employee_data: Dictionary = hired_staff[employee_id]
+		var assigned_phase: String = employee_data.get("assigned_phase", "none")
 
-		# Determine AI type based on role
-		match staff_data.role:
-			StaffRole.BAKER:
-				ai_type = "baker"
-			StaffRole.CASHIER:
-				ai_type = "cashier"
-			StaffRole.CLEANER:
-				ai_type = "cleaner"
+		# Only activate employees with assigned phases (not "none")
+		if assigned_phase != "none":
+			_create_and_activate_ai(employee_data, assigned_phase)
+		else:
+			print("[StaffManager] ", employee_data["employee_name"], " is off duty (no phase assigned)")
 
-		if ai_type != "":
-			_create_and_activate_ai(staff_data, ai_type)
-
-func _activate_bakers() -> void:
-	"""Activate all hired bakers"""
-	var bakers: Array = get_staff_by_role(StaffRole.BAKER)
-	print("[StaffManager] Found ", bakers.size(), " bakers to activate")
-	for baker_data in bakers:
-		_create_and_activate_ai(baker_data, "baker")
-
-func _activate_cashiers() -> void:
-	"""Activate all hired cashiers"""
-	var cashiers: Array = get_staff_by_role(StaffRole.CASHIER)
-	print("[StaffManager] Found ", cashiers.size(), " cashiers to activate")
-	for cashier_data in cashiers:
-		_create_and_activate_ai(cashier_data, "cashier")
-
-func _activate_cleaners() -> void:
-	"""Activate all hired cleaners"""
-	var cleaners: Array = get_staff_by_role(StaffRole.CLEANER)
-	print("[StaffManager] Found ", cleaners.size(), " cleaners to activate")
-	for cleaner_data in cleaners:
-		_create_and_activate_ai(cleaner_data, "cleaner")
-
-func _create_and_activate_ai(staff_data: Dictionary, ai_type: String) -> void:
+func _create_and_activate_ai(employee_data: Dictionary, phase: String) -> void:
 	"""Create and activate an AI worker instance - spawns at entrance and walks to station"""
-	var staff_id: String = staff_data.id
+	var employee_id: String = employee_data["employee_id"]
 
 	# Spawn visual character at entrance (will walk to station, then AI activates)
-	_spawn_staff_character(staff_data, ai_type)
+	_spawn_staff_character(employee_data, phase)
 
 	# Note: AI activation happens in _activate_staff_ai() after character reaches station
 
@@ -394,6 +719,7 @@ func _deactivate_all_ai() -> void:
 func get_save_data() -> Dictionary:
 	"""Get data for saving"""
 	return {
+		"version": SAVE_VERSION,
 		"hired_staff": hired_staff,
 		"applicant_pool": applicant_pool,
 		"max_staff_slots": max_staff_slots,
@@ -401,39 +727,62 @@ func get_save_data() -> Dictionary:
 	}
 
 func load_save_data(data: Dictionary) -> void:
-	"""Load saved data"""
-	hired_staff = data.get("hired_staff", {})
-	applicant_pool = data.get("applicant_pool", [])
+	"""Load saved data with version checking"""
+	var save_version: int = data.get("version", 1)
+
+	if save_version < SAVE_VERSION:
+		print("[StaffManager] WARNING: Loading old save format (v%d). Employee data will be reset." % save_version)
+		# Invalidate old employee data - player must hire new staff
+		hired_staff = {}
+		applicant_pool = []
+		max_staff_slots = data.get("max_staff_slots", 3)
+		next_staff_id = data.get("next_staff_id", 1)
+		# Generate fresh applicant pool
+		refresh_applicants()
+		print("[StaffManager] Old employee system data cleared. Fresh applicant pool generated.")
+		return
+
+	# Load current version data
+	hired_staff = data["hired_staff"] if data.has("hired_staff") else {}
+	applicant_pool = data["applicant_pool"] if data.has("applicant_pool") else []
 	max_staff_slots = data.get("max_staff_slots", 3)
 	next_staff_id = data.get("next_staff_id", 1)
 
-	print("StaffManager data loaded: ", hired_staff.size(), " staff hired")
+	print("[StaffManager] Data loaded: ", hired_staff.size(), " employees hired")
 
 # ============================================================================
 # UTILITIES
 # ============================================================================
 
-func _get_role_name(role: StaffRole) -> String:
-	"""Get display name for role"""
-	match role:
-		StaffRole.BAKER:
-			return "Baker"
-		StaffRole.CASHIER:
-			return "Cashier"
-		StaffRole.CLEANER:
-			return "Cleaner"
+func get_phase_display_name(phase: String) -> String:
+	"""Get display name for phase"""
+	match phase:
+		"baking":
+			return "Baking"
+		"checkout":
+			return "Checkout"
+		"cleanup":
+			return "Cleanup"
+		"restocking":
+			return "Restocking"
+		"none":
+			return "Off Duty"
 		_:
 			return "Unknown"
 
-func get_role_description(role: StaffRole) -> String:
-	"""Get description for role"""
-	match role:
-		StaffRole.BAKER:
-			return "Automatically bakes recipes during Baking Phase"
-		StaffRole.CASHIER:
-			return "Handles customer checkout during Business Phase"
-		StaffRole.CLEANER:
+func get_phase_description(phase: String) -> String:
+	"""Get description for phase"""
+	match phase:
+		"baking":
+			return "Prepares baked goods during Baking Phase"
+		"checkout":
+			return "Handles customer transactions during Business Phase"
+		"cleanup":
 			return "Completes cleanup tasks during Cleanup Phase"
+		"restocking":
+			return "Manages inventory and restocking"
+		"none":
+			return "Not currently assigned to any phase"
 		_:
 			return ""
 
@@ -441,9 +790,9 @@ func get_role_description(role: StaffRole) -> String:
 # VISUAL STAFF CHARACTERS
 # ============================================================================
 
-func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
-	"""Spawn a visual character for this staff member at entrance, then walk to station"""
-	var staff_id: String = staff_data.id
+func _spawn_staff_character(employee_data: Dictionary, phase: String) -> void:
+	"""Spawn a visual character for this employee at entrance, then walk to station"""
+	var employee_id: String = employee_data["employee_id"]
 
 	# Get the bakery scene
 	var bakery = get_tree().current_scene
@@ -453,25 +802,25 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 
 	# Instance the employee scene
 	var character: Node3D = employee_scene.instantiate()
-	character.name = "Staff_" + staff_data.name
+	character.name = "Employee_" + employee_data["employee_name"]
 	bakery.add_child(character)
 
 	# Spawn at entrance position (same as customers)
 	character.global_position = entrance_position
 
 	# Set employee properties
-	character.employee_id = staff_id
-	character.employee_name = staff_data.name
-	character.employee_role = ai_type
+	character.employee_id = employee_id
+	character.employee_name = employee_data["employee_name"]
+	character.employee_role = phase  # Using role property to store phase for now
 
 	# Add name label
-	_add_staff_name_label(character, staff_data.name, ai_type)
+	_add_staff_name_label(character, employee_data["employee_name"], phase)
 
 	# Store reference
-	staff_characters[staff_id] = character
+	staff_characters[employee_id] = character
 
 	# Get target station position
-	var target_position: Vector3 = _get_staff_target_position(ai_type, bakery)
+	var target_position: Vector3 = _get_staff_target_position(phase, bakery)
 
 	# Wait one frame for employee's _ready() to complete before playing animation
 	await get_tree().process_frame
@@ -480,22 +829,22 @@ func _spawn_staff_character(staff_data: Dictionary, ai_type: String) -> void:
 	_play_character_animation(character, "walk")
 
 	# Begin navigation to station
-	staff_walking_to_station[staff_id] = {
+	staff_walking_to_station[employee_id] = {
 		"character": character,
 		"target_position": target_position,
-		"ai_type": ai_type,
-		"staff_data": staff_data
+		"phase": phase,
+		"employee_data": employee_data
 	}
 
-	print("[StaffManager] Spawned ", staff_data.name, " at entrance ", entrance_position, " - walking to station at ", target_position)
+	print("[StaffManager] Spawned ", employee_data["employee_name"], " at entrance ", entrance_position, " - walking to ", phase, " station at ", target_position)
 
-func _get_staff_target_position(ai_type: String, bakery: Node) -> Vector3:
-	"""Get the target position for a staff member based on their role"""
-	# Try to find StaffTarget markers
-	var targets = _find_staff_targets(bakery, ai_type)
+func _get_staff_target_position(phase: String, bakery: Node) -> Vector3:
+	"""Get the target position for an employee based on their assigned phase"""
+	# Try to find StaffTarget markers (still using old target_type names for now - Phase 9 will update markers)
+	var targets = _find_staff_targets(bakery, phase)
 
-	match ai_type:
-		"baker":
+	match phase:
+		"baking":
 			# Target: storage
 			for target in targets:
 				var target_name = target.get("target_name")
@@ -503,7 +852,7 @@ func _get_staff_target_position(ai_type: String, bakery: Node) -> Vector3:
 					return target.global_position
 			return Vector3(2, 0, -2)  # Fallback
 
-		"cashier":
+		"checkout":
 			# Target: register
 			for target in targets:
 				var target_name = target.get("target_name")
@@ -511,7 +860,7 @@ func _get_staff_target_position(ai_type: String, bakery: Node) -> Vector3:
 					return target.global_position
 			return Vector3(7, 0, 3)  # Fallback
 
-		"cleaner":
+		"cleanup":
 			# Target: sink
 			for target in targets:
 				var target_name = target.get("target_name")
@@ -519,19 +868,27 @@ func _get_staff_target_position(ai_type: String, bakery: Node) -> Vector3:
 					return target.global_position
 			return Vector3(-2, 0, 2)  # Fallback
 
+		"restocking":
+			# Target: storage (same as baking for now)
+			for target in targets:
+				var target_name = target.get("target_name")
+				if target_name and ("storage" in str(target_name).to_lower() or "cabinet" in str(target_name).to_lower()):
+					return target.global_position
+			return Vector3(2, 0, -2)  # Fallback
+
 	return Vector3.ZERO
 
 func _process_staff_walking_to_station(delta: float) -> void:
-	"""Process staff members walking from entrance to their stations"""
-	var arrived_staff: Array = []
+	"""Process employees walking from entrance to their stations"""
+	var arrived_employees: Array = []
 
-	for staff_id in staff_walking_to_station.keys():
-		var walk_data: Dictionary = staff_walking_to_station[staff_id]
+	for employee_id in staff_walking_to_station.keys():
+		var walk_data: Dictionary = staff_walking_to_station[employee_id]
 		var character: Node3D = walk_data.character
 		var target_position: Vector3 = walk_data.target_position
 
 		if not is_instance_valid(character):
-			arrived_staff.append(staff_id)
+			arrived_employees.append(employee_id)
 			continue
 
 		# Calculate direction to target
@@ -553,7 +910,7 @@ func _process_staff_walking_to_station(delta: float) -> void:
 			character.rotation.y = PI
 
 			# Mark as arrived
-			arrived_staff.append(staff_id)
+			arrived_employees.append(employee_id)
 			print("[StaffManager] ", character.name, " arrived at station")
 			continue
 
@@ -567,41 +924,38 @@ func _process_staff_walking_to_station(delta: float) -> void:
 			var target_rotation = atan2(direction.x, direction.z)
 			character.rotation.y = lerp_angle(character.rotation.y, target_rotation, 10.0 * delta)
 
-	# Activate AI for staff that arrived at their stations
-	for staff_id in arrived_staff:
-		var walk_data: Dictionary = staff_walking_to_station[staff_id]
-		_activate_staff_ai(walk_data.staff_data, walk_data.ai_type, staff_id)
-		staff_walking_to_station.erase(staff_id)
+	# Activate AI for employees that arrived at their stations
+	for employee_id in arrived_employees:
+		var walk_data: Dictionary = staff_walking_to_station[employee_id]
+		_activate_staff_ai(walk_data.employee_data, walk_data.phase, employee_id)
+		staff_walking_to_station.erase(employee_id)
 
-func _activate_staff_ai(staff_data: Dictionary, ai_type: String, staff_id: String) -> void:
-	"""Activate AI for a staff member who has reached their station"""
+func _activate_staff_ai(employee_data: Dictionary, phase: String, employee_id: String) -> void:
+	"""Activate AI for an employee who has reached their station"""
 	# Get the character reference
-	var character: Node3D = staff_characters.get(staff_id)
+	var character: Node3D = staff_characters.get(employee_id)
 
-	# Load the appropriate AI class
-	var ai_instance = null
-	match ai_type:
-		"baker":
-			var BakerAI = load("res://scripts/staff/baker_ai.gd")
-			ai_instance = BakerAI.new(staff_id, staff_data)
-		"cashier":
-			var CashierAI = load("res://scripts/staff/cashier_ai.gd")
-			ai_instance = CashierAI.new(staff_id, staff_data)
-		"cleaner":
-			var CleanerAI = load("res://scripts/staff/cleaner_ai.gd")
-			ai_instance = CleanerAI.new(staff_id, staff_data)
+	# Load the unified EmployeeAI class
+	var EmployeeAI = load("res://scripts/staff/employee_ai.gd")
+	if not EmployeeAI:
+		print("[StaffManager] ERROR: Could not load EmployeeAI class")
+		return
 
-	if ai_instance:
-		# Add AI to scene tree so it can access get_tree()
-		add_child(ai_instance)
-		active_ai_workers[staff_id] = ai_instance
+	# Create AI instance
+	var ai_instance = EmployeeAI.new(employee_id, employee_data)
 
-		# Give AI control of the visual character
-		if ai_instance.has_method("set_character") and character:
-			ai_instance.set_character(character)
+	# Add AI to scene tree so it can access get_tree()
+	add_child(ai_instance)
+	active_ai_workers[employee_id] = ai_instance
 
-		ai_instance.activate()
-		print("[StaffManager] AI activated for ", staff_data.name, " at their station")
+	# Give AI control of the visual character
+	if ai_instance.has_method("set_character") and character:
+		ai_instance.set_character(character)
+
+	# Activate with assigned phase
+	if ai_instance.has_method("activate"):
+		ai_instance.activate(phase)
+		print("[StaffManager] Unified AI activated for ", employee_data["employee_name"], " (", phase, " phase)")
 
 func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Dictionary:
 	"""Get the spawn position and rotation for a staff member based on their role"""
@@ -635,13 +989,26 @@ func _get_staff_spawn_position(ai_type: String, bakery: Node) -> Dictionary:
 
 	return {"position": Vector3.ZERO, "rotation_y": 0}
 
-func _find_staff_targets(bakery: Node, staff_type: String) -> Array:
-	"""Find all StaffTarget nodes for a given staff type"""
+func _find_staff_targets(bakery: Node, phase: String) -> Array:
+	"""Find all StaffTarget nodes for a given phase (supports old role names for compatibility)"""
 	var targets: Array = []
+
+	# Map phases to old role names for backwards compatibility with existing markers
+	var old_role_map: Dictionary = {
+		"baking": "baker",
+		"checkout": "cashier",
+		"cleanup": "cleaner",
+		"restocking": "any"  # Can use any type markers
+	}
+
+	var compatible_types: Array = [phase, "any"]
+	if old_role_map.has(phase):
+		compatible_types.append(old_role_map[phase])
+
 	for child in _get_all_descendants(bakery):
 		if child.get_script():
 			var target_type_prop = child.get("target_type")
-			if target_type_prop and (target_type_prop == staff_type or target_type_prop == "any"):
+			if target_type_prop and target_type_prop in compatible_types:
 				targets.append(child)
 	return targets
 
@@ -720,12 +1087,13 @@ func _stop_character_animation(character: Node3D) -> void:
 	"""Stop walking animation and set to idle pose"""
 	_play_character_animation(character, "idle")
 
-func _add_staff_name_label(character: Node3D, staff_name: String, ai_type: String) -> void:
-	"""Add a name label above the staff character"""
+func _add_staff_name_label(character: Node3D, employee_name: String, phase: String) -> void:
+	"""Add a name label above the employee character"""
 	# Create a Label3D node
 	var label = Label3D.new()
 	label.name = "NameLabel"
-	label.text = staff_name + " (" + ai_type.capitalize() + ")"
+	var phase_display: String = get_phase_display_name(phase)
+	label.text = employee_name + " (" + phase_display + ")"
 	label.position = Vector3(0, 2.2, 0)  # Above character's head
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.font_size = 24

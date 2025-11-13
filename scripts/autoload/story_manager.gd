@@ -254,7 +254,7 @@ func show_beginning_letter() -> void:
 
 func get_letter(milestone_id: String) -> Dictionary:
 	"""Get letter data for a milestone"""
-	return grandmother_letters.get(milestone_id, {})
+	return grandmother_letters[milestone_id] if grandmother_letters.has(milestone_id) else {}
 
 func has_read_letter(milestone_id: String) -> bool:
 	"""Check if a letter has been read"""

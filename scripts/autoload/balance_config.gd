@@ -604,61 +604,140 @@ const STARTING_RESOURCES = {
 }
 
 ## =============================================================================
-## STAFF PARAMETERS
+## EMPLOYEE PARAMETERS (Skill-Based System)
 ## =============================================================================
 const STAFF = {
 	# Staff Capacity
 	"max_staff_slots": 3,                # Starting staff slots (upgradeable)
-
-	# Wage Rates (daily cost per skill level)
-	"wage_rates": {
-		1: 20.0,                         # 1-star: $20/day
-		2: 35.0,                         # 2-star: $35/day
-		3: 55.0,                         # 3-star: $55/day
-		4: 80.0,                         # 4-star: $80/day
-		5: 120.0                         # 5-star: $120/day
-	},
-
-	# Skill Performance Multipliers
-	"skill_speed_multipliers": {
-		1: 0.6,                          # 1-star: 60% speed
-		2: 0.8,                          # 2-star: 80% speed
-		3: 1.0,                          # 3-star: 100% speed (baseline)
-		4: 1.3,                          # 4-star: 130% speed
-		5: 1.6                           # 5-star: 160% speed
-	},
-
-	"skill_quality_multipliers": {
-		1: 0.8,                          # 1-star: 80% quality
-		2: 0.9,                          # 2-star: 90% quality
-		3: 1.0,                          # 3-star: 100% quality (baseline)
-		4: 1.1,                          # 4-star: 110% quality
-		5: 1.2                           # 5-star: 120% quality
-	},
-
-	# Progression
-	"experience_per_skill_level": 30,    # Days needed to level up = skill × 30
-	                                     # (30, 60, 90, 120 days for levels 1→2, 2→3, 3→4, 4→5)
 
 	# Applicant Pool
 	"applicant_pool_size_min": 5,        # Minimum applicants per week
 	"applicant_pool_size_max": 8,        # Maximum applicants per week
 	"applicant_refresh_days": 7,         # Refresh pool every 7 days
 
-	# Applicant Skill Distribution (must sum to 1.0)
-	"skill_distribution": {
-		1: 0.40,                         # 40% chance of 1-star
-		2: 0.30,                         # 30% chance of 2-star
-		3: 0.18,                         # 18% chance of 3-star
-		4: 0.09,                         # 9% chance of 4-star
-		5: 0.03                          # 3% chance of 5-star
+	# Archetypes (for applicant generation)
+	# Each archetype defines skill ranges [min, max] for the 4 skills (0-100 scale)
+	"archetypes": {
+		"Baker": {
+			"culinary_skill": [60, 90],
+			"customer_service_skill": [20, 40],
+			"cleaning_skill": [30, 50],
+			"organization_skill": [40, 60],
+			"spawn_weight": 0.25          # 25% of applicants
+		},
+		"Server": {
+			"culinary_skill": [20, 40],
+			"customer_service_skill": [60, 90],
+			"cleaning_skill": [30, 50],
+			"organization_skill": [40, 60],
+			"spawn_weight": 0.25          # 25% of applicants
+		},
+		"All-Rounder": {
+			"culinary_skill": [45, 65],
+			"customer_service_skill": [45, 65],
+			"cleaning_skill": [45, 65],
+			"organization_skill": [45, 65],
+			"spawn_weight": 0.20          # 20% of applicants
+		},
+		"Specialist": {
+			# One skill very high (75-95), others low (15-35)
+			# Randomly chosen during generation
+			"high_skill": [75, 95],
+			"low_skills": [15, 35],
+			"spawn_weight": 0.15          # 15% of applicants
+		},
+		"Raw Talent": {
+			# Young/inexperienced - low skills but room to grow
+			"culinary_skill": [30, 50],
+			"customer_service_skill": [30, 50],
+			"cleaning_skill": [30, 50],
+			"organization_skill": [30, 50],
+			"spawn_weight": 0.15          # 15% of applicants
+		}
 	},
 
-	# AI Behavior
-	"baker_check_interval": 5.0,         # Baker AI checks for tasks every 5 seconds
-	"cashier_check_interval": 1.0,       # Cashier AI checks for customers every second
-	"cleaner_check_interval": 2.0,       # Cleaner AI checks for tasks every 2 seconds
-	"cashier_base_checkout_time": 8.0,   # Base time for cashier to process one customer
+	# Traits (personality/special abilities)
+	"traits": {
+		"Quick Learner": {
+			"xp_multiplier": 1.5,         # Gains 50% more XP
+			"spawn_chance": 0.15          # 15% chance on applicants
+		},
+		"People Person": {
+			"customer_service_bonus": 10, # +10 to customer service skill
+			"spawn_chance": 0.15
+		},
+		"Perfectionist": {
+			"quality_bonus": 0.1,         # +10% quality multiplier
+			"speed_penalty": 0.1,         # -10% speed (takes longer)
+			"spawn_chance": 0.12
+		},
+		"Speed Demon": {
+			"speed_bonus": 0.15,          # +15% speed (faster work)
+			"quality_penalty": 0.05,      # -5% quality
+			"spawn_chance": 0.12
+		},
+		"Morning Person": {
+			"energy_regen_bonus": 5,      # +5 energy regeneration
+			"spawn_chance": 0.10
+		},
+		"Night Owl": {
+			"energy_drain_reduction": 0.2, # 20% less energy drain
+			"spawn_chance": 0.10
+		},
+		"Team Player": {
+			"morale_boost_to_others": 2,  # Boosts nearby employees' morale
+			"spawn_chance": 0.08
+		}
+	},
+
+	# Energy System
+	"max_energy": 100,
+	"starting_energy": 100,
+	"energy_cost_per_task": {
+		"baking": 5,                     # Costs 5 energy per baking task
+		"checkout": 3,                   # Costs 3 energy per checkout
+		"cleanup": 4,                    # Costs 4 energy per cleanup task
+		"restocking": 3                  # Costs 3 energy per restock
+	},
+	"energy_regen_per_phase": 20,        # Regenerates 20 energy when not working
+	"low_energy_threshold": 30,          # Performance degrades below 30%
+
+	# Morale System
+	"max_morale": 100,
+	"starting_morale": 80,               # New hires start at 80 morale
+	"morale_thresholds": {
+		"happy": 80,                     # 80+ = happy (normal performance)
+		"content": 60,                   # 60-79 = content (slight performance drop)
+		"unhappy": 40,                   # 40-59 = unhappy (noticeable performance drop)
+		"miserable": 20                  # 20-39 = miserable (major performance drop)
+		                                 # <20 = will quit after 3 days
+	},
+	"morale_daily_decay": 1,             # Loses 1 morale per day naturally
+	"morale_events": {
+		"task_completed": 1,             # +1 morale per task completed
+		"given_bonus": 10,               # +10 morale when given bonus
+		"given_raise": 5,                # +5 morale when given raise
+		"low_energy_penalty": -2,        # -2 morale per day working with low energy
+		"no_assignment": -3              # -3 morale per day with no phase assignment
+	},
+
+	# Experience & Skill Progression
+	"xp_per_task": 5,                    # Gain 5 XP per task completed
+	"xp_for_skill_point": 100,           # Every 100 XP = +1 skill point to most-used skill
+	"max_skill": 100,                    # Skills cap at 100
+
+	# AI Behavior (phase-based, not role-based)
+	"ai_check_intervals": {
+		"baking": 5.0,                   # Check for baking tasks every 5 seconds
+		"checkout": 1.0,                 # Check for customers every second
+		"cleanup": 2.0,                  # Check for cleanup tasks every 2 seconds
+		"restocking": 4.0                # Check for restocking every 4 seconds
+	},
+	"base_task_times": {
+		"checkout": 45.0,                # Base time to process one customer (seconds)
+		"cleanup_item": 10.0,            # Base time to clean one item
+		"restock_item": 8.0              # Base time to restock one item
+	}
 }
 
 ## =============================================================================

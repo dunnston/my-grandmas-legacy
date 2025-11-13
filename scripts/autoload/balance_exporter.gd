@@ -25,7 +25,7 @@ func export_recipes_csv() -> String:
 
 		# Format ingredients
 		var ingredients_str: String = ""
-		var ingredients_dict = recipe.get("ingredients", {})
+		var ingredients_dict = recipe["ingredients"] if recipe.has("ingredients") else {}
 		for ing in ingredients_dict:
 			ingredients_str += "%s:%d " % [ing, ingredients_dict[ing]]
 
