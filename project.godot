@@ -36,6 +36,7 @@ SceneManager="*res://scripts/autoload/scene_manager.gd"
 AchievementManager="*res://scripts/autoload/achievement_manager.gd"
 TaskManager="*res://scripts/autoload/task_manager.gd"
 StaffManager="*res://scripts/autoload/staff_manager.gd"
+SleepManager="*res://scripts/autoload/sleep_manager.gd"
 BuildingManager="*res://scripts/autoload/building_manager.gd"
 DeliveryManager="*res://scripts/autoload/delivery_manager.gd"
 

@@ -168,6 +168,10 @@ func _collect_save_data() -> Dictionary:
 	if BuildingManager:
 		data["building_manager"] = BuildingManager.get_save_data()
 
+	# Sleep system (buffs, settings)
+	if SleepManager:
+		data["sleep_manager"] = SleepManager.get_save_data()
+
 	# Delivery (queued deliveries, packages)
 	if DeliveryManager:
 		data["delivery_manager"] = DeliveryManager.save_data()
@@ -243,6 +247,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Tasks
 	if data.has("task_manager") and TaskManager:
 		TaskManager.load_save_data(data["task_manager"])
+
+	# Sleep system
+	if data.has("sleep_manager") and SleepManager:
+		SleepManager.load_save_data(data["sleep_manager"])
 
 	print("Applied save data to all managers")
 

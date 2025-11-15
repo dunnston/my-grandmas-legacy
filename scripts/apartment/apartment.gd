@@ -6,6 +6,7 @@ extends Node3D
 # Signals
 signal player_rested(hours_skipped: int)
 signal transition_to_bakery()
+signal sleep_started()
 
 # Node references
 @onready var bed_interaction: Area3D = $Furniture/Bed/BedInteraction
@@ -13,6 +14,7 @@ signal transition_to_bakery()
 @onready var bookshelf_interaction: Area3D = $Furniture/Bookshelf/BookshelfInteraction
 @onready var photo_interaction: Area3D = $Furniture/GrandmaPhoto/PhotoInteraction
 @onready var stairs_exit: Area3D = $StairsExit
+@onready var sleep_controller: Node = $SleepController
 
 var player_nearby_bed: bool = false
 var player_nearby_tv: bool = false
@@ -42,6 +44,10 @@ func _ready() -> void:
 		stairs_exit.body_entered.connect(_on_stairs_entered)
 		stairs_exit.body_exited.connect(_on_stairs_exited)
 
+	# Connect sleep controller
+	if sleep_controller:
+		sleep_controller.sleep_sequence_complete.connect(_on_sleep_sequence_complete)
+
 	print("Apartment scene loaded")
 
 func _process(_delta: float) -> void:
@@ -69,27 +75,15 @@ func _on_bed_exited(body: Node3D) -> void:
 		player_nearby_bed = false
 
 func interact_with_bed() -> void:
-	print("
-=== REST ===")
-	print("You lie down on the comfortable bed.")
-	print("Grandma's quilt is warm and familiar...")
+	print("\n=== GOING TO SLEEP ===")
+	print("You lie down on Grandma's comfortable bed...")
 
-	# Sleep for 8 hours
-	var hours_to_sleep = 8
-	print("
-Sleeping for ", hours_to_sleep, " hours...")
-	print("(You rest and recover energy)")
-
-	# Use GameManager sleep function (advances time, closes shop if open)
-	GameManager.sleep(hours_to_sleep)
-
-	# Small morale boost
-	if ProgressionManager.has_method("add_reputation"):
-		ProgressionManager.add_reputation(1.0)
-		print("+1 Reputation (well-rested)")
-
-	skip_time(hours_to_sleep)
-	player_rested.emit(hours_to_sleep)
+	# Start the sleep sequence with mini-game
+	if sleep_controller:
+		sleep_started.emit()
+		sleep_controller.start_sleep_sequence()
+	else:
+		push_error("SleepController not found!")
 
 # TV interactions
 func _on_tv_entered(body: Node3D) -> void:
@@ -216,9 +210,21 @@ func interact_with_stairs() -> void:
 	transition_to_bakery.emit()
 	SceneManager.go_to_bakery()
 
+# Sleep sequence callbacks
+func _on_sleep_sequence_complete() -> void:
+	"""Called when sleep sequence is fully complete"""
+	print("[Apartment] Sleep sequence complete - player wakes up")
+
+	# Check for active buffs
+	var buff_info = SleepManager.get_active_buff()
+	if buff_info.active:
+		print("Morning buff active: %s %s" % [buff_info.icon, buff_info.name])
+
+	# Player can now move around apartment
+	# Could show a wake-up message here
+
 # Helper functions
 func skip_time(hours: int) -> void:
-	"""Skip forward in time (for rest/sleep)"""
+	"""Skip forward in time (for rest/sleep) - DEPRECATED, use sleep system"""
 	print("Skipping %d hours..." % hours)
 	player_rested.emit(hours)
-	# TODO: Integrate with GameManager time system
