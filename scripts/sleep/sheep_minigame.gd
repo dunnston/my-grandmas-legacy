@@ -235,13 +235,14 @@ func _update_sheep_animation(progress: float) -> void:
 	var x = progress * horizontal_distance - (horizontal_distance / 2)
 	var y = -jump_height * (4.0 * progress * (1.0 - progress))  # Parabola
 
-	# Update ColorRect position (offset values)
-	var base_left = -120.0
-	var base_top = -20.0
-	sheep_sprite.offset_left = base_left + x
-	sheep_sprite.offset_right = base_left + x + 40.0  # Width of 40px
-	sheep_sprite.offset_top = base_top + y
-	sheep_sprite.offset_bottom = base_top + y + 40.0  # Height of 40px
+	# Update ColorRect position (offset values relative to center anchor)
+	var sheep_size = 40.0
+	var half_size = sheep_size / 2.0
+
+	sheep_sprite.offset_left = x - half_size
+	sheep_sprite.offset_right = x + half_size
+	sheep_sprite.offset_top = y - half_size
+	sheep_sprite.offset_bottom = y + half_size
 
 func _update_timing_indicator(progress: float) -> void:
 	"""Update the timing indicator to show current position"""
