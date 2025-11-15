@@ -296,6 +296,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Commercial-grade oven (+2% quality)",
 		"cost": 2000.0,
 		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Requires Rising Reputation task
 		"category": "equipment",
 		"subcategory": "oven",
 		"equipment_tier": 1
@@ -305,6 +306,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Advanced convection oven (+4% quality)",
 		"cost": 5000.0,
 		"unlock_revenue": 10000,
+		"star_requirement": 3.0,  # Requires Team Player task
 		"category": "equipment",
 		"subcategory": "oven",
 		"equipment_tier": 2
@@ -314,6 +316,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Top-of-the-line oven (+6% quality)",
 		"cost": 10000.0,
 		"unlock_revenue": 25000,
+		"star_requirement": 3.5,  # Requires Perfectionist task
 		"category": "equipment",
 		"subcategory": "oven",
 		"equipment_tier": 3
@@ -325,6 +328,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Professional stand mixer (+2% quality)",
 		"cost": 1500.0,
 		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Requires Rising Reputation task
 		"category": "equipment",
 		"subcategory": "mixer",
 		"equipment_tier": 1
@@ -334,6 +338,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Heavy-duty industrial mixer (+4% quality)",
 		"cost": 4000.0,
 		"unlock_revenue": 10000,
+		"star_requirement": 3.0,  # Requires Team Player task
 		"category": "equipment",
 		"subcategory": "mixer",
 		"equipment_tier": 2
@@ -343,6 +348,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Grandma's restored professional mixer (+6% quality)",
 		"cost": 8000.0,
 		"unlock_revenue": 25000,
+		"star_requirement": 4.0,  # Requires Grandmother's Legacy task
 		"category": "equipment",
 		"subcategory": "mixer",
 		"equipment_tier": 3
@@ -354,6 +360,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Temperature-controlled display case",
 		"cost": 1000.0,
 		"unlock_revenue": 1000,
+		"star_requirement": 2.0,  # Requires Baking Variety task
 		"category": "equipment",
 		"subcategory": "display",
 		"capacity_bonus": 5
@@ -363,6 +370,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"description": "Large multi-shelf display (+10 capacity)",
 		"cost": 2500.0,
 		"unlock_revenue": 5000,
+		"star_requirement": 3.5,  # Requires Perfectionist task
 		"category": "equipment",
 		"subcategory": "display",
 		"capacity_bonus": 10
@@ -472,15 +480,23 @@ func get_upgrade(upgrade_id: String) -> Dictionary:
 			return upgrades[upgrade_id]
 	return {}
 
-# Check if upgrade is unlocked (based on revenue)
+# Check if upgrade is unlocked (based on revenue AND star rating)
 func is_upgrade_unlocked(upgrade_id: String) -> bool:
 	var upgrade = get_upgrade(upgrade_id)
 	if upgrade.is_empty():
 		return false
 
+	# Check revenue requirement
 	var required_revenue: float = upgrade.get("unlock_revenue", 0)
 	var current_revenue: float = ProgressionManager.get_total_revenue()
-	return current_revenue >= required_revenue
+	var revenue_met = current_revenue >= required_revenue
+
+	# Check star requirement (if specified)
+	var required_stars: float = upgrade.get("star_requirement", 0.0)
+	var current_stars: float = TaskManager.get_star_rating() if TaskManager else 0.0
+	var stars_met = current_stars >= required_stars
+
+	return revenue_met and stars_met
 
 # Check if upgrade is purchased
 func is_upgrade_purchased(upgrade_id: String) -> bool:

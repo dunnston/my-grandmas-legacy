@@ -34,6 +34,10 @@ var task_progress_label: Label
 # Task completion popup
 var task_completion_popup: Control
 
+# Task menu
+var task_menu: Control
+var view_tasks_button: Button
+
 func _ready() -> void:
 	print("HUD ready")
 
@@ -51,6 +55,9 @@ func _ready() -> void:
 
 	# Create task completion popup
 	_create_task_completion_popup()
+
+	# Create task menu
+	_create_task_menu()
 
 	# Create and setup equipment UI manager
 	equipment_ui_manager = preload("res://scripts/ui/equipment_ui_manager.gd").new()
@@ -367,6 +374,13 @@ func _create_star_display() -> void:
 	task_progress_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	vbox.add_child(task_progress_label)
 
+	# View Tasks button
+	view_tasks_button = Button.new()
+	view_tasks_button.text = "View All Tasks [T]"
+	view_tasks_button.custom_minimum_size = Vector2(0, 30)
+	view_tasks_button.pressed.connect(_on_view_tasks_pressed)
+	vbox.add_child(view_tasks_button)
+
 	add_child(star_panel)
 	print("HUD: Star display created")
 
@@ -461,3 +475,31 @@ func _create_task_completion_popup() -> void:
 		print("HUD: Task completion popup created")
 	else:
 		push_error("Failed to load task_completion_popup.gd")
+
+
+func _create_task_menu() -> void:
+	"""Create the task menu"""
+	var menu_script = load("res://scripts/ui/task_menu.gd")
+	if menu_script:
+		task_menu = menu_script.new()
+		task_menu.name = "TaskMenu"
+		add_child(task_menu)
+		print("HUD: Task menu created")
+	else:
+		push_error("Failed to load task_menu.gd")
+
+
+func _on_view_tasks_pressed() -> void:
+	"""Open the task menu"""
+	if task_menu and task_menu.has_method("show_menu"):
+		task_menu.show_menu()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	"""Handle hotkey to open task menu"""
+	if event.is_action_pressed("ui_focus_next"):  # Tab key, we'll use T
+		# Check for 'T' key
+		if event is InputEventKey and event.keycode == KEY_T and not event.is_echo():
+			if task_menu and task_menu.has_method("show_menu"):
+				task_menu.show_menu()
+				get_viewport().set_input_as_handled()

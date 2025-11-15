@@ -85,7 +85,7 @@ func _initialize_tasks() -> void:
 	task3.completion_type = "threshold"
 	task3.tracked_stat = "reputation"
 	task3.progress_required = 60
-	task3.unlocks = ["equipment_standard_oven", "story_letter_1"]
+	task3.unlocks = ["story_letter_1"]  # Equipment unlocked via star requirements
 	all_tasks[task3.task_id] = task3
 
 	# Task 4: Baking Variety (1.5 → 2.0 stars)
@@ -101,7 +101,7 @@ func _initialize_tasks() -> void:
 	task4.completion_type = "collection"
 	task4.tracked_stat = "unique_recipes_baked"
 	task4.progress_required = 5
-	task4.unlocks = ["recipe_group_artisan_breads", "equipment_medium_mixing_bowl"]
+	task4.unlocks = ["recipe_group_artisan_breads"]  # Equipment unlocked via star requirements
 	all_tasks[task4.task_id] = task4
 
 	# Task 5: Profitable Day (2.0 → 2.5 stars)
@@ -117,7 +117,7 @@ func _initialize_tasks() -> void:
 	task5.completion_type = "threshold"
 	task5.tracked_stat = "daily_profit"
 	task5.progress_required = 200
-	task5.unlocks = ["equipment_medium_display_case", "staff_hiring_enabled"]
+	task5.unlocks = ["staff_hiring_enabled"]  # Equipment unlocked via star requirements
 	all_tasks[task5.task_id] = task5
 
 	# Task 6: Team Player (2.5 → 3.0 stars)
@@ -149,7 +149,7 @@ func _initialize_tasks() -> void:
 	task7.completion_type = "counter"
 	task7.tracked_stat = "perfect_items_baked"
 	task7.progress_required = 25
-	task7.unlocks = ["equipment_professional_oven", "equipment_large_display_case", "equipment_decorating_station"]
+	task7.unlocks = []  # Equipment unlocked via star requirements now
 	all_tasks[task7.task_id] = task7
 
 	# Task 8: Grandmother's Legacy (3.5 → 4.0 stars)
@@ -203,7 +203,7 @@ func _initialize_tasks() -> void:
 	task10.progress_required = 95
 	task10.secondary_stat = "legendary_items_by_category"
 	task10.secondary_required = 6  # Assuming 6 recipe categories
-	task10.unlocks = ["recipe_group_legendary_bakes", "story_letter_final", "equipment_industrial_tier", "achievement_master_baker"]
+	task10.unlocks = ["recipe_group_legendary_bakes", "story_letter_final", "achievement_master_baker"]
 	all_tasks[task10.task_id] = task10
 
 	# TODO: Add optional tasks later
@@ -352,24 +352,106 @@ func _process_task_unlocks(task: BakeryTask) -> void:
 
 		# Recipe groups
 		if unlock_id.begins_with("recipe_group_"):
-			# TODO: Unlock recipe group through RecipeManager
-			pass
+			_unlock_recipe_group(unlock_id)
 
 		# Equipment
 		elif unlock_id.begins_with("equipment_"):
-			# TODO: Unlock equipment through UpgradeManager
-			pass
+			_unlock_equipment(unlock_id)
 
 		# Story letters
 		elif unlock_id.begins_with("story_letter_"):
-			if StoryManager:
-				# TODO: Trigger story letter display
-				pass
+			_trigger_story_letter(unlock_id)
 
 		# Other unlocks
 		else:
 			# Handle special unlocks like staff_hiring_enabled, expansion_option, etc.
+			_handle_special_unlock(unlock_id)
+
+
+func _unlock_recipe_group(unlock_id: String) -> void:
+	"""Unlock a group of recipes based on unlock ID"""
+	if not RecipeManager:
+		return
+
+	var group_name = unlock_id.replace("recipe_group_", "")
+	print("[TaskManager] Unlocking recipe group: %s" % group_name)
+
+	# Map task unlock IDs to recipe IDs
+	match group_name:
+		"basic_pastries":
+			RecipeManager.unlock_recipe("croissants")
+			RecipeManager.unlock_recipe("danish_pastries")
+			RecipeManager.unlock_recipe("scones")
+			RecipeManager.unlock_recipe("cinnamon_rolls")
+
+		"artisan_breads":
+			RecipeManager.unlock_recipe("sourdough_bread")
+			RecipeManager.unlock_recipe("baguettes")
+			RecipeManager.unlock_recipe("focaccia")
+			RecipeManager.unlock_recipe("rye_bread")
+
+		"special_cakes":
+			RecipeManager.unlock_recipe("birthday_cake")
+			RecipeManager.unlock_recipe("chocolate_cake")
+			RecipeManager.unlock_recipe("cheesecake")
+			RecipeManager.unlock_recipe("carrot_cake")
+
+		"secret_recipes":
+			RecipeManager.unlock_recipe("grandmas_apple_pie")
+			RecipeManager.unlock_recipe("grandmas_cinnamon_bread")
+			RecipeManager.unlock_recipe("grandmas_chocolate_brownies")
+
+		"international_treats":
+			RecipeManager.unlock_recipe("french_macarons")
+			RecipeManager.unlock_recipe("german_stollen")
+			RecipeManager.unlock_recipe("italian_biscotti")
+
+		"legendary_bakes":
+			RecipeManager.unlock_recipe("wedding_cake")
+			RecipeManager.unlock_recipe("artisan_sourdough")
+			RecipeManager.unlock_recipe("championship_croissant")
+
+
+func _unlock_equipment(unlock_id: String) -> void:
+	"""Unlock specific equipment"""
+	# Equipment will be unlocked through UpgradeManager's star requirements
+	# This is just a notification
+	print("[TaskManager] Equipment available: %s" % unlock_id)
+
+
+func _trigger_story_letter(unlock_id: String) -> void:
+	"""Trigger a story letter to be shown"""
+	if not StoryManager:
+		return
+
+	var letter_id = unlock_id.replace("story_letter_", "")
+	print("[TaskManager] Triggering story letter: %s" % letter_id)
+
+	# TODO: Call StoryManager to show the letter
+	# For now, just log it
+
+
+func _handle_special_unlock(unlock_id: String) -> void:
+	"""Handle special unlocks like features or game systems"""
+	print("[TaskManager] Special unlock: %s" % unlock_id)
+
+	match unlock_id:
+		"planning_phase_access":
+			# Player can now use planning phase
 			pass
+		"staff_hiring_enabled":
+			# Player can now hire staff
+			pass
+		"bakery_expansion_option":
+			# Player can expand bakery
+			pass
+		"marketing_billboard":
+			# Unlock billboard marketing option
+			pass
+		"achievement_master_baker":
+			# Final achievement
+			if AchievementManager and AchievementManager.has_method("unlock_achievement"):
+				AchievementManager.unlock_achievement("master_baker")
 
 
 ## Check which tasks should be newly unlocked
