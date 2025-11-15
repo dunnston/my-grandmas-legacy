@@ -47,6 +47,7 @@ var feedback_duration: float = 1.0
 func _ready() -> void:
 	hide()
 	_load_difficulty_settings()
+	print("[SheepMinigame] Node references - sheep_sprite:", sheep_sprite, " fence:", fence)
 	print("[SheepMinigame] Ready")
 
 func _load_difficulty_settings() -> void:
