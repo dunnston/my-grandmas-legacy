@@ -49,8 +49,8 @@ func get_interaction_prompt() -> String:
 
 func interact(player: Node3D) -> void:
 	# Check if cleanup phase
-	if GameManager.get_current_phase() != GameManager.Phase.CLEANUP:
-		print("Can only wipe counters during cleanup phase!")
+	if GameManager.is_shop_open():
+		print("Can only clean when shop is closed!")
 		return
 
 	# Check if already completed

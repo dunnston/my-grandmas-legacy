@@ -47,7 +47,7 @@ func _process(delta: float) -> void:
 	if not is_spawning_enabled:
 		return
 
-	if GameManager.current_phase != GameManager.Phase.BUSINESS:
+	if not GameManager.is_shop_open():
 		return
 
 	# Spawn customers at intervals

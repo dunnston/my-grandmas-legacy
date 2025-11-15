@@ -1,7 +1,7 @@
 extends Node3D
 
 # Bakery - Main scene controller for the bakery
-# Manages phase transitions, customer spawning, and UI
+# Manages shop open/close, customer spawning, and UI
 
 # Node references
 @onready var equipment: Node3D = $Equipment
@@ -56,11 +56,11 @@ func _ready() -> void:
 	else:
 		push_warning("Some navigation markers are missing!")
 
-	# Connect to GameManager phase changes
-	GameManager.phase_changed.connect(_on_phase_changed)
+	# Connect to GameManager shop state changes
+	GameManager.shop_state_changed.connect(_on_shop_state_changed)
 
-	# Connect Planning Menu
-	if planning_menu:
+	# Connect Planning Menu (if it exists)
+	if planning_menu and planning_menu.has_signal("next_day_started"):
 		planning_menu.next_day_started.connect(_on_next_day_started)
 
 	# Connect DeliveryManager signals
@@ -75,75 +75,50 @@ func _ready() -> void:
 	if DeliveryManager.is_package_available():
 		_spawn_package()
 
-	# Start in Baking phase
-	_on_phase_changed(GameManager.Phase.BAKING)
+	# Update UI for initial closed state
+	_on_shop_state_changed(false)
 
-func _on_phase_changed(new_phase: GameManager.Phase) -> void:
-	"""Handle phase transitions"""
-	print("Bakery: Phase changed to ", GameManager.Phase.keys()[new_phase])
+func _on_shop_state_changed(is_open: bool) -> void:
+	"""Handle shop opening/closing"""
+	print("Bakery: Shop state changed - Open: ", is_open)
 
-	match new_phase:
-		GameManager.Phase.BAKING:
-			_setup_baking_phase()
-		GameManager.Phase.BUSINESS:
-			_setup_business_phase()
-		GameManager.Phase.CLEANUP:
-			_setup_cleanup_phase()
-		GameManager.Phase.PLANNING:
-			_setup_planning_phase()
+	if is_open:
+		_setup_shop_open()
+	else:
+		_setup_shop_closed()
 
-func _setup_baking_phase() -> void:
-	"""Set up for baking phase"""
-	print("Bakery: Setting up Baking phase")
+func _setup_shop_open() -> void:
+	"""Set up when shop opens"""
+	print("Bakery: Shop is now OPEN")
 
 	# Hide planning menu if visible
-	if planning_menu:
+	if planning_menu and planning_menu.has_method("close_menu"):
 		planning_menu.close_menu()
 
 	# Update HUD
-	if hud:
-		hud.show_phase_info("BAKING PHASE", "Prepare goods for the day")
+	if hud and hud.has_method("show_phase_info"):
+		hud.show_phase_info("SHOP OPEN", "Serving customers!")
 
-func _setup_business_phase() -> void:
-	"""Set up for business phase"""
-	print("Bakery: Setting up Business phase")
+func _setup_shop_closed() -> void:
+	"""Set up when shop closes"""
+	print("Bakery: Shop is now CLOSED")
 
-	# Customers will start spawning automatically via CustomerManager
-	if hud:
-		hud.show_phase_info("BUSINESS PHASE", "Shop is open!")
-
-func _setup_cleanup_phase() -> void:
-	"""Set up for cleanup phase"""
-	print("Bakery: Setting up Cleanup phase")
-
-	# GameManager handles cleanup automatically
-	if hud:
-		hud.show_phase_info("CLEANUP PHASE", "Cleaning up...")
-
-func _setup_planning_phase() -> void:
-	"""Set up for planning phase"""
-	print("Bakery: Setting up Planning phase")
-
-	# Open planning menu
-	if planning_menu:
-		planning_menu.open_menu()
-
-	if hud:
-		hud.show_phase_info("PLANNING PHASE", "Review and prepare")
+	# Update HUD
+	if hud and hud.has_method("show_phase_info"):
+		hud.show_phase_info("SHOP CLOSED", "Prepare goods or rest")
 
 func _on_next_day_started() -> void:
 	"""Called when player starts next day from planning menu"""
 	print("Bakery: Next day started")
-	# GameManager.end_day() is called by planning menu, which triggers phase change
 
 # Public methods for UI buttons
-func start_business_phase() -> void:
-	"""Manually trigger business phase (called by UI button)"""
-	GameManager.start_business_phase()
+func open_shop() -> void:
+	"""Manually open shop (called by UI button)"""
+	GameManager.open_shop()
 
-func end_business_phase() -> void:
-	"""Manually end business phase (called by UI button)"""
-	GameManager.start_cleanup_phase()
+func close_shop() -> void:
+	"""Manually close shop (called by UI button)"""
+	GameManager.close_shop()
 
 # ============================================================================
 # PACKAGE DELIVERY SYSTEM

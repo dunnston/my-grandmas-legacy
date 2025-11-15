@@ -1,121 +1,145 @@
 extends Node
 
-# GameManager - Singleton for managing game state, phases, and time
-# Handles the daily cycle and phase transitions
+# GameManager - Singleton for managing game state and time
+# Handles shop open/closed states and continuous 24-hour time
 #
 # BALANCE CONFIG INTEGRATION:
 # Time constants are now loaded from BalanceConfig.
 # To adjust timing balance, modify scripts/autoload/balance_config.gd
 
 # Signals
-signal phase_changed(new_phase: Phase)
+signal shop_state_changed(is_open: bool)
 signal time_scale_changed(new_scale: float)
 signal day_changed(new_day: int)
+signal hour_changed(new_hour: int)
 
 # Enums
-enum Phase {
-	BAKING,
-	BUSINESS,
-	CLEANUP,
-	PLANNING
+enum ShopState {
+	CLOSED,
+	OPEN
 }
 
 # Game state
-var current_phase: Phase = Phase.BAKING
+var shop_state: ShopState = ShopState.CLOSED
 var current_day: int = 1
 var time_scale: float = 1.0  # 1.0 = normal speed, 0.0 = paused, 2.0/3.0 = faster
 var is_paused: bool = false
 
-# Time tracking (game time in seconds)
-var game_time: float = 0.0  # Time of day in seconds (0 = midnight, 32400 = 9 AM)
-var phase_start_time: float = 0.0
+# Time tracking (game time in seconds from midnight 0:00)
+var game_time: float = 21600.0  # Start at 6 AM (6 * 3600)
+var previous_hour: int = 6
 
 # Time constants - loaded from BalanceConfig
 var SECONDS_PER_GAME_HOUR: float = 60.0
-var BUSINESS_START_HOUR: int = 9
-var BUSINESS_END_HOUR: int = 17
+var DEFAULT_OPEN_HOUR: int = 6
+var DEFAULT_CLOSE_HOUR: int = 22
 
 func _ready() -> void:
 	# Load balance config values
 	SECONDS_PER_GAME_HOUR = BalanceConfig.TIME.seconds_per_game_hour
-	BUSINESS_START_HOUR = BalanceConfig.TIME.business_start_hour
-	BUSINESS_END_HOUR = BalanceConfig.TIME.business_end_hour
+	DEFAULT_OPEN_HOUR = BalanceConfig.TIME.default_open_hour
+	DEFAULT_CLOSE_HOUR = BalanceConfig.TIME.default_close_hour
 
 	print("GameManager initialized")
-	print("Starting Day ", current_day, " - Phase: BAKING")
-	print("Business hours: ", BUSINESS_START_HOUR, ":00 to ", BUSINESS_END_HOUR, ":00")
+	print("Starting Day ", current_day, " - Shop: CLOSED")
+	print("Default hours: ", DEFAULT_OPEN_HOUR, ":00 to ", DEFAULT_CLOSE_HOUR, ":00")
+	print("Current time: ", get_game_time_formatted())
 
 func _process(delta: float) -> void:
 	if not is_paused:
-		game_time += delta * time_scale
-		# Additional time logic can be added here if needed
+		# Convert real seconds to game seconds
+		# If SECONDS_PER_GAME_HOUR = 30, then 30 real seconds = 3600 game seconds
+		var game_seconds_per_real_second = 3600.0 / SECONDS_PER_GAME_HOUR
+		var time_increment = delta * game_seconds_per_real_second * time_scale
+		game_time += time_increment
 
-# Phase management
-func set_phase(new_phase: Phase) -> void:
-	if current_phase != new_phase:
-		current_phase = new_phase
-		phase_start_time = game_time
-		print("Phase changed to: ", Phase.keys()[new_phase])
-		phase_changed.emit(new_phase)
+		# Wrap to next day at midnight
+		if game_time >= 86400.0:  # 24 hours in seconds
+			_advance_to_next_day()
 
-func start_baking_phase() -> void:
-	set_phase(Phase.BAKING)
-	print("=== BAKING PHASE STARTED ===")
-	print("Prepare goods for the day!")
+		# Check for hour changes
+		var current_hour = get_current_hour()
+		if current_hour != previous_hour:
+			previous_hour = current_hour
+			hour_changed.emit(current_hour)
 
-	# Stop customer spawning if it was active
-	if CustomerManager:
-		CustomerManager.stop_spawning()
-	resume_game()
+# Shop state management
+func open_shop() -> void:
+	if shop_state != ShopState.OPEN:
+		shop_state = ShopState.OPEN
+		print("=== SHOP OPENED ===")
+		print("Time: ", get_game_time_formatted())
+		shop_state_changed.emit(true)
 
-func start_business_phase() -> void:
-	set_phase(Phase.BUSINESS)
-	game_time = BUSINESS_START_HOUR * 3600  # Set to 9 AM
-	print("=== BUSINESS PHASE STARTED ===")
-	print("Shop opens at 9 AM")
+		# Start spawning customers
+		if CustomerManager:
+			CustomerManager.start_spawning()
 
-	# Start spawning customers
-	if CustomerManager:
-		CustomerManager.start_spawning()
-	resume_game()
+func close_shop() -> void:
+	if shop_state != ShopState.CLOSED:
+		shop_state = ShopState.CLOSED
+		print("=== SHOP CLOSED ===")
+		print("Time: ", get_game_time_formatted())
+		shop_state_changed.emit(false)
 
-func start_cleanup_phase() -> void:
-	set_phase(Phase.CLEANUP)
-	print("=== CLEANUP PHASE STARTED ===")
-	print("Time to clean up!")
+		# Stop customer spawning and clear remaining customers
+		if CustomerManager:
+			CustomerManager.stop_spawning()
+			CustomerManager.clear_all_customers()
 
-	# Stop customer spawning
-	if CustomerManager:
-		CustomerManager.stop_spawning()
-		# Clear any remaining customers
-		CustomerManager.clear_all_customers()
+		# Regenerate employee energy when shop closes
+		if StaffManager:
+			StaffManager.regenerate_all_employee_energy()
 
-	# Auto-complete cleanup phase after brief delay (respects pause state)
-	await get_tree().create_timer(2.0, false).timeout
-	start_planning_phase()
+func toggle_shop() -> void:
+	if shop_state == ShopState.OPEN:
+		close_shop()
+	else:
+		open_shop()
 
-func start_planning_phase() -> void:
-	set_phase(Phase.PLANNING)
-	print("=== PLANNING PHASE STARTED ===")
-	print("Review the day and plan for tomorrow")
-
-	# Auto-save before planning
-	if SaveManager:
-		SaveManager.auto_save()
-
-	# Note: Planning menu will be opened by the bakery scene
-
-func end_day() -> void:
+# Day management
+func _advance_to_next_day() -> void:
+	# Wrap time back to midnight
+	game_time = fmod(game_time, 86400.0)
 	current_day += 1
-	game_time = 0.0
+
+	# Ensure shop is closed at day transition
+	if shop_state == ShopState.OPEN:
+		close_shop()
 
 	# Update progression manager day tracking and reputation
 	if ProgressionManager:
 		ProgressionManager.increment_day()
 
+	# Process employee daily updates (morale, etc.)
+	if StaffManager:
+		StaffManager.process_daily_updates()
+
+	# Auto-save
+	if SaveManager:
+		SaveManager.auto_save()
+
 	print("=== DAY ", current_day, " ===")
+	print("Time: ", get_game_time_formatted())
 	day_changed.emit(current_day)
-	start_baking_phase()
+
+# Sleep function (for player sleep mechanic)
+func sleep(hours: int) -> void:
+	print("Sleeping for ", hours, " hours...")
+
+	# Close shop if open
+	if shop_state == ShopState.OPEN:
+		close_shop()
+
+	# Advance time
+	var sleep_seconds = hours * 3600.0
+	game_time += sleep_seconds
+
+	# Check if we crossed midnight
+	if game_time >= 86400.0:
+		_advance_to_next_day()
+
+	print("Woke up at ", get_game_time_formatted())
 
 # Time control
 func set_time_scale(scale: float) -> void:
@@ -139,8 +163,11 @@ func resume_game() -> void:
 	print("Game RESUMED")
 
 # Getters
-func get_current_phase() -> Phase:
-	return current_phase
+func is_shop_open() -> bool:
+	return shop_state == ShopState.OPEN
+
+func get_shop_state() -> ShopState:
+	return shop_state
 
 func get_current_day() -> int:
 	return current_day
@@ -148,10 +175,32 @@ func get_current_day() -> int:
 func get_time_scale() -> float:
 	return time_scale
 
+func get_current_hour() -> int:
+	return int(game_time / 3600) % 24
+
+func get_current_minute() -> int:
+	return int(game_time / 60) % 60
+
 func get_game_time_formatted() -> String:
-	var hours: int = int(game_time / 3600) % 24
-	var minutes: int = int(game_time / 60) % 60
+	var hours: int = get_current_hour()
+	var minutes: int = get_current_minute()
 	return "%02d:%02d" % [hours, minutes]
+
+func get_time_of_day_string() -> String:
+	var hour = get_current_hour()
+	if hour >= 5 and hour < 12:
+		return "Morning"
+	elif hour >= 12 and hour < 17:
+		return "Afternoon"
+	elif hour >= 17 and hour < 21:
+		return "Evening"
+	else:
+		return "Night"
 
 func is_game_paused() -> bool:
 	return is_paused
+
+# Backwards compatibility (deprecated - to be removed)
+func get_current_phase() -> int:
+	push_warning("get_current_phase() is deprecated. Use is_shop_open() instead.")
+	return 1 if shop_state == ShopState.OPEN else 0

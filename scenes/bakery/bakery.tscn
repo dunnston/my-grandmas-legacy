@@ -229,6 +229,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.711466, 0, -4.8996143)
 target_name = "sink"
 target_type = "cleanup"
 
+[node name="StaffTargetSink2" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.711466, 0, -4.8996143)
+target_name = "sink"
+target_type = "cleanup"
+
 [node name="StaffTargetStorage" parent="NavigationMarkers" instance=ExtResource("14_66x8v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.072268, 0, -7.7342186)
 target_name = "storage"

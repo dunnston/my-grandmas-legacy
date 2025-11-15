@@ -69,30 +69,27 @@ func _on_bed_exited(body: Node3D) -> void:
 		player_nearby_bed = false
 
 func interact_with_bed() -> void:
-	print("\n=== REST ===")
+	print("
+=== REST ===")
 	print("You lie down on the comfortable bed.")
 	print("Grandma's quilt is warm and familiar...")
 
-	# Skip to next planning phase (basically skip the current day)
-	var current_phase = GameManager.get_current_phase()
-
-	if current_phase == GameManager.Phase.PLANNING:
-		print("\nYou're already rested! Start the day when you're ready.")
-		return
-
-	print("\nSkipping to next planning phase...")
+	# Sleep for 8 hours
+	var hours_to_sleep = 8
+	print("
+Sleeping for ", hours_to_sleep, " hours...")
 	print("(You rest and recover energy)")
 
-	# Advance time to next planning phase
-	GameManager.end_day()
+	# Use GameManager sleep function (advances time, closes shop if open)
+	GameManager.sleep(hours_to_sleep)
 
 	# Small morale boost
 	if ProgressionManager.has_method("add_reputation"):
 		ProgressionManager.add_reputation(1.0)
 		print("+1 Reputation (well-rested)")
 
-	skip_time(8)  # 8 hours
-	player_rested.emit(8)
+	skip_time(hours_to_sleep)
+	player_rested.emit(hours_to_sleep)
 
 # TV interactions
 func _on_tv_entered(body: Node3D) -> void:

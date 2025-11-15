@@ -54,7 +54,7 @@ func _ready() -> void:
 	# Connect to day change and phase change signals
 	if GameManager:
 		GameManager.day_changed.connect(_on_day_changed)
-		GameManager.phase_changed.connect(_on_phase_changed)
+		GameManager.shop_state_changed.connect(_on_shop_state_changed)
 
 	# Generate initial applicant pool
 	refresh_applicants()
@@ -650,22 +650,20 @@ func increase_staff_capacity(additional_slots: int) -> void:
 # AI AUTOMATION
 # ============================================================================
 
-func _on_phase_changed(new_phase: int) -> void:
-	"""Handle phase changes to activate/deactivate staff AI"""
-	print("[StaffManager] Phase changed to: ", new_phase)
+func _on_shop_state_changed(is_open: bool) -> void:
+	"""Handle shop opening/closing to activate/deactivate staff AI"""
+	print("[StaffManager] Shop state changed - Open: ", is_open)
 	print("[StaffManager] Currently hired staff: ", hired_staff.size())
 
 	# Deactivate all current AI
 	_deactivate_all_ai()
 
-	# Activate ALL staff during BUSINESS phase (when shop is open)
-	match new_phase:
-		1:  # BUSINESS phase - Shop is open, all staff work
-			print("[StaffManager] Shop opened - activating all staff...")
-			_activate_all_staff()
-		_:  # All other phases - no staff active
-			print("[StaffManager] Shop closed - staff inactive")
-			pass
+	# Activate ALL assigned staff when shop opens
+	if is_open:
+		print("[StaffManager] Shop opened - activating all staff...")
+		_activate_all_staff()
+	else:
+		print("[StaffManager] Shop closed - staff inactive")
 
 	print("[StaffManager] Active AI workers: ", active_ai_workers.size())
 
@@ -1110,3 +1108,24 @@ func _remove_staff_character(staff_id: String) -> void:
 			character.queue_free()
 		staff_characters.erase(staff_id)
 		print("[StaffManager] Removed visual character for staff ", staff_id)
+
+# ============================================================================
+# NEW METHODS FOR SHOP OPEN/CLOSED SYSTEM
+# ============================================================================
+
+func regenerate_all_employee_energy() -> void:
+	"""Fully regenerate energy for all employees (called when shop closes)"""
+	for employee_id in hired_staff.keys():
+		var employee_data: Dictionary = hired_staff[employee_id]
+		employee_data["energy"] = BalanceConfig.STAFF.max_energy
+	print("[StaffManager] Regenerated energy for all employees")
+
+func process_daily_updates() -> void:
+	"""Process daily updates - called by GameManager at end of day"""
+	pay_daily_wages()
+	_process_daily_morale_and_energy()
+	_check_employee_auto_quit()
+	
+	# Refresh applicants weekly
+	if GameManager.current_day % BalanceConfig.STAFF.get("applicant_refresh_days", 7) == 0:
+		refresh_applicants()

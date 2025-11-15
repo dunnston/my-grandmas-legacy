@@ -39,13 +39,13 @@ func _ready() -> void:
 
 	# Connect economy signals
 	EconomyManager.money_changed.connect(_update_cash_display)
-	GameManager.phase_changed.connect(_update_phase_display)
+	GameManager.shop_state_changed.connect(_update_phase_display)
 	GameManager.day_changed.connect(_update_day_display)
 	GameManager.time_scale_changed.connect(_update_time_scale_display)
 
 	# Initial display update
 	_update_cash_display(EconomyManager.current_cash)
-	_update_phase_display(GameManager.current_phase)
+	_update_phase_display(GameManager.shop_state)
 	_update_day_display(GameManager.current_day)
 	_update_time_scale_display(GameManager.time_scale)
 
@@ -73,7 +73,7 @@ func toggle_menu() -> void:
 
 func _update_all_displays() -> void:
 	_update_cash_display(EconomyManager.current_cash)
-	_update_phase_display(GameManager.current_phase)
+	_update_phase_display(GameManager.shop_state)
 	_update_day_display(GameManager.current_day)
 	_update_time_scale_display(GameManager.time_scale)
 	_update_customer_count()
@@ -159,7 +159,7 @@ func _update_customer_count() -> void:
 		active_customers_label.text = "Active Customers: %d" % count
 
 func _on_spawn_customer_pressed() -> void:
-	if GameManager.current_phase != GameManager.Phase.BUSINESS:
+	if GameManager.shop_state != 1:
 		print("[DEV] Warning: Not in BUSINESS phase. Spawning anyway...")
 
 	CustomerManager.spawn_customer()
@@ -169,7 +169,7 @@ func _on_spawn_customer_pressed() -> void:
 func _on_spawn_multiple_pressed() -> void:
 	var count: int = int(spawn_count_input.value)
 
-	if GameManager.current_phase != GameManager.Phase.BUSINESS:
+	if GameManager.shop_state != 1:
 		print("[DEV] Warning: Not in BUSINESS phase. Spawning anyway...")
 
 	for i in range(count):
@@ -197,10 +197,10 @@ func _on_stop_spawning_pressed() -> void:
 # TIME/PHASE FUNCTIONS
 # ============================================================================
 
-func _update_phase_display(phase: GameManager.Phase) -> void:
+func _update_phase_display(is_open: bool) -> void:
 	if current_phase_label:
-		var phase_names = ["BAKING", "BUSINESS", "CLEANUP", "PLANNING"]
-		current_phase_label.text = "Current Phase: " + phase_names[phase]
+		var status = "OPEN" if is_open else "CLOSED"
+		current_phase_label.text = "Shop: " + status
 
 func _update_day_display(day: int) -> void:
 	if current_day_label:
@@ -230,33 +230,25 @@ func _on_speed_3x_pressed() -> void:
 	print("[DEV] Time scale: 3x")
 
 func _on_next_phase_pressed() -> void:
-	var current = GameManager.current_phase
-	match current:
-		GameManager.Phase.BAKING:
-			GameManager.start_business_phase()
-		GameManager.Phase.BUSINESS:
-			GameManager.start_cleanup_phase()
-		GameManager.Phase.CLEANUP:
-			GameManager.start_planning_phase()
-		GameManager.Phase.PLANNING:
-			GameManager.end_day()
-	print("[DEV] Advanced to next phase")
+	# Toggle shop open/closed
+	GameManager.toggle_shop()
+	print("[DEV] Toggled shop state")
 
 func _on_set_baking_pressed() -> void:
-	GameManager.start_baking_phase()
-	print("[DEV] Set phase to BAKING")
+	GameManager.close_shop()
+	print("[DEV] Closed shop")
 
 func _on_set_business_pressed() -> void:
-	GameManager.start_business_phase()
-	print("[DEV] Set phase to BUSINESS")
+	GameManager.open_shop()
+	print("[DEV] Opened shop")
 
 func _on_set_cleanup_pressed() -> void:
-	GameManager.start_cleanup_phase()
-	print("[DEV] Set phase to CLEANUP")
+	GameManager.close_shop()
+	print("[DEV] Closed shop")
 
 func _on_set_planning_pressed() -> void:
-	GameManager.start_planning_phase()
-	print("[DEV] Set phase to PLANNING")
+	GameManager.close_shop()
+	print("[DEV] Closed shop")
 
 func _on_advance_day_pressed() -> void:
 	GameManager.end_day()
@@ -276,7 +268,7 @@ func _on_set_day_pressed() -> void:
 func _on_print_debug_pressed() -> void:
 	print("\n=== DEV MENU DEBUG INFO ===")
 	print("Day: %d" % GameManager.current_day)
-	print("Phase: %s" % GameManager.Phase.keys()[GameManager.current_phase])
+	print("Phase: %s" % GameManager.ShopState.keys()[GameManager.shop_state])
 	print("Cash: $%.2f" % EconomyManager.current_cash)
 	print("Time Scale: %.1fx" % GameManager.time_scale)
 	print("Active Customers: %d" % CustomerManager.active_customers.size())

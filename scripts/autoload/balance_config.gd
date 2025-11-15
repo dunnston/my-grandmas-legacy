@@ -17,15 +17,28 @@ extends Node
 ## =============================================================================
 const TIME = {
 	# Day/Night Cycle
-	"seconds_per_game_hour": 60.0,      # 1 game hour = 60 real seconds at 1x speed
-	"business_start_hour": 9,            # Business opens at 9 AM
-	"business_end_hour": 17,             # Business closes at 5 PM (8 hour day)
-	"max_time_scale": 3.0,               # Maximum speed multiplier (1x, 2x, 3x)
-	"cleanup_auto_delay": 2.0,           # Auto-complete cleanup after X seconds
-
-	# Calculated: Business day = 8 hours × 60 seconds = 480 real seconds at 1x
-	# At 1x speed: 8 real minutes per day
-	# At 3x speed: ~2.7 real minutes per day
+	"seconds_per_game_hour": 30.0,
+	"default_open_hour": 6,
+	"default_close_hour": 22,
+	"max_time_scale": 3.0,
+	
+	# Time-of-day traffic multipliers
+	"traffic_multipliers": {
+		"early_morning": {"hours": [5, 6, 7], "multiplier": 0.8},
+		"morning_rush": {"hours": [8, 9, 10], "multiplier": 1.5},
+		"late_morning": {"hours": [11], "multiplier": 1.2},
+		"lunch": {"hours": [12, 13], "multiplier": 1.8},
+		"afternoon": {"hours": [14, 15, 16], "multiplier": 1.3},
+		"evening": {"hours": [17, 18, 19], "multiplier": 1.4},
+		"late_evening": {"hours": [20, 21], "multiplier": 0.9},
+		"night": {"hours": [22, 23], "multiplier": 0.3},
+		"late_night": {"hours": [0, 1, 2, 3, 4], "multiplier": 0.2},
+	},
+	
+	# Deprecated
+	"business_start_hour": 9,
+	"business_end_hour": 17,
+	"cleanup_auto_delay": 2.0,
 }
 
 ## =============================================================================
@@ -815,3 +828,4 @@ func print_balance_summary():
 	print("Base Customers/Hour: ", CUSTOMERS.base_customers_per_hour)
 	print("Milestones: $500, $2000, $5000, $10000, $25000, $50000")
 	print("============================")
+
