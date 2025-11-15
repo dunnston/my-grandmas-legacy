@@ -235,29 +235,30 @@ func _update_sheep_animation(progress: float) -> void:
 	if not sheep_sprite:
 		return
 
-	# Simple arc jump (parabola)
-	var jump_height = 100.0
-	var horizontal_distance = 200.0
+	# Simple arc jump (parabola) - sheep travels across full screen
+	var jump_height = 120.0
+	var horizontal_distance = 500.0  # Much wider travel distance
 
+	# Start from far left (-250) to far right (+250)
 	var x = progress * horizontal_distance - (horizontal_distance / 2)
 	var y = -jump_height * (4.0 * progress * (1.0 - progress))  # Parabola
 
 	# Update ColorRect position (offset values relative to center anchor)
-	var sheep_size = 60.0
-	var half_size = sheep_size / 2.0
+	var sheep_width = 100.0
+	var sheep_height = 60.0
 
-	sheep_sprite.offset_left = x - half_size
-	sheep_sprite.offset_right = x + half_size
-	sheep_sprite.offset_top = y - half_size
-	sheep_sprite.offset_bottom = y + half_size
+	sheep_sprite.offset_left = x - (sheep_width / 2)
+	sheep_sprite.offset_right = x + (sheep_width / 2)
+	sheep_sprite.offset_top = y - (sheep_height / 2)
+	sheep_sprite.offset_bottom = y + (sheep_height / 2)
 
 	# Debug output
-	if current_sheep_index <= 2:
-		print("[Sheep Animation] progress=%.2f, x=%.1f, y=%.1f, offsets: L=%.1f R=%.1f T=%.1f B=%.1f" % [
-			progress, x, y,
-			sheep_sprite.offset_left, sheep_sprite.offset_right,
-			sheep_sprite.offset_top, sheep_sprite.offset_bottom
-		])
+	print("[Sheep Animation] #%d progress=%.2f, x=%.1f, y=%.1f, offsets: L=%.1f R=%.1f T=%.1f B=%.1f, visible=%s" % [
+		current_sheep_index, progress, x, y,
+		sheep_sprite.offset_left, sheep_sprite.offset_right,
+		sheep_sprite.offset_top, sheep_sprite.offset_bottom,
+		sheep_sprite.visible
+	])
 
 func _update_timing_indicator(progress: float) -> void:
 	"""Update the timing indicator to show current position"""
