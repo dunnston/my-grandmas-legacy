@@ -424,6 +424,82 @@ func _unlock_equipment(unlock_id: String) -> void:
 	print("[TaskManager] Equipment available: %s" % unlock_id)
 
 
+## Public helper function to get unlock requirements for a recipe
+func get_recipe_unlock_requirement(recipe_id: String) -> Dictionary:
+	"""Returns {task_name: String, stars: float, task_id: String} for a recipe, or empty dict if starter"""
+	# Starter recipes (always unlocked)
+	if recipe_id in ["white_bread", "chocolate_chip_cookies", "blueberry_muffins"]:
+		return {}
+
+	# Map recipe ID to task that unlocks it
+	var recipe_to_task: Dictionary = {
+		# Basic Pastries - Task 2 (First Customers)
+		"croissants": "task_2_first_customers",
+		"danish_pastries": "task_2_first_customers",
+		"scones": "task_2_first_customers",
+		"cinnamon_rolls": "task_2_first_customers",
+
+		# Artisan Breads - Task 4 (Baking Variety)
+		"sourdough_bread": "task_4_baking_variety",
+		"baguettes": "task_4_baking_variety",
+		"focaccia": "task_4_baking_variety",
+		"rye_bread": "task_4_baking_variety",
+
+		# Special Cakes - Task 6 (Team Player)
+		"birthday_cake": "task_6_team_player",
+		"chocolate_cake": "task_6_team_player",
+		"cheesecake": "task_6_team_player",
+		"carrot_cake": "task_6_team_player",
+
+		# Secret Recipes - Task 8 (Grandmother's Legacy)
+		"grandmas_apple_pie": "task_8_grandmas_legacy",
+		"grandmas_cinnamon_bread": "task_8_grandmas_legacy",
+		"grandmas_chocolate_brownies": "task_8_grandmas_legacy",
+
+		# International Treats - Task 9 (Town Favorite)
+		"french_macarons": "task_9_town_favorite",
+		"german_stollen": "task_9_town_favorite",
+		"italian_biscotti": "task_9_town_favorite",
+
+		# Legendary Bakes - Task 10 (Master Baker)
+		"wedding_cake": "task_10_master_baker",
+		"artisan_sourdough": "task_10_master_baker",
+		"championship_croissant": "task_10_master_baker",
+	}
+
+	var task_id = recipe_to_task.get(recipe_id, "")
+	if task_id.is_empty():
+		return {}
+
+	var task = all_tasks.get(task_id)
+	if not task:
+		return {}
+
+	return {
+		"task_name": task.task_name,
+		"stars": get_cumulative_stars_for_task(task_id),
+		"task_id": task_id
+	}
+
+
+## Get cumulative star rating when a specific task is completed
+func get_cumulative_stars_for_task(task_id: String) -> float:
+	"""Returns the total stars you'll have AFTER completing this task"""
+	var cumulative: float = 0.0
+
+	# Add up all task rewards up to and including this task
+	for i in range(1, 11):  # Tasks 1-10
+		var check_task_id = "task_%d_" % i
+		for t_id in all_tasks.keys():
+			if t_id.begins_with(check_task_id):
+				cumulative += all_tasks[t_id].star_reward
+				if t_id == task_id:
+					return cumulative
+				break
+
+	return cumulative
+
+
 func _trigger_story_letter(unlock_id: String) -> void:
 	"""Trigger a story letter to be shown"""
 	if not StoryManager:

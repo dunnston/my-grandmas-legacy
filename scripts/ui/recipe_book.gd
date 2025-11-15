@@ -119,12 +119,16 @@ func _add_recipe_button(recipe_id: String, recipe: Dictionary, is_unlocked: bool
 
 	# Format button text
 	var recipe_name: String = recipe.get("name", recipe_id.capitalize())
-	var tier_name: String = recipe.get("unlock_tier", "Starter")
 
 	if is_unlocked:
 		button.text = recipe_name
 	else:
-		button.text = "🔒 " + recipe_name
+		# Get unlock requirement from TaskManager
+		var unlock_req: Dictionary = TaskManager.get_recipe_unlock_requirement(recipe_id) if TaskManager else {}
+		if unlock_req.has("stars"):
+			button.text = "🔒 %s (%.1f★)" % [recipe_name, unlock_req.stars]
+		else:
+			button.text = "🔒 " + recipe_name
 		button.disabled = false  # Allow viewing locked recipes
 		button.modulate = Color(0.6, 0.6, 0.6)
 
@@ -150,8 +154,16 @@ func _select_recipe(recipe_id: String) -> void:
 		detail_name.text = recipe.get("name", recipe_id.capitalize())
 
 	if detail_tier:
-		var tier: String = recipe.get("unlock_tier", "Starter")
-		detail_tier.text = "Unlock Tier: " + tier
+		if is_unlocked:
+			var tier: String = recipe.get("unlock_tier", "Starter")
+			detail_tier.text = "Tier: " + tier
+		else:
+			# Show unlock requirement
+			var unlock_req: Dictionary = TaskManager.get_recipe_unlock_requirement(recipe_id) if TaskManager else {}
+			if unlock_req.has("task_name") and unlock_req.has("stars"):
+				detail_tier.text = "🔒 Unlock: Complete '%s' (%.1f★)" % [unlock_req.task_name, unlock_req.stars]
+			else:
+				detail_tier.text = "🔒 Locked"
 
 	if detail_price:
 		var sell_price: float = recipe.get("sell_price", 0.0)
