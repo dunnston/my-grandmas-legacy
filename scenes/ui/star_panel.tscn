@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqr8y7m5x3h4p"]
+
+[ext_resource type="Script" path="res://scripts/ui/star_panel.gd" id="1_star_panel"]
+
+[node name="StarPanel" type="PanelContainer"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 120.0
+offset_right = -10.0
+offset_bottom = 320.0
+grow_horizontal = 0
+script = ExtResource("1_star_panel")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="StarLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "★★★★★ (0.0 Stars)"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="TaskHeader" type="Label" parent="VBox"]
+layout_mode = 2
+text = "CURRENT TASK:"
+
+[node name="TaskNameLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "No active task"
+autowrap_mode = 3
+
+[node name="TaskProgressLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = ""
+
+[node name="ViewTasksButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "View All Tasks [T]"

@@ -5,12 +5,14 @@ extends Control
 ## Signals
 signal task_menu_closed
 
-## Node references
-var panel: PanelContainer
-var tabs: TabContainer
-var main_tasks_scroll: ScrollContainer
-var main_tasks_vbox: VBoxContainer
-var close_button: Button
+## Node references from scene
+@onready var panel: PanelContainer = $Panel
+@onready var tabs: TabContainer = $Panel/MainVBox/Tabs
+@onready var main_tasks_scroll: ScrollContainer = $Panel/MainVBox/Tabs/MainProgression
+@onready var main_tasks_vbox: VBoxContainer = $Panel/MainVBox/Tabs/MainProgression/MainTasksVBox
+@onready var close_button: Button = $Panel/MainVBox/CloseButton
+@onready var star_rating_label: Label = $Panel/MainVBox/HeaderHBox/StarRatingLabel
+@onready var title_label: Label = $Panel/MainVBox/HeaderHBox/Title
 
 ## Currently selected task
 var selected_task: BakeryTask = null
@@ -20,13 +22,20 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = MOUSE_FILTER_IGNORE
 
-	_build_ui()
+	# Style the UI elements
+	_style_ui()
+
+	# Connect close button
+	if close_button:
+		close_button.pressed.connect(hide_menu)
 
 	# Connect to TaskManager signals
 	if TaskManager:
 		TaskManager.task_progress_updated.connect(_on_task_progress_updated)
 		TaskManager.task_completed.connect(_on_task_completed)
 		TaskManager.star_rating_changed.connect(_on_star_rating_changed)
+
+	print("TaskMenu ready")
 
 
 func show_menu() -> void:
@@ -43,98 +52,40 @@ func hide_menu() -> void:
 	task_menu_closed.emit()
 
 
-func _build_ui() -> void:
-	"""Build the task menu UI"""
-	# Semi-transparent overlay
-	var overlay = ColorRect.new()
-	overlay.color = Color(0, 0, 0, 0.5)
-	overlay.anchor_right = 1.0
-	overlay.anchor_bottom = 1.0
-	overlay.mouse_filter = MOUSE_FILTER_STOP
-	add_child(overlay)
+func _style_ui() -> void:
+	"""Apply styling to UI elements from scene"""
+	# Style panel
+	if panel:
+		var panel_style = StyleBoxFlat.new()
+		panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
+		panel_style.border_width_left = 3
+		panel_style.border_width_right = 3
+		panel_style.border_width_top = 3
+		panel_style.border_width_bottom = 3
+		panel_style.border_color = Color(1.0, 0.8, 0.0, 0.8)
+		panel_style.corner_radius_top_left = 10
+		panel_style.corner_radius_top_right = 10
+		panel_style.corner_radius_bottom_left = 10
+		panel_style.corner_radius_bottom_right = 10
+		panel_style.content_margin_left = 20
+		panel_style.content_margin_right = 20
+		panel_style.content_margin_top = 20
+		panel_style.content_margin_bottom = 20
+		panel.add_theme_stylebox_override("panel", panel_style)
 
-	# Center panel - use margins for better positioning
-	panel = PanelContainer.new()
-	panel.anchor_left = 0.0
-	panel.anchor_top = 0.0
-	panel.anchor_right = 1.0
-	panel.anchor_bottom = 1.0
-	panel.offset_left = 100
-	panel.offset_top = 50
-	panel.offset_right = -100
-	panel.offset_bottom = -50
+	# Style title
+	if title_label:
+		title_label.add_theme_font_size_override("font_size", 28)
+		title_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
 
-	# Style
-	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.1, 0.1, 0.15, 0.95)
-	panel_style.border_width_left = 3
-	panel_style.border_width_right = 3
-	panel_style.border_width_top = 3
-	panel_style.border_width_bottom = 3
-	panel_style.border_color = Color(1.0, 0.8, 0.0, 0.8)
-	panel_style.corner_radius_top_left = 10
-	panel_style.corner_radius_top_right = 10
-	panel_style.corner_radius_bottom_left = 10
-	panel_style.corner_radius_bottom_right = 10
-	panel_style.content_margin_left = 20
-	panel_style.content_margin_right = 20
-	panel_style.content_margin_top = 20
-	panel_style.content_margin_bottom = 20
-	panel.add_theme_stylebox_override("panel", panel_style)
+	# Style star rating label
+	if star_rating_label:
+		star_rating_label.add_theme_font_size_override("font_size", 24)
+		star_rating_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
 
-	add_child(panel)
-
-	# Main VBox
-	var main_vbox = VBoxContainer.new()
-	main_vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(main_vbox)
-
-	# Header
-	var header_hbox = HBoxContainer.new()
-	main_vbox.add_child(header_hbox)
-
-	var title = Label.new()
-	title.text = "TASKS & PROGRESSION"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_hbox.add_child(title)
-
-	# Star rating display
-	var star_label = Label.new()
-	star_label.name = "StarRatingLabel"
-	star_label.text = "★★★★★ 0.0 / 5.0"
-	star_label.add_theme_font_size_override("font_size", 24)
-	star_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
-	header_hbox.add_child(star_label)
-
-	var sep1 = HSeparator.new()
-	main_vbox.add_child(sep1)
-
-	# Tab container for different task categories
-	tabs = TabContainer.new()
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_vbox.add_child(tabs)
-
-	# Main Tasks Tab
-	main_tasks_scroll = ScrollContainer.new()
-	main_tasks_scroll.name = "Main Progression"
-	main_tasks_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tabs.add_child(main_tasks_scroll)
-
-	main_tasks_vbox = VBoxContainer.new()
-	main_tasks_vbox.add_theme_constant_override("separation", 10)
-	main_tasks_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main_tasks_scroll.add_child(main_tasks_vbox)
-
-	# Close button
-	close_button = Button.new()
-	close_button.text = "Close [ESC]"
-	close_button.custom_minimum_size = Vector2(200, 50)
-	close_button.pressed.connect(hide_menu)
-	main_vbox.add_child(close_button)
-
-	print("TaskMenu UI built")
+	# Style task VBox
+	if main_tasks_vbox:
+		main_tasks_vbox.add_theme_constant_override("separation", 10)
 
 
 func _refresh_task_display() -> void:
@@ -143,20 +94,20 @@ func _refresh_task_display() -> void:
 		return
 
 	# Update star rating
-	var star_label = panel.find_child("StarRatingLabel", true, false)
-	if star_label and star_label is Label:
+	if star_rating_label:
 		var rating = TaskManager.get_star_rating()
 		var star_visual = _get_star_visual(rating)
-		star_label.text = "%s %.1f / 5.0" % [star_visual, rating]
+		star_rating_label.text = "%s %.1f / 5.0" % [star_visual, rating]
 
 	# Clear existing task cards
-	for child in main_tasks_vbox.get_children():
-		child.queue_free()
+	if main_tasks_vbox:
+		for child in main_tasks_vbox.get_children():
+			child.queue_free()
 
-	# Add main progression tasks
-	var main_tasks = TaskManager.get_main_progression_tasks()
-	for task in main_tasks:
-		_add_task_card(task)
+		# Add main progression tasks
+		var main_tasks = TaskManager.get_main_progression_tasks()
+		for task in main_tasks:
+			_add_task_card(task)
 
 
 func _add_task_card(task: BakeryTask) -> void:

@@ -6,15 +6,15 @@ extends Control
 signal popup_closed
 signal view_unlocks_pressed
 
-## Node references (created dynamically)
-var overlay: ColorRect
-var popup_panel: PanelContainer
-var task_name_label: Label
-var star_reward_label: Label
-var star_change_label: Label
-var unlocks_label: RichTextLabel
-var awesome_button: Button
-var view_unlocks_button: Button
+## Node references from scene
+@onready var popup_panel: PanelContainer = $PopupPanel
+@onready var task_name_label: Label = $PopupPanel/VBox/TaskNameLabel
+@onready var task_desc_label: Label = $PopupPanel/VBox/TaskDescLabel
+@onready var star_reward_label: Label = $PopupPanel/VBox/StarRewardLabel
+@onready var star_change_label: Label = $PopupPanel/VBox/StarChangeLabel
+@onready var unlocks_label: RichTextLabel = $PopupPanel/VBox/UnlocksLabel
+@onready var awesome_button: Button = $PopupPanel/VBox/ButtonHBox/AwesomeButton
+@onready var view_unlocks_button: Button = $PopupPanel/VBox/ButtonHBox/ViewUnlocksButton
 
 ## Stored task data
 var completed_task: BakeryTask
@@ -27,16 +27,20 @@ func _ready() -> void:
 	visible = false
 	mouse_filter = MOUSE_FILTER_IGNORE
 
+	# Connect buttons
+	if awesome_button:
+		awesome_button.pressed.connect(_on_awesome_pressed)
+	if view_unlocks_button:
+		view_unlocks_button.pressed.connect(_on_view_unlocks_pressed)
+
+	print("TaskCompletionPopup ready")
+
 
 func show_completion(task: BakeryTask, old_stars: float, new_stars: float) -> void:
 	"""Display the task completion popup"""
 	completed_task = task
 	old_star_rating = old_stars
 	new_star_rating = new_stars
-
-	# Build UI if not already built
-	if not overlay:
-		_build_ui()
 
 	# Update content
 	_update_content()
@@ -49,157 +53,6 @@ func show_completion(task: BakeryTask, old_stars: float, new_stars: float) -> vo
 	_play_entrance_animation()
 
 
-func _build_ui() -> void:
-	"""Build the popup UI structure"""
-	# Semi-transparent overlay
-	overlay = ColorRect.new()
-	overlay.name = "Overlay"
-	overlay.color = Color(0, 0, 0, 0.7)
-	overlay.anchor_right = 1.0
-	overlay.anchor_bottom = 1.0
-	add_child(overlay)
-
-	# Center panel
-	popup_panel = PanelContainer.new()
-	popup_panel.name = "PopupPanel"
-	popup_panel.anchor_left = 0.5
-	popup_panel.anchor_top = 0.5
-	popup_panel.anchor_right = 0.5
-	popup_panel.anchor_bottom = 0.5
-	popup_panel.offset_left = -300
-	popup_panel.offset_top = -250
-	popup_panel.offset_right = 300
-	popup_panel.offset_bottom = 250
-	popup_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	popup_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-
-	# Style the panel
-	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.15, 0.15, 0.2, 0.95)
-	panel_style.border_width_left = 4
-	panel_style.border_width_right = 4
-	panel_style.border_width_top = 4
-	panel_style.border_width_bottom = 4
-	panel_style.border_color = Color(1.0, 0.8, 0.0, 1.0)
-	panel_style.corner_radius_top_left = 12
-	panel_style.corner_radius_top_right = 12
-	panel_style.corner_radius_bottom_left = 12
-	panel_style.corner_radius_bottom_right = 12
-	panel_style.content_margin_left = 30
-	panel_style.content_margin_right = 30
-	panel_style.content_margin_top = 30
-	panel_style.content_margin_bottom = 30
-	popup_panel.add_theme_stylebox_override("panel", panel_style)
-
-	add_child(popup_panel)
-
-	# VBox for content
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 15)
-	popup_panel.add_child(vbox)
-
-	# Header: "TASK COMPLETED!"
-	var header = Label.new()
-	header.text = "TASK COMPLETED!"
-	header.add_theme_font_size_override("font_size", 32)
-	header.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(header)
-
-	# Separator
-	var sep1 = HSeparator.new()
-	vbox.add_child(sep1)
-
-	# Task name
-	task_name_label = Label.new()
-	task_name_label.text = "Task Name Here"
-	task_name_label.add_theme_font_size_override("font_size", 24)
-	task_name_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1.0))
-	task_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(task_name_label)
-
-	# Task description
-	var task_desc_label = Label.new()
-	task_desc_label.name = "TaskDescLabel"
-	task_desc_label.text = "Task description here"
-	task_desc_label.add_theme_font_size_override("font_size", 14)
-	task_desc_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	task_desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	task_desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(task_desc_label)
-
-	# Spacer
-	var spacer1 = Control.new()
-	spacer1.custom_minimum_size = Vector2(0, 10)
-	vbox.add_child(spacer1)
-
-	# Star reward
-	star_reward_label = Label.new()
-	star_reward_label.text = "★ +0.5 STARS!"
-	star_reward_label.add_theme_font_size_override("font_size", 28)
-	star_reward_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
-	star_reward_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(star_reward_label)
-
-	# Star change (old → new)
-	star_change_label = Label.new()
-	star_change_label.text = "★★★☆☆ → ★★★★☆"
-	star_change_label.add_theme_font_size_override("font_size", 20)
-	star_change_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.0))
-	star_change_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(star_change_label)
-
-	# Spacer
-	var spacer2 = Control.new()
-	spacer2.custom_minimum_size = Vector2(0, 10)
-	vbox.add_child(spacer2)
-
-	# Unlocks header
-	var unlocks_header = Label.new()
-	unlocks_header.text = "UNLOCKED:"
-	unlocks_header.add_theme_font_size_override("font_size", 18)
-	unlocks_header.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
-	unlocks_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(unlocks_header)
-
-	# Unlocks list (RichTextLabel for formatting)
-	unlocks_label = RichTextLabel.new()
-	unlocks_label.bbcode_enabled = true
-	unlocks_label.fit_content = true
-	unlocks_label.scroll_active = false
-	unlocks_label.add_theme_font_size_override("normal_font_size", 16)
-	unlocks_label.add_theme_color_override("default_color", Color(0.9, 1.0, 0.9))
-	unlocks_label.custom_minimum_size = Vector2(0, 80)
-	vbox.add_child(unlocks_label)
-
-	# Spacer to push buttons to bottom
-	var spacer3 = Control.new()
-	spacer3.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(spacer3)
-
-	# Buttons
-	var button_hbox = HBoxContainer.new()
-	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	button_hbox.add_theme_constant_override("separation", 20)
-	vbox.add_child(button_hbox)
-
-	awesome_button = Button.new()
-	awesome_button.text = "Awesome!"
-	awesome_button.custom_minimum_size = Vector2(150, 50)
-	awesome_button.add_theme_font_size_override("font_size", 18)
-	awesome_button.pressed.connect(_on_awesome_pressed)
-	button_hbox.add_child(awesome_button)
-
-	view_unlocks_button = Button.new()
-	view_unlocks_button.text = "View Unlocks"
-	view_unlocks_button.custom_minimum_size = Vector2(150, 50)
-	view_unlocks_button.add_theme_font_size_override("font_size", 18)
-	view_unlocks_button.pressed.connect(_on_view_unlocks_pressed)
-	button_hbox.add_child(view_unlocks_button)
-
-	print("TaskCompletionPopup UI built")
-
-
 func _update_content() -> void:
 	"""Update popup content with current task data"""
 	if not completed_task:
@@ -210,9 +63,8 @@ func _update_content() -> void:
 		task_name_label.text = "\"%s\"" % completed_task.task_name
 
 	# Task description
-	var desc_label = popup_panel.find_child("TaskDescLabel", true, false)
-	if desc_label and desc_label is Label:
-		desc_label.text = completed_task.task_description
+	if task_desc_label:
+		task_desc_label.text = completed_task.task_description
 
 	# Star reward
 	if star_reward_label:
@@ -300,8 +152,7 @@ func _close_popup() -> void:
 	var tween = create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(popup_panel, "scale", Vector2(0.8, 0.8), 0.2)
-	tween.tween_property(popup_panel, "modulate:a", 0.0, 0.2)
-	tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
+	tween.tween_property(self, "modulate:a", 0.0, 0.2)
 
 	await tween.finished
 
