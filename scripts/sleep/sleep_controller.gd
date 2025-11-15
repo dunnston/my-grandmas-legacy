@@ -23,14 +23,30 @@ var current_quality: String = ""
 var current_bonuses: Dictionary = {}
 
 func _ready() -> void:
+	print("[SleepController] Initializing...")
+
 	# Create transition overlay (persistent)
-	transition_overlay = TRANSITION_SCENE.instantiate()
-	add_child(transition_overlay)
+	if TRANSITION_SCENE:
+		transition_overlay = TRANSITION_SCENE.instantiate()
+		add_child(transition_overlay)
+		print("[SleepController] Transition overlay created")
+	else:
+		push_error("[SleepController] Failed to load TRANSITION_SCENE")
+		return
 
 	# Connect signals
 	if transition_overlay:
-		transition_overlay.fade_complete.connect(_on_fade_to_black_complete)
-		transition_overlay.wake_complete.connect(_on_wake_transition_complete)
+		if transition_overlay.has_signal("fade_complete"):
+			transition_overlay.fade_complete.connect(_on_fade_to_black_complete)
+			print("[SleepController] Connected fade_complete signal")
+		else:
+			push_error("[SleepController] fade_complete signal not found")
+
+		if transition_overlay.has_signal("wake_complete"):
+			transition_overlay.wake_complete.connect(_on_wake_transition_complete)
+			print("[SleepController] Connected wake_complete signal")
+		else:
+			push_error("[SleepController] wake_complete signal not found")
 
 	print("[SleepController] Ready")
 
