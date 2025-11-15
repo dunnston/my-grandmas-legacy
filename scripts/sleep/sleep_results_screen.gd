@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 
 # SleepResultsScreen - Shows sleep quality results and bonuses earned
 

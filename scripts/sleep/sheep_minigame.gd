@@ -1,4 +1,4 @@
-extends Control
+extends CanvasLayer
 
 # SheepMinigame - Counting sheep rhythm game for sleep quality
 # Player presses SPACE when sheep jump over fence to count them accurately
