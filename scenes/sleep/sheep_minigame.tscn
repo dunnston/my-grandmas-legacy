@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://dlk8m5n6p7q8r"]
+[gd_scene load_steps=4 format=3 uid="uid://dlk8m5n6p7q8r"]
 
-[ext_resource type="Script" path="res://scripts/sleep/sheep_minigame.gd" id="1_sheep"]
+[ext_resource type="Script" uid="uid://uk7lyjtmiitx" path="res://scripts/sleep/sheep_minigame.gd" id="1_sheep"]
+[ext_resource type="Texture2D" uid="uid://bddix06h5cxg3" path="res://assets/enviroment/sheep-background.png" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://jbse3ptck8eg" path="res://assets/sprites/sheep-run.png" id="3_run"]
 
 [node name="SheepMinigame" type="CanvasLayer"]
 layer = 10
@@ -14,61 +16,25 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="ColorRect" parent="GameContainer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.1, 0.15, 0.3, 1)
+[node name="GameArea" type="Node2D" parent="GameContainer"]
 
-[node name="GameArea" type="Control" parent="GameContainer"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Background1" type="Sprite2D" parent="GameContainer/GameArea"]
+position = Vector2(1, -374)
+scale = Vector2(0.87999976, 1)
+texture = ExtResource("2_bg")
+centered = false
 
-[node name="GameBackground" type="ColorRect" parent="GameContainer/GameArea"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.15, 0.2, 0.35, 0.3)
+[node name="Background2" type="Sprite2D" parent="GameContainer/GameArea"]
+position = Vector2(-3, -376)
+scale = Vector2(0.87999976, 1)
+texture = ExtResource("2_bg")
+centered = false
 
-[node name="Fence" type="ColorRect" parent="GameContainer/GameArea"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = 60.0
-offset_right = 150.0
-offset_bottom = 80.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.545, 0.271, 0.075, 1)
-
-[node name="Sheep" type="ColorRect" parent="GameContainer/GameArea"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -50.0
-offset_top = -80.0
-offset_right = 50.0
-offset_bottom = -20.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1, 0.2, 0.8, 1)
+[node name="Sheep" type="Sprite2D" parent="GameContainer/GameArea"]
+texture = ExtResource("3_run")
+flip_h = true
+hframes = 6
+vframes = 6
 
 [node name="UI" type="Control" parent="GameContainer"]
 layout_mode = 1
@@ -88,8 +54,10 @@ offset_top = 50.0
 offset_right = 300.0
 offset_bottom = 120.0
 grow_horizontal = 2
-text = "Press SPACE when sheep jump over fence!
-Count sheep to sleep well."
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Press SPACE to jump over bushes!
+Don't hit the bushes!"
 horizontal_alignment = 1
 
 [node name="CalmMeter" type="ProgressBar" parent="GameContainer/UI"]
@@ -102,7 +70,6 @@ offset_top = 20.0
 offset_right = -20.0
 offset_bottom = 60.0
 grow_horizontal = 0
-max_value = 100.0
 value = 50.0
 show_percentage = false
 
@@ -132,9 +99,9 @@ offset_top = -60.0
 offset_right = 400.0
 offset_bottom = -20.0
 grow_vertical = 0
-theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-text = "Distance: 0m | Fences: 0"
+theme_override_font_sizes/font_size = 24
+text = "Distance: 0m | Bushes: 0"
 
 [node name="FeedbackLabel" type="Label" parent="GameContainer/UI"]
 visible = false
@@ -150,7 +117,8 @@ offset_right = 100.0
 offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
 text = "Perfect!"
 horizontal_alignment = 1
 vertical_alignment = 1
-
