@@ -252,11 +252,6 @@ func _connect_tracking_signals() -> void:
 		if CleanlinessManager.has_signal("all_chores_completed"):
 			CleanlinessManager.all_chores_completed.connect(_on_all_chores_completed)
 
-	# Connect to RecipeManager
-	if RecipeManager:
-		if RecipeManager.has_signal("recipe_unlocked"):
-			RecipeManager.recipe_unlocked.connect(_on_recipe_unlocked)
-
 	print("[TaskManager] Connected to tracking signals")
 
 
@@ -607,7 +602,13 @@ func _on_daily_customer_stats(total_customers: int, total_revenue: float, avg_sa
 
 
 func _on_quality_calculated(item_id: String, quality: float, quality_tier: String) -> void:
-	"""Track item quality for perfect items"""
+	"""Track item quality for perfect items and unique recipes"""
+	# Track unique recipe baked
+	if not unique_recipes_baked.has(item_id):
+		unique_recipes_baked.append(item_id)
+		set_task_progress("baking_variety", unique_recipes_baked.size())
+		print("[TaskManager] Unique recipe baked: %s (%d/%d)" % [item_id, unique_recipes_baked.size(), 5])
+
 	# Perfect quality is tier "Perfect" or quality >= 90
 	if quality_tier == "Perfect" or quality >= 90.0:
 		update_task_progress("perfectionist")
@@ -617,13 +618,6 @@ func _on_legendary_item_created(item_id: String, quality: float) -> void:
 	"""Track legendary item creation"""
 	# TODO: Track legendary items by recipe category for task 10 (master_baker)
 	pass
-
-
-func _on_recipe_unlocked(recipe_id: String) -> void:
-	"""Track unique recipes for baking variety"""
-	if not unique_recipes_baked.has(recipe_id):
-		unique_recipes_baked.append(recipe_id)
-		set_task_progress("baking_variety", unique_recipes_baked.size())
 
 
 func _on_daily_report_ready(revenue: float, expenses: float, profit: float) -> void:
