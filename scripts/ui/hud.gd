@@ -303,15 +303,15 @@ func _create_star_display() -> void:
 	star_panel = PanelContainer.new()
 	star_panel.name = "StarPanel"
 
-	# Position in top-right corner
+	# Position in top-right corner (below any existing UI)
 	star_panel.anchor_left = 1.0
 	star_panel.anchor_top = 0.0
 	star_panel.anchor_right = 1.0
 	star_panel.anchor_bottom = 0.0
-	star_panel.offset_left = -250
-	star_panel.offset_top = 10
+	star_panel.offset_left = -260
+	star_panel.offset_top = 120  # Moved down to avoid overlap
 	star_panel.offset_right = -10
-	star_panel.offset_bottom = 150
+	star_panel.offset_bottom = 320  # Increased height slightly
 	star_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 
 	# Style the panel

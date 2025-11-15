@@ -53,16 +53,11 @@ func _build_ui() -> void:
 	overlay.mouse_filter = MOUSE_FILTER_STOP
 	add_child(overlay)
 
-	# Center panel - use margins for better positioning
+	# Center panel
 	panel = PanelContainer.new()
-	panel.anchor_left = 0.0
-	panel.anchor_top = 0.0
-	panel.anchor_right = 1.0
-	panel.anchor_bottom = 1.0
-	panel.offset_left = 100
-	panel.offset_top = 50
-	panel.offset_right = -100
-	panel.offset_bottom = -50
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.custom_minimum_size = Vector2(800, 600)
+	panel.position = Vector2(-400, -300)  # Half of size to center it
 
 	# Style
 	var panel_style = StyleBoxFlat.new()
