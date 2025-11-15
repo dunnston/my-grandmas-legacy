@@ -98,6 +98,13 @@ func start_minigame() -> void:
 	_update_ui()
 	show()
 
+	# Ensure sheep and fence are visible
+	if sheep_sprite:
+		sheep_sprite.show()
+		print("[SheepMinigame] Sheep visible:", sheep_sprite.visible)
+	if fence:
+		fence.show()
+
 	# Show instructions briefly
 	if instructions_label:
 		instructions_label.text = "Press SPACE when sheep jump over fence!\nCount %d sheep to sleep well." % total_sheep_to_count
@@ -236,13 +243,21 @@ func _update_sheep_animation(progress: float) -> void:
 	var y = -jump_height * (4.0 * progress * (1.0 - progress))  # Parabola
 
 	# Update ColorRect position (offset values relative to center anchor)
-	var sheep_size = 40.0
+	var sheep_size = 60.0
 	var half_size = sheep_size / 2.0
 
 	sheep_sprite.offset_left = x - half_size
 	sheep_sprite.offset_right = x + half_size
 	sheep_sprite.offset_top = y - half_size
 	sheep_sprite.offset_bottom = y + half_size
+
+	# Debug output
+	if current_sheep_index <= 2:
+		print("[Sheep Animation] progress=%.2f, x=%.1f, y=%.1f, offsets: L=%.1f R=%.1f T=%.1f B=%.1f" % [
+			progress, x, y,
+			sheep_sprite.offset_left, sheep_sprite.offset_right,
+			sheep_sprite.offset_top, sheep_sprite.offset_bottom
+		])
 
 func _update_timing_indicator(progress: float) -> void:
 	"""Update the timing indicator to show current position"""
