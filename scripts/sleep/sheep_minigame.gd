@@ -132,8 +132,8 @@ func _process(delta: float) -> void:
 		time_since_last_sheep = 0.0
 		current_sheep_progress = 0.0
 
-	# Update current sheep jump progress
-	if current_sheep_index < total_sheep_to_count:
+	# Update current sheep jump progress - always animate while game is active
+	if current_sheep_index > 0 and current_sheep_index <= total_sheep_to_count:
 		current_sheep_progress = time_since_last_sheep / sheep_jump_duration
 		current_sheep_progress = clamp(current_sheep_progress, 0.0, 1.0)
 
