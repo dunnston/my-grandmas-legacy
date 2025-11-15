@@ -1,41 +1,46 @@
 extends CanvasLayer
 
-# SheepMinigame - Counting sheep rhythm game for sleep quality
-# Player presses SPACE when sheep jump over fence to count them accurately
+# SheepMinigame - Endless runner game for sleep quality
+# Sheep runs forward, fences come at them, press SPACE to jump over fences
 
 # Signals
 signal minigame_completed(calm_percentage: float)
 
-# Node references (will be created via scene)
+# Node references
 @onready var calm_meter: ProgressBar = $GameContainer/UI/CalmMeter
-@onready var sheep_counter_label: Label = $GameContainer/UI/SheepCounter
+@onready var distance_label: Label = $GameContainer/UI/DistanceLabel
 @onready var instructions_label: Label = $GameContainer/UI/Instructions
 @onready var sheep_sprite: ColorRect = $GameContainer/GameArea/Sheep
-@onready var fence: ColorRect = $GameContainer/GameArea/Fence
-@onready var timing_indicator: Control = $GameContainer/UI/TimingIndicator
-@onready var perfect_zone: ColorRect = $GameContainer/UI/TimingIndicator/PerfectZone
-@onready var good_zone: ColorRect = $GameContainer/UI/TimingIndicator/GoodZone
+@onready var game_area: Control = $GameContainer/GameArea
 @onready var feedback_label: Label = $GameContainer/UI/FeedbackLabel
 
 # Game state
-var sheep_counted: int = 0
-var total_sheep_to_count: int = 20
-var calm_level: float = 50.0  # Starts at 50%
 var is_active: bool = false
-var current_sheep_index: int = 0
+var is_jumping: bool = false
+var is_game_over: bool = false
 
-# Timing variables
-var sheep_jump_interval: float = 2.0  # Seconds between sheep
-var time_since_last_sheep: float = 0.0
-var current_sheep_progress: float = 0.0  # 0.0 to 1.0
-var sheep_jump_duration: float = 1.0  # How long the jump animation takes
+# Scoring
+var distance_traveled: float = 0.0
+var fences_cleared: int = 0
 
-# Input timing
-var can_count_sheep: bool = false
-var perfect_window_start: float = 0.45  # Jump peak window
-var perfect_window_end: float = 0.55
-var good_window_start: float = 0.35
-var good_window_end: float = 0.65
+# Movement
+var base_speed: float = 200.0  # pixels per second
+var current_speed: float = 200.0
+var speed_increase_rate: float = 10.0  # pixels/sec increase per second
+var max_speed: float = 500.0
+
+# Jumping
+var jump_velocity: float = -400.0
+var gravity: float = 1200.0
+var sheep_y_velocity: float = 0.0
+var sheep_ground_y: float = 0.0
+var jump_height: float = 100.0
+
+# Fences
+var fences: Array = []
+var fence_spawn_timer: float = 0.0
+var fence_spawn_interval: float = 2.0  # Start with 2 seconds between fences
+var min_spawn_interval: float = 0.8  # Minimum time between fences
 
 # Difficulty settings
 var difficulty: String = "normal"
@@ -44,11 +49,13 @@ var difficulty: String = "normal"
 var feedback_timer: float = 0.0
 var feedback_duration: float = 1.0
 
+# Scoring thresholds for calm percentage
+var max_distance_for_perfect: float = 1000.0  # 1000m = 100% calm
+
 func _ready() -> void:
 	hide()
 	_load_difficulty_settings()
-	print("[SheepMinigame] Node references - sheep_sprite:", sheep_sprite, " fence:", fence)
-	print("[SheepMinigame] Ready")
+	print("[SheepMinigame] Ready - Endless runner mode")
 
 func _load_difficulty_settings() -> void:
 	"""Load difficulty from SleepManager"""
@@ -57,75 +64,64 @@ func _load_difficulty_settings() -> void:
 
 	match difficulty:
 		"easy":
-			sheep_jump_interval = 2.5
-			perfect_window_start = 0.40
-			perfect_window_end = 0.60
-			good_window_start = 0.30
-			good_window_end = 0.70
-			total_sheep_to_count = 15
+			base_speed = 150.0
+			speed_increase_rate = 5.0
+			fence_spawn_interval = 2.5
+			min_spawn_interval = 1.2
+			max_distance_for_perfect = 800.0
 
 		"normal":
-			sheep_jump_interval = 2.0
-			perfect_window_start = 0.45
-			perfect_window_end = 0.55
-			good_window_start = 0.35
-			good_window_end = 0.65
-			total_sheep_to_count = 20
+			base_speed = 200.0
+			speed_increase_rate = 10.0
+			fence_spawn_interval = 2.0
+			min_spawn_interval = 0.8
+			max_distance_for_perfect = 1000.0
 
 		"hard":
-			sheep_jump_interval = 1.5
-			perfect_window_start = 0.47
-			perfect_window_end = 0.53
-			good_window_start = 0.38
-			good_window_end = 0.62
-			total_sheep_to_count = 25
+			base_speed = 250.0
+			speed_increase_rate = 15.0
+			fence_spawn_interval = 1.5
+			min_spawn_interval = 0.6
+			max_distance_for_perfect = 1200.0
 
 	print("[SheepMinigame] Difficulty: %s" % difficulty)
 
 func start_minigame() -> void:
-	"""Start the counting sheep mini-game"""
-	print("[SheepMinigame] Starting mini-game...")
+	"""Start the endless runner mini-game"""
+	print("[SheepMinigame] Starting endless runner...")
 
 	# Reset state
-	sheep_counted = 0
-	current_sheep_index = 0
-	calm_level = 50.0
+	distance_traveled = 0.0
+	fences_cleared = 0
+	current_speed = base_speed
 	is_active = true
-	time_since_last_sheep = 0.0
-	current_sheep_progress = 0.0
+	is_jumping = false
+	is_game_over = false
+	sheep_y_velocity = 0.0
+	fence_spawn_timer = 0.0
 	feedback_timer = 0.0
+	fences.clear()
+
+	# Position sheep
+	if sheep_sprite:
+		sheep_ground_y = 40.0  # Y position when on ground (relative to center)
+		_position_sheep(0.0, sheep_ground_y)
+		sheep_sprite.show()
 
 	# Update UI
 	_update_ui()
 	show()
 
-	# Ensure sheep and fence are visible
-	if sheep_sprite:
-		sheep_sprite.show()
-		print("[SheepMinigame] Sheep sprite found and shown. Visible:", sheep_sprite.visible)
-		print("[SheepMinigame] Sheep offsets: L=%f R=%f T=%f B=%f" % [
-			sheep_sprite.offset_left, sheep_sprite.offset_right,
-			sheep_sprite.offset_top, sheep_sprite.offset_bottom
-		])
-	else:
-		print("[SheepMinigame] ERROR: sheep_sprite is NULL!")
-
-	if fence:
-		fence.show()
-		print("[SheepMinigame] Fence shown")
-	else:
-		print("[SheepMinigame] ERROR: fence is NULL!")
-
-	# Show instructions briefly
+	# Show instructions
 	if instructions_label:
-		instructions_label.text = "Press SPACE when sheep jump over fence!\nCount %d sheep to sleep well." % total_sheep_to_count
+		instructions_label.text = "Press SPACE to jump over fences!\nDon't hit the fences!"
 		instructions_label.show()
 		await get_tree().create_timer(3.0).timeout
 		if instructions_label:
 			instructions_label.hide()
 
 func _process(delta: float) -> void:
-	if not is_active:
+	if not is_active or is_game_over:
 		return
 
 	# Update feedback timer
@@ -134,132 +130,71 @@ func _process(delta: float) -> void:
 		if feedback_timer <= 0.0 and feedback_label:
 			feedback_label.hide()
 
-	# Update sheep spawning
-	time_since_last_sheep += delta
+	# Update distance
+	distance_traveled += current_speed * delta
 
-	if time_since_last_sheep >= sheep_jump_interval:
-		# Start next sheep
-		_spawn_sheep()
-		time_since_last_sheep = 0.0
-		current_sheep_progress = 0.0
+	# Increase speed over time
+	current_speed = min(current_speed + speed_increase_rate * delta, max_speed)
 
-	# Update current sheep jump progress - always animate while game is active
-	if current_sheep_index > 0 and current_sheep_index <= total_sheep_to_count:
-		current_sheep_progress = time_since_last_sheep / sheep_jump_duration
-		current_sheep_progress = clamp(current_sheep_progress, 0.0, 1.0)
+	# Decrease spawn interval over time (spawn fences more frequently)
+	fence_spawn_interval = max(fence_spawn_interval - (0.05 * delta), min_spawn_interval)
 
-		# Update visual state
-		_update_sheep_animation(current_sheep_progress)
-		_update_timing_indicator(current_sheep_progress)
+	# Update sheep jumping physics
+	_update_sheep_physics(delta)
 
-		# Check if in counting window
-		can_count_sheep = (current_sheep_progress >= good_window_start and
-						   current_sheep_progress <= good_window_end)
-	elif current_sheep_index == 0:
-		print("[SheepMinigame] Waiting for first sheep to spawn... (frame skipped)")
+	# Spawn fences
+	_update_fence_spawning(delta)
 
-func _input(event: InputEvent) -> void:
-	if not is_active:
-		return
-
-	# Count sheep on SPACE press
-	if event.is_action_pressed("ui_accept"):  # SPACE key
-		print("[SheepMinigame] SPACE pressed! Attempting to count sheep...")
-		_attempt_count_sheep()
-		get_viewport().set_input_as_handled()
-
-func _spawn_sheep() -> void:
-	"""Spawn a new sheep to jump"""
-	current_sheep_index += 1
-
-	if current_sheep_index > total_sheep_to_count:
-		_end_minigame()
-		return
-
-	print("[SheepMinigame] Sheep #%d jumping..." % current_sheep_index)
-	# Animation handled by _update_sheep_animation() in _process()
-
-func _attempt_count_sheep() -> void:
-	"""Player attempts to count a sheep"""
-	print("[SheepMinigame] _attempt_count_sheep called. can_count_sheep=%s, progress=%.2f" % [can_count_sheep, current_sheep_progress])
-
-	if not can_count_sheep:
-		# Clicked outside timing window
-		print("[SheepMinigame] Miss - outside timing window")
-		_give_feedback("Miss", Color.GRAY, -5.0)
-		return
-
-	# Check timing quality
-	var timing_quality = _check_timing()
-	print("[SheepMinigame] Timing quality: %s" % timing_quality)
-
-	match timing_quality:
-		"perfect":
-			sheep_counted += 1
-			_give_feedback("Perfect! 🐑", Color.GOLD, 3.0)
-			calm_level += 3.0
-
-		"good":
-			sheep_counted += 1
-			_give_feedback("Good", Color.LIGHT_GREEN, 1.5)
-			calm_level += 1.5
-
-		"ok":
-			sheep_counted += 1
-			_give_feedback("OK", Color.LIGHT_BLUE, 0.5)
-			calm_level += 0.5
-
-		"miss":
-			_give_feedback("Miss", Color.ORANGE_RED, -2.0)
-			calm_level -= 2.0
-
-	# Clamp calm level
-	calm_level = clamp(calm_level, 0.0, 100.0)
+	# Move and check fences
+	_update_fences(delta)
 
 	# Update UI
 	_update_ui()
 
-	# Reset for next sheep
-	can_count_sheep = false
+func _input(event: InputEvent) -> void:
+	if not is_active or is_game_over:
+		return
 
-func _check_timing() -> String:
-	"""Check how well-timed the input was"""
-	if current_sheep_progress >= perfect_window_start and current_sheep_progress <= perfect_window_end:
-		return "perfect"
-	elif current_sheep_progress >= good_window_start and current_sheep_progress <= good_window_end:
-		return "good"
-	else:
-		return "ok"
+	# Jump on SPACE press
+	if event.is_action_pressed("ui_accept") and not is_jumping:
+		_jump()
+		get_viewport().set_input_as_handled()
 
-func _give_feedback(text: String, color: Color, calm_change: float) -> void:
-	"""Show visual feedback for player input"""
-	if feedback_label:
-		feedback_label.text = text
-		if calm_change > 0:
-			feedback_label.text += " +%.1f%%" % calm_change
-		elif calm_change < 0:
-			feedback_label.text += " %.1f%%" % calm_change
+func _jump() -> void:
+	"""Make the sheep jump"""
+	if is_jumping:
+		return
 
-		feedback_label.add_theme_color_override("font_color", color)
-		feedback_label.show()
-		feedback_timer = feedback_duration
+	is_jumping = true
+	sheep_y_velocity = jump_velocity
+	print("[SheepMinigame] Sheep jumping!")
 
-	print("[SheepMinigame] %s (calm change: %.1f%%)" % [text, calm_change])
-
-func _update_sheep_animation(progress: float) -> void:
-	"""Update sheep sprite position based on jump progress"""
+func _update_sheep_physics(delta: float) -> void:
+	"""Update sheep vertical position (jumping)"""
 	if not sheep_sprite:
 		return
 
-	# Simple arc jump (parabola) - sheep travels across full screen
-	var jump_height = 120.0
-	var horizontal_distance = 500.0  # Much wider travel distance
+	# Apply gravity
+	sheep_y_velocity += gravity * delta
 
-	# Start from far left (-250) to far right (+250)
-	var x = progress * horizontal_distance - (horizontal_distance / 2)
-	var y = -jump_height * (4.0 * progress * (1.0 - progress))  # Parabola
+	# Calculate new Y position
+	var current_y = sheep_sprite.offset_top + (sheep_sprite.offset_bottom - sheep_sprite.offset_top) / 2.0
+	var new_y = current_y + sheep_y_velocity * delta
 
-	# Update ColorRect position (offset values relative to center anchor)
+	# Check if landed
+	if new_y >= sheep_ground_y:
+		new_y = sheep_ground_y
+		sheep_y_velocity = 0.0
+		is_jumping = false
+
+	# Update position
+	_position_sheep(0.0, new_y)
+
+func _position_sheep(x: float, y: float) -> void:
+	"""Position the sheep sprite"""
+	if not sheep_sprite:
+		return
+
 	var sheep_width = 100.0
 	var sheep_height = 60.0
 
@@ -268,54 +203,119 @@ func _update_sheep_animation(progress: float) -> void:
 	sheep_sprite.offset_top = y - (sheep_height / 2)
 	sheep_sprite.offset_bottom = y + (sheep_height / 2)
 
-	# Debug output
-	print("[Sheep Animation] #%d progress=%.2f, x=%.1f, y=%.1f, offsets: L=%.1f R=%.1f T=%.1f B=%.1f, visible=%s" % [
-		current_sheep_index, progress, x, y,
-		sheep_sprite.offset_left, sheep_sprite.offset_right,
-		sheep_sprite.offset_top, sheep_sprite.offset_bottom,
-		sheep_sprite.visible
-	])
+func _update_fence_spawning(delta: float) -> void:
+	"""Spawn new fences"""
+	fence_spawn_timer += delta
 
-func _update_timing_indicator(progress: float) -> void:
-	"""Update the timing indicator to show current position"""
-	if not timing_indicator:
+	if fence_spawn_timer >= fence_spawn_interval:
+		_spawn_fence()
+		fence_spawn_timer = 0.0
+
+func _spawn_fence() -> void:
+	"""Create a new fence at the right side of screen"""
+	if not game_area:
 		return
 
-	# Move indicator needle/marker based on progress
-	# This will be a visual element showing where in the timing window we are
+	var fence_node = ColorRect.new()
+	fence_node.color = Color(0.545, 0.271, 0.075, 1)  # Brown
+
+	# Position at right edge
+	var start_x = 300.0  # Right edge of game area
+	var fence_y = sheep_ground_y
+
+	fence_node.offset_left = start_x - 10.0
+	fence_node.offset_right = start_x + 10.0
+	fence_node.offset_top = fence_y - 60.0
+	fence_node.offset_bottom = fence_y + 10.0
+
+	game_area.add_child(fence_node)
+	fences.append(fence_node)
+
+func _update_fences(delta: float) -> void:
+	"""Move fences and check collisions"""
+	var fences_to_remove = []
+
+	for fence_node in fences:
+		if not is_instance_valid(fence_node):
+			continue
+
+		# Move fence left
+		var move_amount = current_speed * delta
+		fence_node.offset_left -= move_amount
+		fence_node.offset_right -= move_amount
+
+		# Check if fence is past sheep (cleared)
+		if fence_node.offset_right < -50.0 and fence_node not in fences_to_remove:
+			fences_cleared += 1
+			_give_feedback("+1 Fence!", Color.GREEN_YELLOW)
+			fences_to_remove.append(fence_node)
+			continue
+
+		# Check collision with sheep
+		if _check_fence_collision(fence_node):
+			print("[SheepMinigame] HIT A FENCE! Game Over!")
+			_game_over()
+			return
+
+	# Remove cleared fences
+	for fence_node in fences_to_remove:
+		fences.erase(fence_node)
+		fence_node.queue_free()
+
+func _check_fence_collision(fence_node: ColorRect) -> bool:
+	"""Check if sheep collides with fence"""
+	if not sheep_sprite or not fence_node:
+		return false
+
+	# Simple AABB collision
+	var sheep_left = sheep_sprite.offset_left
+	var sheep_right = sheep_sprite.offset_right
+	var sheep_top = sheep_sprite.offset_top
+	var sheep_bottom = sheep_sprite.offset_bottom
+
+	var fence_left = fence_node.offset_left
+	var fence_right = fence_node.offset_right
+	var fence_top = fence_node.offset_top
+	var fence_bottom = fence_node.offset_bottom
+
+	# Check if rectangles overlap
+	if sheep_right > fence_left and sheep_left < fence_right:
+		if sheep_bottom > fence_top and sheep_top < fence_bottom:
+			return true
+
+	return false
+
+func _game_over() -> void:
+	"""End the game"""
+	is_game_over = true
+	is_active = false
+
+	_give_feedback("Game Over!", Color.RED)
+
+	# Calculate calm percentage based on distance
+	var calm_percentage = min((distance_traveled / max_distance_for_perfect) * 100.0, 100.0)
+
+	print("[SheepMinigame] Game Over! Distance: %.1fm, Fences: %d, Calm: %.1f%%" % [distance_traveled, fences_cleared, calm_percentage])
+
+	# Wait a moment then emit completion
+	await get_tree().create_timer(2.0).timeout
+	minigame_completed.emit(calm_percentage)
+
+func _give_feedback(text: String, color: Color) -> void:
+	"""Show feedback text"""
+	if feedback_label:
+		feedback_label.text = text
+		feedback_label.add_theme_color_override("font_color", color)
+		feedback_label.show()
+		feedback_timer = feedback_duration
 
 func _update_ui() -> void:
 	"""Update all UI elements"""
+	# Update distance display
+	if distance_label:
+		distance_label.text = "Distance: %.0fm | Fences: %d" % [distance_traveled, fences_cleared]
+
+	# Update calm meter (based on current distance)
 	if calm_meter:
-		calm_meter.value = calm_level
-
-	if sheep_counter_label:
-		sheep_counter_label.text = "Sheep: %d / %d" % [sheep_counted, total_sheep_to_count]
-
-func _end_minigame() -> void:
-	"""End the mini-game and return results"""
-	is_active = false
-
-	print("[SheepMinigame] Mini-game complete!")
-	print("  Sheep counted: %d / %d" % [sheep_counted, total_sheep_to_count])
-	print("  Final calm level: %.1f%%" % calm_level)
-
-	# Calculate final calm percentage (accounting for missed sheep)
-	var counting_accuracy = float(sheep_counted) / float(total_sheep_to_count)
-	var final_calm = calm_level * counting_accuracy
-
-	print("  Counting accuracy: %.1f%%" % (counting_accuracy * 100))
-	print("  Final calm (adjusted): %.1f%%" % final_calm)
-
-	# Emit completion signal
-	minigame_completed.emit(final_calm)
-
-	# Hide after a delay to show final state
-	await get_tree().create_timer(2.0).timeout
-	hide()
-
-func skip_minigame() -> void:
-	"""Skip the mini-game and give default result"""
-	var default_calm = randf_range(30.0, 40.0)
-	minigame_completed.emit(default_calm)
-	hide()
+		var calm_pct = min((distance_traveled / max_distance_for_perfect) * 100.0, 100.0)
+		calm_meter.value = calm_pct
