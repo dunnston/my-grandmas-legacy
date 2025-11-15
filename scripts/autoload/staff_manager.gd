@@ -1120,6 +1120,14 @@ func regenerate_all_employee_energy() -> void:
 		employee_data["energy"] = BalanceConfig.STAFF.max_energy
 	print("[StaffManager] Regenerated energy for all employees")
 
+func apply_sleep_energy_bonus(bonus_percentage: float) -> void:
+	"""Apply sleep quality energy bonus to all employees"""
+	var bonus_amount = BalanceConfig.STAFF.max_energy * bonus_percentage
+	for employee_id in hired_staff.keys():
+		var employee_data: Dictionary = hired_staff[employee_id]
+		employee_data["energy"] = min(employee_data["energy"] + bonus_amount, BalanceConfig.STAFF.max_energy)
+	print("[StaffManager] Applied sleep energy bonus: +%.1f%% to all employees" % (bonus_percentage * 100))
+
 func process_daily_updates() -> void:
 	"""Process daily updates - called by GameManager at end of day"""
 	pay_daily_wages()
