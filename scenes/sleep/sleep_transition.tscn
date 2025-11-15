@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/sleep/sleep_transition.gd" id="1_transition"]
 
 [node name="SleepTransition" type="CanvasLayer"]
-layer = 100
+layer = 5
 script = ExtResource("1_transition")
 
 [node name="FadeOverlay" type="ColorRect" parent="."]

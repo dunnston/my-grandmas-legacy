@@ -7,15 +7,15 @@ extends Control
 signal minigame_completed(calm_percentage: float)
 
 # Node references (will be created via scene)
-@onready var calm_meter: ProgressBar = $UI/CalmMeter
-@onready var sheep_counter_label: Label = $UI/SheepCounter
-@onready var instructions_label: Label = $UI/Instructions
-@onready var sheep_sprite: AnimatedSprite2D = $GameArea/Sheep
-@onready var fence: Sprite2D = $GameArea/Fence
-@onready var timing_indicator: Control = $UI/TimingIndicator
-@onready var perfect_zone: ColorRect = $UI/TimingIndicator/PerfectZone
-@onready var good_zone: ColorRect = $UI/TimingIndicator/GoodZone
-@onready var feedback_label: Label = $UI/FeedbackLabel
+@onready var calm_meter: ProgressBar = $GameContainer/UI/CalmMeter
+@onready var sheep_counter_label: Label = $GameContainer/UI/SheepCounter
+@onready var instructions_label: Label = $GameContainer/UI/Instructions
+@onready var sheep_sprite: AnimatedSprite2D = $GameContainer/GameArea/Sheep
+@onready var fence: Sprite2D = $GameContainer/GameArea/Fence
+@onready var timing_indicator: Control = $GameContainer/UI/TimingIndicator
+@onready var perfect_zone: ColorRect = $GameContainer/UI/TimingIndicator/PerfectZone
+@onready var good_zone: ColorRect = $GameContainer/UI/TimingIndicator/GoodZone
+@onready var feedback_label: Label = $GameContainer/UI/FeedbackLabel
 
 # Game state
 var sheep_counted: int = 0

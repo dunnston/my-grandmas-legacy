@@ -6,11 +6,11 @@ extends Control
 signal continue_pressed()
 
 # Node references
-@onready var quality_label: Label = $Panel/VBox/QualityLabel
-@onready var message_label: Label = $Panel/VBox/MessageLabel
-@onready var calm_percentage_label: Label = $Panel/VBox/CalmPercentageLabel
-@onready var bonuses_container: VBoxContainer = $Panel/VBox/BonusesContainer
-@onready var continue_button: Button = $Panel/VBox/ContinueButton
+@onready var quality_label: Label = $ScreenContainer/Panel/VBox/QualityLabel
+@onready var message_label: Label = $ScreenContainer/Panel/VBox/MessageLabel
+@onready var calm_percentage_label: Label = $ScreenContainer/Panel/VBox/CalmPercentageLabel
+@onready var bonuses_container: VBoxContainer = $ScreenContainer/Panel/VBox/BonusesContainer
+@onready var continue_button: Button = $ScreenContainer/Panel/VBox/ContinueButton
 
 func _ready() -> void:
 	hide()
