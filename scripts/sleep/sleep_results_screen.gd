@@ -15,16 +15,27 @@ signal continue_pressed()
 func _ready() -> void:
 	hide()
 
+	print("[SleepResults] Ready - checking node references...")
+	print("  quality_label: ", quality_label)
+	print("  message_label: ", message_label)
+	print("  calm_percentage_label: ", calm_percentage_label)
+	print("  bonuses_container: ", bonuses_container)
+	print("  continue_button: ", continue_button)
+
 	if continue_button:
 		continue_button.pressed.connect(_on_continue_pressed)
 
 func show_results(calm_percentage: float, quality_name: String, bonuses: Dictionary) -> void:
 	"""Display sleep results"""
-	print("[SleepResults] Showing results...")
+	print("[SleepResults] Showing results: calm=%.1f%%, quality=%s" % [calm_percentage, quality_name])
+	print("[SleepResults] Bonuses: ", bonuses)
 
 	# Update quality display
 	if quality_label:
 		quality_label.text = quality_name
+		print("[SleepResults] Set quality_label to: ", quality_name)
+	else:
+		print("[SleepResults] ERROR: quality_label is NULL!")
 
 	# Update calm percentage
 	if calm_percentage_label:
