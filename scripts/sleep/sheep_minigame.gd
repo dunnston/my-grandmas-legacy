@@ -158,13 +158,15 @@ func _process(delta: float) -> void:
 	elif current_sheep_index == 0:
 		print("[SheepMinigame] Waiting for first sheep to spawn... (frame skipped)")
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if not is_active:
 		return
 
 	# Count sheep on SPACE press
 	if event.is_action_pressed("ui_accept"):  # SPACE key
+		print("[SheepMinigame] SPACE pressed! Attempting to count sheep...")
 		_attempt_count_sheep()
+		get_viewport().set_input_as_handled()
 
 func _spawn_sheep() -> void:
 	"""Spawn a new sheep to jump"""
@@ -179,13 +181,17 @@ func _spawn_sheep() -> void:
 
 func _attempt_count_sheep() -> void:
 	"""Player attempts to count a sheep"""
+	print("[SheepMinigame] _attempt_count_sheep called. can_count_sheep=%s, progress=%.2f" % [can_count_sheep, current_sheep_progress])
+
 	if not can_count_sheep:
 		# Clicked outside timing window
+		print("[SheepMinigame] Miss - outside timing window")
 		_give_feedback("Miss", Color.GRAY, -5.0)
 		return
 
 	# Check timing quality
 	var timing_quality = _check_timing()
+	print("[SheepMinigame] Timing quality: %s" % timing_quality)
 
 	match timing_quality:
 		"perfect":
