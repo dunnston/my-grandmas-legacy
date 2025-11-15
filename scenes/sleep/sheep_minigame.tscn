@@ -37,11 +37,19 @@ offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Fence" type="Sprite2D" parent="GameArea"]
-position = Vector2(0, 150)
+[node name="Fence" type="ColorRect" parent="GameArea"]
+offset_left = -150.0
+offset_top = 130.0
+offset_right = 150.0
+offset_bottom = 150.0
+color = Color(0.545, 0.271, 0.075, 1)
 
-[node name="Sheep" type="AnimatedSprite2D" parent="GameArea"]
-position = Vector2(-100, 0)
+[node name="Sheep" type="ColorRect" parent="GameArea"]
+offset_left = -120.0
+offset_top = -20.0
+offset_right = -80.0
+offset_bottom = 20.0
+color = Color(1, 1, 1, 1)
 
 [node name="UI" type="Control" parent="GameContainer"]
 layout_mode = 1

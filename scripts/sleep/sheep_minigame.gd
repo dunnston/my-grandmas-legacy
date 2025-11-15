@@ -10,8 +10,8 @@ signal minigame_completed(calm_percentage: float)
 @onready var calm_meter: ProgressBar = $GameContainer/UI/CalmMeter
 @onready var sheep_counter_label: Label = $GameContainer/UI/SheepCounter
 @onready var instructions_label: Label = $GameContainer/UI/Instructions
-@onready var sheep_sprite: AnimatedSprite2D = $GameContainer/GameArea/Sheep
-@onready var fence: Sprite2D = $GameContainer/GameArea/Fence
+@onready var sheep_sprite: ColorRect = $GameContainer/GameArea/Sheep
+@onready var fence: ColorRect = $GameContainer/GameArea/Fence
 @onready var timing_indicator: Control = $GameContainer/UI/TimingIndicator
 @onready var perfect_zone: ColorRect = $GameContainer/UI/TimingIndicator/PerfectZone
 @onready var good_zone: ColorRect = $GameContainer/UI/TimingIndicator/GoodZone
@@ -235,7 +235,13 @@ func _update_sheep_animation(progress: float) -> void:
 	var x = progress * horizontal_distance - (horizontal_distance / 2)
 	var y = -jump_height * (4.0 * progress * (1.0 - progress))  # Parabola
 
-	sheep_sprite.position = Vector2(x, y)
+	# Update ColorRect position (offset values)
+	var base_left = -120.0
+	var base_top = -20.0
+	sheep_sprite.offset_left = base_left + x
+	sheep_sprite.offset_right = base_left + x + 40.0  # Width of 40px
+	sheep_sprite.offset_top = base_top + y
+	sheep_sprite.offset_bottom = base_top + y + 40.0  # Height of 40px
 
 func _update_timing_indicator(progress: float) -> void:
 	"""Update the timing indicator to show current position"""
