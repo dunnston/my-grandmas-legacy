@@ -45,7 +45,8 @@ func save_game(slot: String = DEFAULT_SAVE_SLOT) -> bool:
 		"day": GameManager.get_current_day(),
 		"cash": EconomyManager.get_current_cash(),
 		"reputation": ProgressionManager.get_reputation() if ProgressionManager else 50,
-		"total_revenue": ProgressionManager.get_total_revenue() if ProgressionManager else 0.0
+		"total_revenue": ProgressionManager.get_total_revenue() if ProgressionManager else 0.0,
+		"star_rating": TaskManager.get_star_rating() if TaskManager else 0.0
 	}
 
 	# Convert to JSON
@@ -171,6 +172,10 @@ func _collect_save_data() -> Dictionary:
 	if DeliveryManager:
 		data["delivery_manager"] = DeliveryManager.save_data()
 
+	# Tasks (quest progression, star rating)
+	if TaskManager:
+		data["task_manager"] = TaskManager.get_save_data()
+
 	print("Collected save data from all managers")
 	return data
 
@@ -234,6 +239,10 @@ func _apply_save_data(data: Dictionary) -> void:
 	# Delivery
 	if data.has("delivery_manager") and DeliveryManager:
 		DeliveryManager.load_data(data["delivery_manager"])
+
+	# Tasks
+	if data.has("task_manager") and TaskManager:
+		TaskManager.load_save_data(data["task_manager"])
 
 	print("Applied save data to all managers")
 
