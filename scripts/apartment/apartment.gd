@@ -220,17 +220,26 @@ func _on_sleep_sequence_complete() -> void:
 	if buff_info.active:
 		print("Morning buff active: %s %s" % [buff_info.icon, buff_info.name])
 
-	# Re-enable player control
+	# Re-enable player control and camera
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
-		print("[Apartment] Re-enabling player control")
-		# Make sure player input is enabled
+		print("[Apartment] Re-enabling player control and camera")
+
+		# Make sure player processing is enabled
 		if player.has_method("set_process_input"):
 			player.set_process_input(true)
 		if player.has_method("set_physics_process"):
 			player.set_physics_process(true)
 		if player.has_method("set_process"):
 			player.set_process(true)
+
+		# Make camera current again (in case it got detached)
+		var camera = player.get_node_or_null("Camera3D")
+		if not camera:
+			camera = player.get_node_or_null("Head/Camera3D")
+		if camera and camera is Camera3D:
+			camera.make_current()
+			print("[Apartment] Camera re-activated")
 	else:
 		print("[Apartment] Warning: Could not find player node!")
 
