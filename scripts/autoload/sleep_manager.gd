@@ -155,7 +155,7 @@ func _apply_bonuses(bonuses: Dictionary) -> void:
 
 	# Apply reputation bonus
 	if bonuses.reputation > 0 and ProgressionManager:
-		ProgressionManager.add_reputation(bonuses.reputation)
+		ProgressionManager.modify_reputation(int(bonuses.reputation))
 		print("  + Reputation: +%.0f" % bonuses.reputation)
 
 	# Apply staff energy bonuses
