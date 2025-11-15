@@ -220,6 +220,20 @@ func _on_sleep_sequence_complete() -> void:
 	if buff_info.active:
 		print("Morning buff active: %s %s" % [buff_info.icon, buff_info.name])
 
+	# Re-enable player control
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		print("[Apartment] Re-enabling player control")
+		# Make sure player input is enabled
+		if player.has_method("set_process_input"):
+			player.set_process_input(true)
+		if player.has_method("set_physics_process"):
+			player.set_physics_process(true)
+		if player.has_method("set_process"):
+			player.set_process(true)
+	else:
+		print("[Apartment] Warning: Could not find player node!")
+
 	# Player can now move around apartment
 	# Could show a wake-up message here
 
