@@ -30,7 +30,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Wooden Table",
 		"description": "Simple wooden table for customers",
 		"cost": 150.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "furniture",
 		"subcategory": "tables",
 		"ambiance_bonus": 2
@@ -39,7 +39,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Marble Table",
 		"description": "Elegant marble-top table",
 		"cost": 450.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"category": "furniture",
 		"subcategory": "tables",
 		"ambiance_bonus": 5
@@ -48,7 +48,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Antique Table",
 		"description": "Grandma's restored antique table",
 		"cost": 800.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "furniture",
 		"subcategory": "tables",
 		"ambiance_bonus": 10
@@ -59,7 +59,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Wooden Chair",
 		"description": "Comfortable wooden chair",
 		"cost": 75.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "furniture",
 		"subcategory": "chairs",
 		"ambiance_bonus": 1
@@ -68,7 +68,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Cushioned Chair",
 		"description": "Chair with soft cushions",
 		"cost": 150.0,
-		"unlock_revenue": 1000,
+		"star_requirement": 1.0,  # First Customers
 		"category": "furniture",
 		"subcategory": "chairs",
 		"ambiance_bonus": 3
@@ -77,7 +77,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Luxury Chair",
 		"description": "Premium upholstered chair",
 		"cost": 300.0,
-		"unlock_revenue": 5000,
+		"star_requirement": 2.5,  # Profitable Day
 		"category": "furniture",
 		"subcategory": "chairs",
 		"ambiance_bonus": 6
@@ -88,7 +88,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Basic Shelf",
 		"description": "Simple wall shelf for display",
 		"cost": 100.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "furniture",
 		"subcategory": "shelving",
 		"ambiance_bonus": 2
@@ -97,7 +97,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Glass Display Shelf",
 		"description": "Glass shelf with LED lighting",
 		"cost": 350.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"category": "furniture",
 		"subcategory": "shelving",
 		"ambiance_bonus": 5
@@ -106,7 +106,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Trophy Display Case",
 		"description": "Showcase your achievements",
 		"cost": 600.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "furniture",
 		"subcategory": "shelving",
 		"ambiance_bonus": 8
@@ -117,7 +117,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Basic Counter",
 		"description": "Standard service counter",
 		"cost": 200.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "furniture",
 		"subcategory": "counters",
 		"ambiance_bonus": 2
@@ -126,7 +126,7 @@ const FURNITURE_UPGRADES: Dictionary = {
 		"name": "Granite Counter",
 		"description": "Premium granite countertop",
 		"cost": 500.0,
-		"unlock_revenue": 5000,
+		"star_requirement": 2.5,  # Profitable Day
 		"category": "furniture",
 		"subcategory": "counters",
 		"ambiance_bonus": 6
@@ -140,7 +140,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Fresh White Paint",
 		"description": "Clean, bright white walls",
 		"cost": 200.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "decoration",
 		"subcategory": "paint",
 		"ambiance_bonus": 5,
@@ -150,7 +150,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Warm Cream Paint",
 		"description": "Cozy cream-colored walls",
 		"cost": 250.0,
-		"unlock_revenue": 1000,
+		"star_requirement": 1.0,  # First Customers
 		"category": "decoration",
 		"subcategory": "paint",
 		"ambiance_bonus": 8,
@@ -160,7 +160,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Sage Green Paint",
 		"description": "Calming sage green walls",
 		"cost": 300.0,
-		"unlock_revenue": 5000,
+		"star_requirement": 2.5,  # Profitable Day
 		"category": "decoration",
 		"subcategory": "paint",
 		"ambiance_bonus": 10,
@@ -172,7 +172,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Floral Wallpaper",
 		"description": "Vintage floral pattern",
 		"cost": 400.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"category": "decoration",
 		"subcategory": "wallpaper",
 		"ambiance_bonus": 12
@@ -181,7 +181,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Grandma's Wallpaper",
 		"description": "Restore the original wallpaper",
 		"cost": 600.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "decoration",
 		"subcategory": "wallpaper",
 		"ambiance_bonus": 20
@@ -202,7 +202,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Hardwood Flooring",
 		"description": "Beautiful hardwood planks",
 		"cost": 1000.0,
-		"unlock_revenue": 5000,
+		"star_requirement": 2.5,  # Profitable Day
 		"category": "decoration",
 		"subcategory": "flooring",
 		"ambiance_bonus": 12,
@@ -212,7 +212,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Vintage Checkerboard",
 		"description": "Classic black & white pattern",
 		"cost": 800.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "decoration",
 		"subcategory": "flooring",
 		"ambiance_bonus": 15
@@ -223,7 +223,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Warm Lighting",
 		"description": "Cozy warm-toned lights",
 		"cost": 300.0,
-		"unlock_revenue": 1000,
+		"star_requirement": 1.0,  # First Customers
 		"category": "decoration",
 		"subcategory": "lighting",
 		"ambiance_bonus": 8
@@ -232,7 +232,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Crystal Chandelier",
 		"description": "Elegant crystal chandelier",
 		"cost": 1200.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "decoration",
 		"subcategory": "lighting",
 		"ambiance_bonus": 20
@@ -243,7 +243,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Family Photos",
 		"description": "Frame family memories",
 		"cost": 150.0,
-		"unlock_revenue": 500,
+		"star_requirement": 0.5,  # First Steps
 		"category": "decoration",
 		"subcategory": "art",
 		"ambiance_bonus": 5
@@ -252,7 +252,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Vintage Baking Poster",
 		"description": "Classic bakery advertisement",
 		"cost": 200.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"category": "decoration",
 		"subcategory": "art",
 		"ambiance_bonus": 6
@@ -261,7 +261,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Oil Painting",
 		"description": "Beautiful countryside painting",
 		"cost": 800.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "decoration",
 		"subcategory": "art",
 		"ambiance_bonus": 12
@@ -272,7 +272,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Potted Plant",
 		"description": "Small decorative plant",
 		"cost": 50.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "decoration",
 		"subcategory": "plants",
 		"ambiance_bonus": 3
@@ -281,7 +281,7 @@ const DECORATION_UPGRADES: Dictionary = {
 		"name": "Fresh Flowers",
 		"description": "Vase with fresh cut flowers",
 		"cost": 100.0,
-		"unlock_revenue": 1000,
+		"star_requirement": 1.0,  # First Customers
 		"category": "decoration",
 		"subcategory": "plants",
 		"ambiance_bonus": 5
@@ -295,7 +295,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Professional Oven",
 		"description": "Commercial-grade oven (+2% quality)",
 		"cost": 2000.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"star_requirement": 1.5,  # Requires Rising Reputation task
 		"category": "equipment",
 		"subcategory": "oven",
@@ -305,7 +305,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Convection Oven",
 		"description": "Advanced convection oven (+4% quality)",
 		"cost": 5000.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"star_requirement": 3.0,  # Requires Team Player task
 		"category": "equipment",
 		"subcategory": "oven",
@@ -315,7 +315,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Master Baker's Oven",
 		"description": "Top-of-the-line oven (+6% quality)",
 		"cost": 10000.0,
-		"unlock_revenue": 25000,
+		"star_requirement": 5.0,  # Master Baker
 		"star_requirement": 3.5,  # Requires Perfectionist task
 		"category": "equipment",
 		"subcategory": "oven",
@@ -327,7 +327,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Stand Mixer",
 		"description": "Professional stand mixer (+2% quality)",
 		"cost": 1500.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"star_requirement": 1.5,  # Requires Rising Reputation task
 		"category": "equipment",
 		"subcategory": "mixer",
@@ -337,7 +337,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Industrial Mixer",
 		"description": "Heavy-duty industrial mixer (+4% quality)",
 		"cost": 4000.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"star_requirement": 3.0,  # Requires Team Player task
 		"category": "equipment",
 		"subcategory": "mixer",
@@ -347,7 +347,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Master Mixer",
 		"description": "Grandma's restored professional mixer (+6% quality)",
 		"cost": 8000.0,
-		"unlock_revenue": 25000,
+		"star_requirement": 5.0,  # Master Baker
 		"star_requirement": 4.0,  # Requires Grandmother's Legacy task
 		"category": "equipment",
 		"subcategory": "mixer",
@@ -359,7 +359,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Refrigerated Display",
 		"description": "Temperature-controlled display case",
 		"cost": 1000.0,
-		"unlock_revenue": 1000,
+		"star_requirement": 1.0,  # First Customers
 		"star_requirement": 2.0,  # Requires Baking Variety task
 		"category": "equipment",
 		"subcategory": "display",
@@ -369,7 +369,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Premium Display",
 		"description": "Large multi-shelf display (+10 capacity)",
 		"cost": 2500.0,
-		"unlock_revenue": 5000,
+		"star_requirement": 2.5,  # Profitable Day
 		"star_requirement": 3.5,  # Requires Perfectionist task
 		"category": "equipment",
 		"subcategory": "display",
@@ -381,7 +381,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Digital Register",
 		"description": "Faster checkout (20% speed boost)",
 		"cost": 800.0,
-		"unlock_revenue": 2000,
+		"star_requirement": 1.5,  # Rising Reputation
 		"category": "equipment",
 		"subcategory": "register",
 		"speed_bonus": 0.2
@@ -395,7 +395,7 @@ const STRUCTURAL_UPGRADES: Dictionary = {
 		"name": "Wall Repairs",
 		"description": "Fix cracks and damage",
 		"cost": 500.0,
-		"unlock_revenue": 0,
+		"star_requirement": 0.0,
 		"category": "structural",
 		"subcategory": "repairs",
 		"ambiance_bonus": 10
@@ -404,7 +404,7 @@ const STRUCTURAL_UPGRADES: Dictionary = {
 		"name": "Ceiling Repairs",
 		"description": "Fix water stains and cracks",
 		"cost": 600.0,
-		"unlock_revenue": 1000,
+		"star_requirement": 1.0,  # First Customers
 		"category": "structural",
 		"subcategory": "repairs",
 		"ambiance_bonus": 8
@@ -415,7 +415,7 @@ const STRUCTURAL_UPGRADES: Dictionary = {
 		"name": "New Windows",
 		"description": "Replace old drafty windows",
 		"cost": 1500.0,
-		"unlock_revenue": 5000,
+		"star_requirement": 2.5,  # Profitable Day
 		"category": "structural",
 		"subcategory": "windows",
 		"ambiance_bonus": 15
@@ -424,7 +424,7 @@ const STRUCTURAL_UPGRADES: Dictionary = {
 		"name": "Bay Window",
 		"description": "Beautiful bay window with seating",
 		"cost": 3000.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "structural",
 		"subcategory": "windows",
 		"ambiance_bonus": 25
@@ -435,7 +435,7 @@ const STRUCTURAL_UPGRADES: Dictionary = {
 		"name": "Seating Area Expansion",
 		"description": "Add more customer seating space",
 		"cost": 5000.0,
-		"unlock_revenue": 10000,
+		"star_requirement": 4.0,  # Grandmother's Legacy
 		"category": "structural",
 		"subcategory": "expansion",
 		"customer_capacity": 5
@@ -444,7 +444,7 @@ const STRUCTURAL_UPGRADES: Dictionary = {
 		"name": "Kitchen Expansion",
 		"description": "Expand work area for more equipment",
 		"cost": 10000.0,
-		"unlock_revenue": 25000,
+		"star_requirement": 5.0,  # Master Baker
 		"category": "structural",
 		"subcategory": "expansion",
 		"equipment_slots": 2
@@ -480,23 +480,18 @@ func get_upgrade(upgrade_id: String) -> Dictionary:
 			return upgrades[upgrade_id]
 	return {}
 
-# Check if upgrade is unlocked (based on revenue AND star rating)
+# Check if upgrade is unlocked (based on star rating ONLY)
 func is_upgrade_unlocked(upgrade_id: String) -> bool:
 	var upgrade = get_upgrade(upgrade_id)
 	if upgrade.is_empty():
 		return false
 
-	# Check revenue requirement
-	var required_revenue: float = upgrade.get("unlock_revenue", 0)
-	var current_revenue: float = ProgressionManager.get_total_revenue()
-	var revenue_met = current_revenue >= required_revenue
-
-	# Check star requirement (if specified)
+	# Check star requirement (if specified, otherwise unlocked by default)
 	var required_stars: float = upgrade.get("star_requirement", 0.0)
 	var current_stars: float = TaskManager.get_star_rating() if TaskManager else 0.0
 	var stars_met = current_stars >= required_stars
 
-	return revenue_met and stars_met
+	return stars_met
 
 # Check if upgrade is purchased
 func is_upgrade_purchased(upgrade_id: String) -> bool:
@@ -519,7 +514,11 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 
 	# Check if unlocked
 	if not is_upgrade_unlocked(upgrade_id):
-		print("Upgrade locked: Need $%.2f total revenue" % upgrade.get("unlock_revenue", 0))
+		var required_stars: float = upgrade.get("star_requirement", 0.0)
+		if required_stars > 0.0:
+			print("Upgrade locked: Need %.1f stars" % required_stars)
+		else:
+			print("Upgrade locked")
 		return false
 
 	# Check if can afford

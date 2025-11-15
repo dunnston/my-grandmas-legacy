@@ -162,30 +162,21 @@ func _add_equipment_card(item: Dictionary) -> void:
 	# Purchase button
 	var buy_button: Button = Button.new()
 
-	# Use UpgradeManager to check if unlocked (checks BOTH revenue AND stars)
+	# Use UpgradeManager to check if unlocked (checks star requirements only)
 	var is_unlocked: bool = UpgradeManager.is_upgrade_unlocked(item.id)
 	var is_owned: bool = UpgradeManager.is_upgrade_purchased(item.id)
 	var can_afford: bool = EconomyManager.can_afford(item.cost)
 
 	# Get the upgrade data to check requirements
 	var upgrade_data: Dictionary = UpgradeManager.get_upgrade(item.id)
-	var required_revenue: float = upgrade_data.get("unlock_revenue", 0)
 	var required_stars: float = upgrade_data.get("star_requirement", 0.0)
-	var current_revenue: float = ProgressionManager.get_total_revenue()
-	var current_stars: float = TaskManager.get_star_rating() if TaskManager else 0.0
 
 	if not is_unlocked:
-		# Build unlock requirements text
-		var unlock_text: String = "🔒 Locked ("
-		var requirements: Array[String] = []
-
-		if current_revenue < required_revenue:
-			requirements.append("$%.0f revenue" % required_revenue)
-		if required_stars > 0.0 and current_stars < required_stars:
-			requirements.append("%.1f★" % required_stars)
-
-		unlock_text += ", ".join(requirements) + ")"
-		buy_button.text = unlock_text
+		# Show star requirement
+		if required_stars > 0.0:
+			buy_button.text = "🔒 Locked (Requires %.1f★)" % required_stars
+		else:
+			buy_button.text = "🔒 Locked"
 		buy_button.disabled = true
 	elif is_owned:
 		buy_button.text = "✓ Owned"
