@@ -305,7 +305,7 @@ func _create_star_display() -> void:
 	star_panel.offset_top = 10
 	star_panel.offset_right = -10
 	star_panel.offset_bottom = 150
-	star_panel.grow_horizontal = GROW_DIRECTION_BEGIN
+	star_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 
 	# Style the panel
 	var style = StyleBoxFlat.new()

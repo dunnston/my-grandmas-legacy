@@ -70,8 +70,8 @@ func _build_ui() -> void:
 	popup_panel.offset_top = -250
 	popup_panel.offset_right = 300
 	popup_panel.offset_bottom = 250
-	popup_panel.grow_horizontal = GROW_DIRECTION_BOTH
-	popup_panel.grow_vertical = GROW_DIRECTION_BOTH
+	popup_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	popup_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
 
 	# Style the panel
 	var panel_style = StyleBoxFlat.new()
