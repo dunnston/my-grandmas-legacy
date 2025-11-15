@@ -52,7 +52,8 @@ func _initialize_tasks() -> void:
 	task1.completion_type = "boolean"
 	task1.tracked_stat = "shop_fully_cleaned"
 	task1.progress_required = 1
-	task1.unlocks = ["planning_phase_access"]
+	var unlocks1: Array[String] = ["planning_phase_access"]
+	task1.unlocks = unlocks1
 	all_tasks[task1.task_id] = task1
 	unlocked_tasks.append(task1.task_id)
 
@@ -69,7 +70,8 @@ func _initialize_tasks() -> void:
 	task2.completion_type = "counter"
 	task2.tracked_stat = "happy_customers_served"
 	task2.progress_required = 10
-	task2.unlocks = ["recipe_group_basic_pastries"]
+	var unlocks2: Array[String] = ["recipe_group_basic_pastries"]
+	task2.unlocks = unlocks2
 	all_tasks[task2.task_id] = task2
 
 	# Task 3: Rising Reputation (1.0 → 1.5 stars)
@@ -85,7 +87,8 @@ func _initialize_tasks() -> void:
 	task3.completion_type = "threshold"
 	task3.tracked_stat = "reputation"
 	task3.progress_required = 60
-	task3.unlocks = ["story_letter_1"]  # Equipment unlocked via star requirements
+	var unlocks3: Array[String] = ["story_letter_1"]
+	task3.unlocks = unlocks3
 	all_tasks[task3.task_id] = task3
 
 	# Task 4: Baking Variety (1.5 → 2.0 stars)
@@ -101,7 +104,8 @@ func _initialize_tasks() -> void:
 	task4.completion_type = "collection"
 	task4.tracked_stat = "unique_recipes_baked"
 	task4.progress_required = 5
-	task4.unlocks = ["recipe_group_artisan_breads"]  # Equipment unlocked via star requirements
+	var unlocks4: Array[String] = ["recipe_group_artisan_breads"]
+	task4.unlocks = unlocks4
 	all_tasks[task4.task_id] = task4
 
 	# Task 5: Profitable Day (2.0 → 2.5 stars)
@@ -117,7 +121,8 @@ func _initialize_tasks() -> void:
 	task5.completion_type = "threshold"
 	task5.tracked_stat = "daily_profit"
 	task5.progress_required = 200
-	task5.unlocks = ["staff_hiring_enabled"]  # Equipment unlocked via star requirements
+	var unlocks5: Array[String] = ["staff_hiring_enabled"]
+	task5.unlocks = unlocks5
 	all_tasks[task5.task_id] = task5
 
 	# Task 6: Team Player (2.5 → 3.0 stars)
@@ -133,7 +138,8 @@ func _initialize_tasks() -> void:
 	task6.completion_type = "boolean"
 	task6.tracked_stat = "employee_hired"
 	task6.progress_required = 1
-	task6.unlocks = ["recipe_group_special_cakes", "story_letter_2"]
+	var unlocks6: Array[String] = ["recipe_group_special_cakes", "story_letter_2"]
+	task6.unlocks = unlocks6
 	all_tasks[task6.task_id] = task6
 
 	# Task 7: Perfectionist (3.0 → 3.5 stars)
@@ -149,7 +155,8 @@ func _initialize_tasks() -> void:
 	task7.completion_type = "counter"
 	task7.tracked_stat = "perfect_items_baked"
 	task7.progress_required = 25
-	task7.unlocks = []  # Equipment unlocked via star requirements now
+	var unlocks7: Array[String] = []
+	task7.unlocks = unlocks7
 	all_tasks[task7.task_id] = task7
 
 	# Task 8: Grandmother's Legacy (3.5 → 4.0 stars)
@@ -167,7 +174,8 @@ func _initialize_tasks() -> void:
 	task8.progress_required = 80
 	task8.secondary_stat = "total_revenue"
 	task8.secondary_required = 5000
-	task8.unlocks = ["recipe_group_secret_recipes", "story_letter_3", "bakery_expansion_option"]
+	var unlocks8: Array[String] = ["recipe_group_secret_recipes", "story_letter_3", "bakery_expansion_option"]
+	task8.unlocks = unlocks8
 	all_tasks[task8.task_id] = task8
 
 	# Task 9: Town Favorite (4.0 → 4.5 stars)
@@ -185,7 +193,8 @@ func _initialize_tasks() -> void:
 	task9.progress_required = 1
 	task9.secondary_stat = "total_customers_served"
 	task9.secondary_required = 500
-	task9.unlocks = ["recipe_group_international_treats", "marketing_billboard", "story_letter_4"]
+	var unlocks9: Array[String] = ["recipe_group_international_treats", "marketing_billboard", "story_letter_4"]
+	task9.unlocks = unlocks9
 	all_tasks[task9.task_id] = task9
 
 	# Task 10: Master Baker (4.5 → 5.0 stars)
@@ -202,8 +211,9 @@ func _initialize_tasks() -> void:
 	task10.tracked_stat = "reputation"
 	task10.progress_required = 95
 	task10.secondary_stat = "legendary_items_by_category"
-	task10.secondary_required = 6  # Assuming 6 recipe categories
-	task10.unlocks = ["recipe_group_legendary_bakes", "story_letter_final", "achievement_master_baker"]
+	task10.secondary_required = 6
+	var unlocks10: Array[String] = ["recipe_group_legendary_bakes", "story_letter_final", "achievement_master_baker"]
+	task10.unlocks = unlocks10
 	all_tasks[task10.task_id] = task10
 
 	# TODO: Add optional tasks later
