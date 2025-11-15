@@ -101,9 +101,19 @@ func start_minigame() -> void:
 	# Ensure sheep and fence are visible
 	if sheep_sprite:
 		sheep_sprite.show()
-		print("[SheepMinigame] Sheep visible:", sheep_sprite.visible)
+		print("[SheepMinigame] Sheep sprite found and shown. Visible:", sheep_sprite.visible)
+		print("[SheepMinigame] Sheep offsets: L=%f R=%f T=%f B=%f" % [
+			sheep_sprite.offset_left, sheep_sprite.offset_right,
+			sheep_sprite.offset_top, sheep_sprite.offset_bottom
+		])
+	else:
+		print("[SheepMinigame] ERROR: sheep_sprite is NULL!")
+
 	if fence:
 		fence.show()
+		print("[SheepMinigame] Fence shown")
+	else:
+		print("[SheepMinigame] ERROR: fence is NULL!")
 
 	# Show instructions briefly
 	if instructions_label:
@@ -144,6 +154,8 @@ func _process(delta: float) -> void:
 		# Check if in counting window
 		can_count_sheep = (current_sheep_progress >= good_window_start and
 						   current_sheep_progress <= good_window_end)
+	elif current_sheep_index == 0:
+		print("[SheepMinigame] Waiting for first sheep to spawn... (frame skipped)")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_active:
