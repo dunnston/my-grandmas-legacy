@@ -175,10 +175,7 @@ func _spawn_sheep() -> void:
 		return
 
 	print("[SheepMinigame] Sheep #%d jumping..." % current_sheep_index)
-
-	# Start sheep animation
-	if sheep_sprite:
-		sheep_sprite.play("jump")
+	# Animation handled by _update_sheep_animation() in _process()
 
 func _attempt_count_sheep() -> void:
 	"""Player attempts to count a sheep"""
