@@ -295,8 +295,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Professional Oven",
 		"description": "Commercial-grade oven (+2% quality)",
 		"cost": 2000.0,
-		"star_requirement": 1.5,  # Rising Reputation
-		"star_requirement": 1.5,  # Requires Rising Reputation task
+		"star_requirement": 1.5,  # Rising Reputation task
 		"category": "equipment",
 		"subcategory": "oven",
 		"equipment_tier": 1
@@ -305,8 +304,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Convection Oven",
 		"description": "Advanced convection oven (+4% quality)",
 		"cost": 5000.0,
-		"star_requirement": 4.0,  # Grandmother's Legacy
-		"star_requirement": 3.0,  # Requires Team Player task
+		"star_requirement": 3.0,  # Team Player task
 		"category": "equipment",
 		"subcategory": "oven",
 		"equipment_tier": 2
@@ -315,8 +313,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Master Baker's Oven",
 		"description": "Top-of-the-line oven (+6% quality)",
 		"cost": 10000.0,
-		"star_requirement": 5.0,  # Master Baker
-		"star_requirement": 3.5,  # Requires Perfectionist task
+		"star_requirement": 3.5,  # Perfectionist task
 		"category": "equipment",
 		"subcategory": "oven",
 		"equipment_tier": 3
@@ -327,8 +324,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Stand Mixer",
 		"description": "Professional stand mixer (+2% quality)",
 		"cost": 1500.0,
-		"star_requirement": 1.5,  # Rising Reputation
-		"star_requirement": 1.5,  # Requires Rising Reputation task
+		"star_requirement": 1.5,  # Rising Reputation task
 		"category": "equipment",
 		"subcategory": "mixer",
 		"equipment_tier": 1
@@ -337,8 +333,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Industrial Mixer",
 		"description": "Heavy-duty industrial mixer (+4% quality)",
 		"cost": 4000.0,
-		"star_requirement": 4.0,  # Grandmother's Legacy
-		"star_requirement": 3.0,  # Requires Team Player task
+		"star_requirement": 3.0,  # Team Player task
 		"category": "equipment",
 		"subcategory": "mixer",
 		"equipment_tier": 2
@@ -347,8 +342,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Master Mixer",
 		"description": "Grandma's restored professional mixer (+6% quality)",
 		"cost": 8000.0,
-		"star_requirement": 5.0,  # Master Baker
-		"star_requirement": 4.0,  # Requires Grandmother's Legacy task
+		"star_requirement": 4.0,  # Grandmother's Legacy task
 		"category": "equipment",
 		"subcategory": "mixer",
 		"equipment_tier": 3
@@ -359,8 +353,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Refrigerated Display",
 		"description": "Temperature-controlled display case",
 		"cost": 1000.0,
-		"star_requirement": 1.0,  # First Customers
-		"star_requirement": 2.0,  # Requires Baking Variety task
+		"star_requirement": 2.0,  # Baking Variety task
 		"category": "equipment",
 		"subcategory": "display",
 		"capacity_bonus": 5
@@ -369,8 +362,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Premium Display",
 		"description": "Large multi-shelf display (+10 capacity)",
 		"cost": 2500.0,
-		"star_requirement": 2.5,  # Profitable Day
-		"star_requirement": 3.5,  # Requires Perfectionist task
+		"star_requirement": 3.5,  # Perfectionist task
 		"category": "equipment",
 		"subcategory": "display",
 		"capacity_bonus": 10
@@ -381,7 +373,7 @@ const EQUIPMENT_UPGRADES: Dictionary = {
 		"name": "Digital Register",
 		"description": "Faster checkout (20% speed boost)",
 		"cost": 800.0,
-		"star_requirement": 1.5,  # Rising Reputation
+		"star_requirement": 1.5,  # Rising Reputation task
 		"category": "equipment",
 		"subcategory": "register",
 		"speed_bonus": 0.2
