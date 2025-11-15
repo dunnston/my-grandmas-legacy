@@ -37,50 +37,60 @@ offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="VBox" type="VBoxContainer" parent="ScreenContainer/Panel"]
 layout_mode = 2
 
-[node name="Title" type="Label" parent="Panel/VBox"]
+[node name="Title" type="Label" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
 text = "☾ Morning Has Arrived ☾"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="Panel/VBox"]
+[node name="HSeparator" type="HSeparator" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
 
-[node name="QualityLabel" type="Label" parent="Panel/VBox"]
+[node name="QualityLabel" type="Label" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 text = "Good Sleep"
 horizontal_alignment = 1
 
-[node name="CalmPercentageLabel" type="Label" parent="Panel/VBox"]
+[node name="CalmPercentageLabel" type="Label" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "Calm Level: 75%"
 horizontal_alignment = 1
 
-[node name="MessageLabel" type="Label" parent="Panel/VBox"]
+[node name="MessageLabel" type="Label" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 text = "You sleep soundly. You wake up feeling great!"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="HSeparator2" type="HSeparator" parent="Panel/VBox"]
+[node name="HSeparator2" type="HSeparator" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
 
-[node name="BonusesTitle" type="Label" parent="Panel/VBox"]
+[node name="BonusesTitle" type="Label" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
 text = "Bonuses Earned:"
 horizontal_alignment = 1
 
-[node name="BonusesContainer" type="VBoxContainer" parent="Panel/VBox"]
+[node name="BonusesContainer" type="VBoxContainer" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Spacer" type="Control" parent="Panel/VBox"]
+[node name="Spacer" type="Control" parent="ScreenContainer/Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ContinueButton" type="Button" parent="Panel/VBox"]
+[node name="ContinueButton" type="Button" parent="ScreenContainer/Panel/VBox"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
