@@ -30,11 +30,11 @@ var speed_increase_rate: float = 10.0  # pixels/sec increase per second
 var max_speed: float = 500.0
 
 # Jumping
-var jump_velocity: float = -400.0
-var gravity: float = 1200.0
+var jump_velocity: float = -600.0
+var gravity: float = 1800.0
 var sheep_y_velocity: float = 0.0
 var sheep_ground_y: float = 0.0
-var jump_height: float = 100.0
+var sheep_x: float = 150.0  # Fixed X position
 
 # Fences
 var fences: Array = []
@@ -102,11 +102,12 @@ func start_minigame() -> void:
 	feedback_timer = 0.0
 	fences.clear()
 
-	# Position sheep at bottom of game area (like Chrome Dino)
+	# Position sheep at bottom-left (like Chrome Dino)
 	if sheep_sprite:
-		# Ground is at the bottom of the game area (y=100 in 200px tall area = bottom)
-		sheep_ground_y = 80.0  # Y position when on ground (relative to center of 200px area)
-		_position_sheep(-150.0, sheep_ground_y)  # Left side of screen
+		# Ground is near bottom of screen (assuming 720p screen height)
+		sheep_ground_y = 500.0  # Y position when on ground
+		sheep_x = 150.0  # Fixed X position on left side
+		_position_sheep(sheep_x, sheep_ground_y)
 		sheep_sprite.show()
 
 	# Update UI
@@ -188,22 +189,22 @@ func _update_sheep_physics(delta: float) -> void:
 		sheep_y_velocity = 0.0
 		is_jumping = false
 
-	# Update position
-	_position_sheep(0.0, new_y)
+	# Update position (keep X fixed!)
+	_position_sheep(sheep_x, new_y)
 
 func _position_sheep(x: float, y: float) -> void:
 	"""Position the sheep sprite (like Chrome Dino)"""
 	if not sheep_sprite:
 		return
 
-	var sheep_width = 60.0
-	var sheep_height = 50.0
+	var sheep_width = 80.0
+	var sheep_height = 60.0
 
 	# Position sheep so bottom aligns with ground
-	sheep_sprite.offset_left = x - (sheep_width / 2)
-	sheep_sprite.offset_right = x + (sheep_width / 2)
-	sheep_sprite.offset_top = y - sheep_height + 30.0  # Top of sheep
-	sheep_sprite.offset_bottom = y + 30.0  # Bottom on ground
+	sheep_sprite.offset_left = x
+	sheep_sprite.offset_right = x + sheep_width
+	sheep_sprite.offset_top = y - sheep_height
+	sheep_sprite.offset_bottom = y
 
 func _update_fence_spawning(delta: float) -> void:
 	"""Spawn new fences"""
@@ -221,16 +222,16 @@ func _spawn_fence() -> void:
 	var fence_node = ColorRect.new()
 	fence_node.color = Color(0.545, 0.271, 0.075, 1)  # Brown
 
-	# Position at right edge, ON THE GROUND
-	var start_x = 300.0  # Right edge of game area (600px wide, centered at 0)
-	var fence_width = 20.0
-	var fence_height = 50.0
+	# Position at right edge of screen
+	var start_x = 1280.0  # Right edge (assuming 1280px width, adjust if needed)
+	var fence_width = 30.0
+	var fence_height = 60.0
 
 	# Place fence on ground, aligned with sheep ground level
-	fence_node.offset_left = start_x - (fence_width / 2)
-	fence_node.offset_right = start_x + (fence_width / 2)
-	fence_node.offset_top = sheep_ground_y - fence_height + 30.0  # Bottom aligns with ground
-	fence_node.offset_bottom = sheep_ground_y + 30.0  # Ground level
+	fence_node.offset_left = start_x
+	fence_node.offset_right = start_x + fence_width
+	fence_node.offset_top = sheep_ground_y - fence_height
+	fence_node.offset_bottom = sheep_ground_y
 
 	game_area.add_child(fence_node)
 	fences.append(fence_node)
@@ -249,7 +250,7 @@ func _update_fences(delta: float) -> void:
 		fence_node.offset_right -= move_amount
 
 		# Check if fence is past sheep (cleared)
-		if fence_node.offset_right < -50.0 and fence_node not in fences_to_remove:
+		if fence_node.offset_right < 0 and fence_node not in fences_to_remove:
 			fences_cleared += 1
 			_give_feedback("+1 Fence!", Color.GREEN_YELLOW)
 			fences_to_remove.append(fence_node)
